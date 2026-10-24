@@ -1,6 +1,6 @@
-# Rungs: build brief for Claude Code
+# Talshift: build brief for Claude Code
 
-Rungs is a HackOHI/O 2026 entry for the Bridge Builder Challenge (Honda Research Institute × 99P Labs at Ohio State). It connects OSU students, industry mentors and recruiters around **verified real work**, not polished resumes.
+Talshift is a HackOHI/O 2026 entry for the Bridge Builder Challenge (Honda Research Institute × 99P Labs at Ohio State). It connects OSU students, industry mentors and recruiters around **verified real work**, not polished resumes.
 
 Your job: build the frontend in the existing `frontend/` app exactly as designed in `design/`, with mock data behind a clean API layer so the backend team can plug in later.
 
@@ -13,9 +13,19 @@ Two people share this work. Read `TEAM.md` for who owns which files, and only ed
 | File | Persona | Tabs |
 |---|---|---|
 | `design/student.dc.html` | Student (Sam Okafor) | Overview · Plan · Events · Network · Resume |
-| `design/mentor.dc.html` | Mentor (Rina Matsuda, HRI) | Project feed · Find students · My profile |
-| `design/recruiter.dc.html` | Recruiter (Jamie Cole, 99P Labs) | Find students · Invites · My profile |
+| `design/mentor.dc.html` + `design/recruiter.dc.html` | Professional (Rina Matsuda, HRI) | Project feed · Find students · Invites · My profile |
 | `design/build-spec.dc.html` | — | Colors, type, spacing, the 10 components with their Tailwind classes, scoring formulas |
+
+**The app has two personas, Student and Professional.** This matches the backend's account types. The designs show Mentor and Recruiter separately, but they are merged into one Professional view, signed in as Rina Matsuda (HRI). Take each Professional tab from one design file:
+
+| Professional tab | Build it from |
+|---|---|
+| Project feed | `design/mentor.dc.html` |
+| Find students | `design/recruiter.dc.html` (not the mentor version) |
+| Invites | `design/recruiter.dc.html` |
+| My profile | `design/mentor.dc.html` (Rina's credibility breakdown) |
+
+Ignore the Mentor "Find students" page and the Recruiter "My profile" page (Jamie Cole). The header switcher shows Student · Professional, and the Professional header shows an "RM" avatar styled like the recruiter's.
 
 How to read them (they are NOT React):
 - Markup sits inside `<x-dc>…</x-dc>` with inline styles. Treat the inline styles as the exact visual spec, then express them as Tailwind classes (the build spec maps most of them for you).
@@ -26,10 +36,13 @@ How to read them (they are NOT React):
 
 Match the design closely: spacing, sizes, colors, copy and the order of elements. If something in the design seems wrong, ask before changing it. Don't add features, sections or copy that aren't in the design.
 
+The product is called **Talshift**. The design files still say "Rungs" in a few places (the header logo, "earned on Rungs", "your verified Rungs link"). Always write "Talshift" instead. This is the one copy change that's allowed.
+
 ## 2. Stack
 
 - Vite + React 19 + TypeScript (the existing `frontend/` app; keep its config and scripts) + Tailwind CSS v4 (`@tailwindcss/vite`) + `lucide-react` + `react-router-dom`
 - `backend/` (Express + PostgreSQL) serves `frontend/dist`, and the Vite dev server proxies `/api/*` to it. Don't create a second app.
+- A separate teammate is building the backend at the same time. So far it has `GET /api/health` and `/api/auth/register|login|me|logout`. Accounts are `student` or `professional`; mentors and recruiters are both professionals. Pages use the mock functions in `client.ts` for now. Don't call the real backend, build login screens or edit `backend/` unless asked. When writing the endpoint comments in `client.ts`, check `backend/src/` first and reuse any routes that already exist.
 - Inter from Google Fonts (400/500/600/700). Default Tailwind colors only, no custom config.
 - Light theme only. Page column: `max-w-[832px] mx-auto px-6`.
 - Every interactive control is at least 44px tall (`h-11` / `min-h-11`). Real `<button>`, `<label>`, `<input>` elements, plus `aria-label` on icon-only buttons and `aria-pressed` on chips.
@@ -46,13 +59,13 @@ frontend/src/
   api/scoring.ts               mentorWeight, overall, credibility, network ranking (build spec #10)
   components/ui/               Button, Chip, Tag, Card, Panel, DisclosureRow, StarRating,
                                TierBar, Tabs, Modal, Avatar, SearchInput, VerificationTracker
-  components/Header.tsx        logo + Student/Mentor/Recruiter switcher + tab row
+  personas.tsx                 the list of personas and tabs; routes and Header are built from it
+  components/Header.tsx        logo + Student/Professional switcher + tab row
   pages/student/  Overview.tsx Plan.tsx Events.tsx Network.tsx Resume.tsx ExplainScoreModal.tsx
-  pages/mentor/   Feed.tsx ProjectCard.tsx FindStudents.tsx Profile.tsx
-  pages/recruiter/ FindStudents.tsx Invites.tsx Profile.tsx
+  pages/professional/ Feed.tsx ProjectCard.tsx FindStudents.tsx Invites.tsx Profile.tsx
 ```
 
-Routes: `/student/:tab`, `/mentor/:tab`, `/recruiter/:tab`. `/` redirects to `/student/overview`. The persona switcher and the tab row are links, so the browser back button works.
+Routes: `/student/:tab`, `/professional/:tab`. `/` redirects to `/student/overview`. The persona switcher and the tab row are links, so the browser back button works.
 
 Every function in `client.ts` is `async`, returns plain JSON typed with `api/types.ts`, and has a comment above it naming the REST endpoint it will become (e.g. `// GET /api/students/search?q=&role=&verified=`). Components never import `mockData.ts` directly.
 
@@ -65,25 +78,23 @@ Every function in `client.ts` is `async`, returns plain JSON typed with `api/typ
 - Network: the filter chips work, "How credibility works" expands, and each action button flips to "Sent".
 - Resume: the role chips switch the feedback list. There is **no** rewrite, apply or "fix it for me" control anywhere. This is deliberate: AI never rewrites the resume.
 
-**Mentor**
-- Feed: the filter chips work, and the feed is sorted with fewest verified reviews first.
+**Professional**
+- Project feed: the filter chips work, and the feed is sorted with fewest verified reviews first.
 - Every score, the AI rating, the mentor rating, skill breakdown and mentor quotes are always visible. Nothing is locked.
 - Rating is optional: a mentor can submit stars only, a note only, or both. Clicking the same star again clears it. "Leave feedback" opens the composer, which has sentence starters, a 140-character limit and an endorse checkbox.
 - Submit for verification → a 4-step tracker (Submitted → Quality check → Peer confirm → Published), plus a "Once verified: rating X → Y" line and a Withdraw button. **A pending review never changes any score and is never shown to the student.**
-- Find students: search, checkbox filters and invite-to-office-hours all work.
-- My profile shows the credibility breakdown.
-
-**Recruiter**
-- Find students: live text search over name, project and skills; role chips; "Mentor-verified only" and "Clears my 70% bar" filters; sort by best match or fastest growing. Invite flips to "Invited" and adds the student to the Invites tab as "Waiting".
+- Find students (from the recruiter design): live text search over name, project and skills; role chips; "Mentor-verified only" and "Clears my 70% bar" filters; sort by best match or fastest growing. Invite flips to "Invited" and adds the student to the Invites tab as "Waiting".
+- Invites (from the recruiter design) lists invited students and their status.
+- My profile (from the mentor design) shows the credibility breakdown.
 
 ## 5. Cross-persona demo loop (most important for the pitch)
 
 Keep shared state in `AppStore` so this works end to end with no reload:
 
-1. On the Mentor feed, rate Sam Okafor's "Split ergonomic keyboard case" 5★, write a note, and submit. It shows as pending.
+1. On the Professional Project feed, rate Sam Okafor's "Split ergonomic keyboard case" 5★, write a note, and submit. It shows as pending.
 2. Add a small, clearly labelled **"Demo: verify now"** button on the pending tracker. It completes the remaining steps, standing in for the backend's AI check plus a second mentor.
 3. Once verified: Sam's project rating updates in the feed (72 → 79 using `scoring.ts`), and the review appears in "What mentors wrote". On the Student side, Overview shows the review card, the score goes 56 → 65, and a notification dot appears on the bell.
-4. On the Recruiter side, Find students → invite Sam. Sam gets a notification, and the invite shows in Recruiter → Invites.
+4. Still as the professional, go to Find students and invite Sam. Sam gets a notification, and the invite shows in Professional → Invites.
 
 Before verification, the student's Overview shows the pre-review state: score 56 and no review card. The current design file shows the post-review state, so build both from the same data.
 
@@ -101,9 +112,9 @@ networkRank = .6*relevanceToStudentTrack + .4*credibility
 
 1. In the existing `frontend/` app, add Tailwind v4, Inter, the routes, Header with the persona switcher and tab row, and empty pages.
 2. The `components/ui/` set from the build spec, plus `types.ts`, `mockData.ts` copied from the design files, `client.ts` and `scoring.ts`.
-3. Mentor Project feed (the most complex page), matching `design/mentor.dc.html`.
+3. Professional Project feed (the most complex page), matching `design/mentor.dc.html`.
 4. Student tabs, one at a time, including the Explain-score modal.
-5. Mentor Find students and Profile; all Recruiter tabs.
+5. Professional Find students and Invites (from `design/recruiter.dc.html`) and My profile (from `design/mentor.dc.html`).
 6. `AppStore` and the demo loop in §5.
 7. Responsive pass at 390px wide (cards stack, chips wrap, no horizontal scroll), an accessibility pass, `npm run build` in `frontend/` with zero errors (it runs `tsc` first), `npm run lint` clean, and a section added to the existing root README listing the API endpoints from `client.ts`.
 
