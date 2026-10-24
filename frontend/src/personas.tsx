@@ -4,14 +4,13 @@ import StudentPlan from './pages/student/Plan.tsx'
 import StudentEvents from './pages/student/Events.tsx'
 import StudentNetwork from './pages/student/Network.tsx'
 import StudentResume from './pages/student/Resume.tsx'
-import MentorFeed from './pages/mentor/Feed.tsx'
-import MentorFindStudents from './pages/mentor/FindStudents.tsx'
-import MentorProfile from './pages/mentor/Profile.tsx'
-import RecruiterFindStudents from './pages/recruiter/FindStudents.tsx'
-import RecruiterInvites from './pages/recruiter/Invites.tsx'
-import RecruiterProfile from './pages/recruiter/Profile.tsx'
+import ProfessionalFeed from './pages/professional/Feed.tsx'
+import ProfessionalFindStudents from './pages/professional/FindStudents.tsx'
+import ProfessionalInvites from './pages/professional/Invites.tsx'
+import ProfessionalProfile from './pages/professional/Profile.tsx'
 
-export type PersonaId = 'student' | 'mentor' | 'recruiter'
+// Matches the backend's account types.
+export type PersonaId = 'student' | 'professional'
 
 export interface Tab {
   slug: string
@@ -25,8 +24,8 @@ export interface Persona {
   id: PersonaId
   label: string
   tabs: Tab[]
-  // Signed-in user's initials in the header; the mentor design has none.
-  avatar?: { initials: string; name: string; className: string }
+  // Signed-in user's initials in the header.
+  avatar: { initials: string; name: string; className: string }
 }
 
 // One entry per persona. The routes in App.tsx and the Header are built from this list,
@@ -45,22 +44,14 @@ export const personas: Persona[] = [
     ],
   },
   {
-    id: 'mentor',
-    label: 'Mentor',
+    id: 'professional',
+    label: 'Professional',
+    avatar: { initials: 'RM', name: 'Rina Matsuda', className: 'bg-blue-50 text-blue-700' },
     tabs: [
-      { slug: 'feed', label: 'Project feed', page: MentorFeed },
-      { slug: 'search', label: 'Find students', page: MentorFindStudents },
-      { slug: 'profile', label: 'My profile', page: MentorProfile },
-    ],
-  },
-  {
-    id: 'recruiter',
-    label: 'Recruiter',
-    avatar: { initials: 'JC', name: 'Jamie Cole', className: 'bg-blue-50 text-blue-700' },
-    tabs: [
-      { slug: 'search', label: 'Find students', page: RecruiterFindStudents },
-      { slug: 'invites', label: 'Invites', page: RecruiterInvites },
-      { slug: 'profile', label: 'My profile', page: RecruiterProfile },
+      { slug: 'feed', label: 'Project feed', page: ProfessionalFeed },
+      { slug: 'search', label: 'Find students', page: ProfessionalFindStudents },
+      { slug: 'invites', label: 'Invites', page: ProfessionalInvites },
+      { slug: 'profile', label: 'My profile', page: ProfessionalProfile },
     ],
   },
 ]

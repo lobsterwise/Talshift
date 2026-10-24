@@ -2,7 +2,7 @@
 
 Two people build the frontend in `frontend/` from the designs in `design/`. `CLAUDE.md` is the build brief; this file is who does what and how we share work.
 
-- **Person A: Ishan.** Foundation, the API layer, the Mentor and Recruiter pages, and the shared store.
+- **Person A: Ishan.** Foundation, the API layer, the Professional pages, and the shared store.
 - **Person B: teammate.** UI components and the Student pages.
 
 You don't need PostgreSQL or the backend for any of this. The frontend uses mock data.
@@ -24,7 +24,7 @@ You don't need PostgreSQL or the backend for any of this. The frontend uses mock
 | `package.json`, `package-lock.json`, `vite.config.ts`, `App.tsx`, `main.tsx`, `index.css`, `personas.tsx` (tabs and routes), `components/Header.tsx` | A |
 | `api/` (`types.ts`, `mockData.ts`, `client.ts`, `scoring.ts`), `store/AppStore.tsx` | A |
 | `components/ui/` | B |
-| `pages/mentor/`, `pages/recruiter/` | A |
+| `pages/professional/` | A |
 | `pages/student/` | B |
 
 If you need a new client function or piece of mock data, ask A. If you need a UI component changed, ask B.
@@ -109,12 +109,10 @@ Merge both. From now on you mostly work in separate folders.
 ### Step 3: Pages (both, in parallel, one branch per tab)
 
 **A**, in this order, one pull request each:
-1. Mentor Project feed + `ProjectCard` (the hardest page)
-2. Mentor Find students
-3. Mentor My profile
-4. Recruiter Find students (reuse the Mentor version where you can)
-5. Recruiter Invites
-6. Recruiter My profile
+1. Project feed + `ProjectCard` (the hardest page; from `mentor.dc.html`)
+2. Find students (from `recruiter.dc.html`)
+3. Invites (from `recruiter.dc.html`)
+4. My profile (from `mentor.dc.html`)
 
 **B**, in this order, one pull request each:
 1. Student Overview + Explain-score modal
@@ -130,8 +128,8 @@ Check it in the browser next to the design file before you merge.
 
 ### Step 4: Demo loop (together)
 
-This is the most important part for the pitch (CLAUDE.md §5). A builds `store/AppStore.tsx` and the Mentor side. B connects Student Overview to the store: the score changing from 56 to 65, the review card, and the bell dot. Sit together, or share a screen, and test the whole loop end to end:
-Mentor rates Sam → Demo: verify now → Student score updates → Recruiter invites Sam.
+This is the most important part for the pitch (CLAUDE.md §5). A builds `store/AppStore.tsx` and the Professional side. B connects Student Overview to the store: the score changing from 56 to 65, the review card, and the bell dot. Sit together, or share a screen, and test the whole loop end to end:
+Professional rates Sam → Demo: verify now → Student score updates → Professional invites Sam.
 
 ### Step 5: Polish (split)
 
