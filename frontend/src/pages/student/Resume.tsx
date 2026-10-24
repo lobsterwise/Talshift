@@ -1,3 +1,5 @@
+import WorkspaceDataPage from '../../components/WorkspaceDataPage'
+
 export default function Resume() {
-  return <p className="text-gray-500">Student · Resume: not built yet.</p>
+  return <WorkspaceDataPage persona="student" resource="resume" title="Resume" emptyMessage="No resume details yet." />
 }

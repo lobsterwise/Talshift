@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import {
   getCurrentAccount,
+  getProfile,
   logout,
+  saveProfile as saveProfileRequest,
   type Account,
   type AuthSession,
   type Profile,
@@ -13,19 +15,6 @@ import { personas, type Persona } from './personas.tsx'
 
 type AuthScreen = 'signup' | 'login' | 'onboarding' | 'welcome'
 
-function profileStorageKey(accountId: string) {
-  return `talshift.profile.${accountId}`
-}
-
-function readProfile(accountId: string): Profile | null {
-  try {
-    const saved = localStorage.getItem(profileStorageKey(accountId))
-    return saved ? JSON.parse(saved) as Profile : null
-  } catch {
-    return null
-  }
-}
-
 function screenForPath(path: string): AuthScreen {
   if (path === '/login') return 'login'
   if (path.startsWith('/onboarding/')) return 'onboarding'
@@ -33,10 +22,25 @@ function screenForPath(path: string): AuthScreen {
   return 'signup'
 }
 
-function PersonaLayout({ persona }: { persona: Persona }) {
+function workspacePath(account: Account) {
+  const persona = personas.find((item) => item.id === account.accountType)
+  return `/${account.accountType}/${persona?.tabs[0].slug ?? ''}`
+}
+
+function PersonaLayout({
+  persona,
+  account,
+  profile,
+  onSignOut,
+}: {
+  persona: Persona
+  account: Account
+  profile: Profile | null
+  onSignOut: () => Promise<void>
+}) {
   return (
     <div className="min-h-screen bg-white">
-      <Header persona={persona} />
+      <Header persona={persona} account={account} profile={profile} onSignOut={onSignOut} />
       <main className="mx-auto flex max-w-[832px] flex-col gap-6 px-6 pt-9 pb-24">
         <Outlet />
       </main>
@@ -60,10 +64,11 @@ function App() {
 
     let cancelled = false
     getCurrentAccount(token)
-      .then(({ account: currentAccount }) => {
+      .then(async ({ account: currentAccount }) => {
         if (cancelled) return
         setAccount(currentAccount)
-        setProfile(readProfile(currentAccount.id))
+        const { profile: currentProfile } = await getProfile(token)
+        if (!cancelled) setProfile(currentProfile)
       })
       .catch(() => {
         if (cancelled) return
@@ -83,17 +88,17 @@ function App() {
     localStorage.setItem('talshift.session', session.token)
     setToken(session.token)
     setAccount(session.account)
-    const savedProfile = readProfile(session.account.id)
+    const { profile: savedProfile } = await getProfile(session.token)
     setProfile(savedProfile)
     navigate(savedProfile?.onboardingCompleted
       ? '/welcome'
       : `/onboarding/${session.account.accountType}`)
   }
 
-  function saveProfile(profileToSave: Profile) {
-    if (!account) return
-    localStorage.setItem(profileStorageKey(account.id), JSON.stringify(profileToSave))
-    setProfile(profileToSave)
+  async function saveProfile(profileToSave: Profile) {
+    if (!token) throw new Error('Your session has expired. Please sign in again.')
+    const { profile: savedProfile } = await saveProfileRequest(token, profileToSave)
+    setProfile(savedProfile)
   }
 
   async function signOut() {
@@ -117,23 +122,47 @@ function App() {
       onLogout={signOut}
     />
   )
+  const profileDestination = account
+    ? profile?.onboardingCompleted ? '/welcome' : `/onboarding/${account.accountType}`
+    : '/signup'
   const protectedAuthPage = restoring
     ? <main className="auth-loading" aria-live="polite">Checking your session…</main>
     : token && account
-      ? authPage
+      ? screenForPath(location.pathname) === 'welcome' && !profile?.onboardingCompleted
+        ? <Navigate to={profileDestination} replace />
+        : screenForPath(location.pathname) === 'onboarding' && profile?.onboardingCompleted
+          ? <Navigate to="/welcome" replace />
+          : location.pathname.startsWith('/onboarding/') && location.pathname !== `/onboarding/${account.accountType}`
+            ? <Navigate to={`/onboarding/${account.accountType}`} replace />
+            : authPage
       : <Navigate to="/signup" replace />
+  const publicAuthPage = restoring
+    ? <main className="auth-loading" aria-live="polite">Checking your session…</main>
+    : token && account
+      ? <Navigate to={profileDestination} replace />
+      : authPage
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/signup" replace />} />
-      <Route path="/signup" element={authPage} />
-      <Route path="/login" element={authPage} />
+      <Route path="/" element={token && account ? <Navigate to={profileDestination} replace /> : <Navigate to="/signup" replace />} />
+      <Route path="/signup" element={publicAuthPage} />
+      <Route path="/login" element={publicAuthPage} />
       <Route path="/onboarding/:accountType" element={protectedAuthPage} />
       <Route path="/welcome" element={protectedAuthPage} />
       {personas.map((persona) => {
         const firstTab = persona.tabs[0].slug
         return (
-          <Route key={persona.id} path={persona.id} element={<PersonaLayout persona={persona} />}>
+          <Route key={persona.id} path={persona.id} element={
+            restoring
+              ? <main className="auth-loading" aria-live="polite">Checking your session…</main>
+              : !token || !account
+                ? <Navigate to="/login" replace />
+                : account.accountType !== persona.id
+                  ? <Navigate to={workspacePath(account)} replace />
+                  : profile?.onboardingCompleted
+                    ? <PersonaLayout persona={persona} account={account} profile={profile} onSignOut={signOut} />
+                    : <Navigate to={`/onboarding/${account.accountType}`} replace />
+          }>
             <Route index element={<Navigate to={firstTab} replace />} />
             {persona.tabs.map((tab) => (
               <Route key={tab.slug} path={tab.slug} element={<tab.page />} />

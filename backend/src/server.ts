@@ -4,6 +4,7 @@ import path from "node:path";
 import { readFile } from "node:fs/promises";
 import dotenv from "dotenv";
 import { createAuthRouter } from "./auth";
+import { createWorkspaceRouter } from "./workspace";
 
 dotenv.config();
 
@@ -32,7 +33,12 @@ app.get("/api/health", async (_request, response) => {
   }
 });
 
+app.get("/api/catalog/interests", (_request, response) => {
+  response.json({ items: [] as string[] });
+});
+
 app.use("/api/auth", createAuthRouter(pool));
+app.use("/api/workspace", createWorkspaceRouter(pool));
 
 app.use("/api", (_request, response) => {
   response.status(404).json({ error: "api route not found" });

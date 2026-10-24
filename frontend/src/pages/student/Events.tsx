@@ -1,3 +1,5 @@
+import WorkspaceDataPage from '../../components/WorkspaceDataPage'
+
 export default function Events() {
-  return <p className="text-gray-500">Student · Events: not built yet.</p>
+  return <WorkspaceDataPage persona="student" resource="events" title="Events" emptyMessage="No events yet." />
 }

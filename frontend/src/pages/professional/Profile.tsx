@@ -1,3 +1,5 @@
+import WorkspaceDataPage from '../../components/WorkspaceDataPage'
+
 export default function Profile() {
-  return <p className="text-gray-500">Professional · My profile: not built yet.</p>
+  return <WorkspaceDataPage persona="professional" resource="profile" title="My profile" emptyMessage="No profile details yet." />
 }

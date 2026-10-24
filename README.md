@@ -1,6 +1,6 @@
 # Talshift
 
-Talshift is a blank React single-page app served by an Express HTTP server. The backend exposes the API and connects to PostgreSQL through `pg`.
+Talshift is a React single-page app served by an Express HTTP server. The backend exposes authentication, profile, and workspace APIs and connects to PostgreSQL through `pg`.
 
 ## Requirements
 
@@ -70,4 +70,4 @@ npm run typecheck
 npm run build
 ```
 
-`GET /api/health` runs `SELECT 1` and returns `{"status":"ok"}` when the database is available, or HTTP 503 when it is not. Unknown API routes return a JSON 404. No database schema or migrations are required for this starter.
+`GET /api/health` runs `SELECT 1` and returns `{"status":"ok"}` when the database is available, or HTTP 503 when it is not. Authentication and profile data are stored in PostgreSQL. Workspace collection endpoints currently return empty collections until those features are implemented. Unknown API routes return a JSON 404.

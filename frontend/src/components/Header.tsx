@@ -1,7 +1,24 @@
-import { Link, NavLink } from 'react-router-dom'
-import { personas, type Persona } from '../personas.tsx'
+import { NavLink } from 'react-router-dom'
+import type { Account, Profile } from '../api/auth'
+import type { Persona } from '../personas.tsx'
 
-export default function Header({ persona }: { persona: Persona }) {
+interface HeaderProps {
+  persona: Persona
+  account: Account
+  profile: Profile | null
+  onSignOut: () => void | Promise<void>
+}
+
+export default function Header({ persona, account, profile, onSignOut }: HeaderProps) {
+  const displayName = profile?.fullName || account.email
+  const initials = displayName
+    .trim()
+    .split(/[\s@._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('')
+
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex min-h-[72px] max-w-[832px] flex-wrap items-center justify-between gap-3 px-6">
@@ -14,35 +31,16 @@ export default function Header({ persona }: { persona: Persona }) {
           <span className="text-[17px] font-semibold">Talshift</span>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <nav aria-label="Switch view" className="flex gap-0.5 rounded-full bg-gray-100 p-1">
-            {personas.map((p) =>
-              p.id === persona.id ? (
-                <span
-                  key={p.id}
-                  aria-current="page"
-                  className="flex min-h-9 items-center rounded-full bg-white px-4 text-sm font-semibold text-gray-900 shadow-[0_1px_2px_rgba(17,24,39,.08)]"
-                >
-                  {p.label}
-                </span>
-              ) : (
-                <Link
-                  key={p.id}
-                  to={`/${p.id}/${p.tabs[0].slug}`}
-                  className="flex min-h-9 items-center rounded-full px-4 text-sm font-medium text-gray-600 no-underline hover:text-gray-900"
-                >
-                  {p.label}
-                </Link>
-              ),
-            )}
-          </nav>
+        <div className="flex items-center gap-3">
           <div
             role="img"
-            aria-label={persona.avatar.name}
-            className={`flex size-9 items-center justify-center rounded-full text-[13px] font-semibold ${persona.avatar.className}`}
+            aria-label={displayName}
+            title={displayName}
+            className="flex size-9 items-center justify-center rounded-full bg-blue-600 text-[13px] font-semibold text-white"
           >
-            {persona.avatar.initials}
+            {initials}
           </div>
+          <button type="button" onClick={onSignOut} className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign out</button>
         </div>
       </div>
 
@@ -59,16 +57,7 @@ export default function Header({ persona }: { persona: Persona }) {
               }`
             }
           >
-            {({ isActive }) => (
-              <>
-                {tab.label}
-                {tab.badge && !isActive && (
-                  <span className="ml-1.5 rounded-full bg-blue-600 px-1.5 py-px text-[11px] font-bold text-white">
-                    {tab.badge}
-                  </span>
-                )}
-              </>
-            )}
+            {tab.label}
           </NavLink>
         ))}
       </nav>

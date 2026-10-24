@@ -63,6 +63,17 @@ export async function getCurrentAccount(token: string) {
   return request<{ account: Account }>('/me', {}, token)
 }
 
+export function getProfile(token: string) {
+  return request<{ profile: Profile | null }>("/profile", {}, token)
+}
+
+export function saveProfile(token: string, profile: Profile) {
+  return request<{ profile: Profile }>("/profile", {
+    method: "PUT",
+    body: JSON.stringify(profile),
+  }, token)
+}
+
 export function logout(token: string) {
   return request<void>('/logout', { method: 'POST' }, token)
 }

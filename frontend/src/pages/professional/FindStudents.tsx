@@ -1,3 +1,5 @@
+import WorkspaceDataPage from '../../components/WorkspaceDataPage'
+
 export default function FindStudents() {
-  return <p className="text-gray-500">Professional · Find students: not built yet.</p>
+  return <WorkspaceDataPage persona="professional" resource="search" title="Find students" emptyMessage="No students to show yet." />
 }

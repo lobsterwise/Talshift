@@ -1,3 +1,5 @@
+import WorkspaceDataPage from '../../components/WorkspaceDataPage'
+
 export default function Network() {
-  return <p className="text-gray-500">Student · Network: not built yet.</p>
+  return <WorkspaceDataPage persona="student" resource="network" title="Network" emptyMessage="Your network is empty." />
 }

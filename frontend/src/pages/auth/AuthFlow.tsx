@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import './AuthFlow.css'
+import { getInterestOptions } from '../../api/catalog'
 import {
   login,
   register,
@@ -17,11 +18,9 @@ interface AuthFlowProps {
   profile?: Profile | null
   onNavigate: (path: string) => void
   onAuthenticated: (session: AuthSession) => Promise<void>
-  onProfileSaved: (profile: Profile) => void
+  onProfileSaved: (profile: Profile) => Promise<void>
   onLogout: () => void
 }
-
-const interestOptions = ['Product design', 'Hardware', 'Robotics', 'Research', 'Software', 'Entrepreneurship']
 
 export default function AuthFlow({
   screen,
@@ -38,8 +37,21 @@ export default function AuthFlow({
   const [confirmPassword, setConfirmPassword] = useState('')
   const [values, setValues] = useState<Record<string, string>>({})
   const [interests, setInterests] = useState<string[]>([])
+  const [interestOptions, setInterestOptions] = useState<string[]>([])
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    getInterestOptions()
+      .then((options) => {
+        if (!cancelled) setInterestOptions(options)
+      })
+      .catch((caught: unknown) => {
+        if (!cancelled) setError(caught instanceof Error ? caught.message : 'Unable to load interest options.')
+      })
+    return () => { cancelled = true }
+  }, [])
 
   const isStudent = account?.accountType === 'student'
   const accountLabel = account?.accountType === 'student' ? 'Student' : 'Professional'
@@ -91,7 +103,7 @@ export default function AuthFlow({
               yearsExperience: Number(values.yearsExperience),
             }),
       }
-      onProfileSaved(onboarding)
+      await onProfileSaved(onboarding)
       onNavigate('/welcome')
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Unable to save your profile.')
@@ -158,11 +170,11 @@ export default function AuthFlow({
               </div>
               <form className="auth-form" onSubmit={submitCredentials}>
                 <label className="field-label" htmlFor="signup-email">Email address</label>
-                <input id="signup-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" required />
+                <input id="signup-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
                 <label className="field-label" htmlFor="signup-password">Password</label>
-                <input id="signup-password" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={8} maxLength={128} placeholder="At least 8 characters" required />
+                <input id="signup-password" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={8} maxLength={128} required />
                 <label className="field-label" htmlFor="confirm-password">Confirm password</label>
-                <input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={8} maxLength={128} placeholder="Enter it again" required />
+                <input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={8} maxLength={128} required />
                 {error && <p className="form-error" role="alert">{error}</p>}
                 <button className="primary-button" type="submit" disabled={busy}>{busy ? 'Creating account…' : 'Create account'}<span aria-hidden="true">→</span></button>
                 <p className="form-footnote">By continuing, you agree to use Talshift to represent your experience honestly.</p>
@@ -177,7 +189,7 @@ export default function AuthFlow({
               <p className="panel-intro">Sign in to continue to your Talshift profile.</p>
               <form className="auth-form login-form" onSubmit={submitCredentials}>
                 <label className="field-label" htmlFor="login-email">Email address</label>
-                <input id="login-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" required />
+                <input id="login-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
                 <label className="field-label" htmlFor="login-password">Password</label>
                 <input id="login-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
                 {error && <p className="form-error" role="alert">{error}</p>}
@@ -198,29 +210,31 @@ export default function AuthFlow({
                 {isStudent ? (
                   <>
                     <label className="field-label" htmlFor="institution">School or institution</label>
-                    <input id="institution" autoComplete="organization" value={values.institution ?? initialValues('institution')} onChange={(event) => updateValue('institution', event.target.value)} maxLength={120} placeholder="e.g. The Ohio State University" required />
+                    <input id="institution" autoComplete="organization" value={values.institution ?? initialValues('institution')} onChange={(event) => updateValue('institution', event.target.value)} maxLength={120} required />
                     <div className="field-row">
-                      <div><label className="field-label" htmlFor="field-of-study">Field of study</label><input id="field-of-study" value={values.fieldOfStudy ?? initialValues('fieldOfStudy')} onChange={(event) => updateValue('fieldOfStudy', event.target.value)} maxLength={120} placeholder="e.g. Industrial design" required /></div>
+                      <div><label className="field-label" htmlFor="field-of-study">Field of study</label><input id="field-of-study" value={values.fieldOfStudy ?? initialValues('fieldOfStudy')} onChange={(event) => updateValue('fieldOfStudy', event.target.value)} maxLength={120} required /></div>
                       <div><label className="field-label" htmlFor="graduation-year">Grad year</label><input id="graduation-year" type="number" min="2020" max="2040" value={values.graduationYear ?? initialValues('graduationYear')} onChange={(event) => updateValue('graduationYear', event.target.value)} required /></div>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="field-row">
-                      <div><label className="field-label" htmlFor="job-title">Job title</label><input id="job-title" autoComplete="organization-title" value={values.jobTitle ?? initialValues('jobTitle')} onChange={(event) => updateValue('jobTitle', event.target.value)} maxLength={120} placeholder="e.g. Design engineer" required /></div>
+                      <div><label className="field-label" htmlFor="job-title">Job title</label><input id="job-title" autoComplete="organization-title" value={values.jobTitle ?? initialValues('jobTitle')} onChange={(event) => updateValue('jobTitle', event.target.value)} maxLength={120} required /></div>
                       <div><label className="field-label" htmlFor="organization">Organization</label><input id="organization" autoComplete="organization" value={values.organization ?? initialValues('organization')} onChange={(event) => updateValue('organization', event.target.value)} maxLength={120} required /></div>
                     </div>
                     <label className="field-label" htmlFor="professional-focus">Professional focus</label>
-                    <input id="professional-focus" value={values.professionalFocus ?? initialValues('professionalFocus')} onChange={(event) => updateValue('professionalFocus', event.target.value)} maxLength={120} placeholder="What kind of work do you do?" required />
+                    <input id="professional-focus" value={values.professionalFocus ?? initialValues('professionalFocus')} onChange={(event) => updateValue('professionalFocus', event.target.value)} maxLength={120} required />
                     <label className="field-label" htmlFor="years-experience">Years of experience</label>
                     <input id="years-experience" type="number" min="0" max="60" value={values.yearsExperience ?? initialValues('yearsExperience')} onChange={(event) => updateValue('yearsExperience', event.target.value)} required />
                   </>
                 )}
                 <fieldset className="interest-fieldset">
                   <legend>What are you interested in?</legend>
-                  <div className="interest-options">{interestOptions.map((interest) => (
+                  {interestOptions.length === 0
+                    ? <p className="panel-intro">No interest options are available yet.</p>
+                    : <div className="interest-options">{interestOptions.map((interest) => (
                     <button type="button" key={interest} className={interests.includes(interest) ? 'interest-chip active' : 'interest-chip'} onClick={() => toggleInterest(interest)} aria-pressed={interests.includes(interest)}>{interest}</button>
-                  ))}</div>
+                    ))}</div>}
                 </fieldset>
                 {error && <p className="form-error" role="alert">{error}</p>}
                 <button className="primary-button" type="submit" disabled={busy}>{busy ? 'Saving your profile…' : 'Finish profile'}<span aria-hidden="true">→</span></button>

@@ -25,6 +25,19 @@ interface AccountRow {
   password_salt?: string;
 }
 
+interface Profile {
+  fullName: string;
+  interests: string[];
+  onboardingCompleted: boolean;
+  institution?: string;
+  fieldOfStudy?: string;
+  graduationYear?: number;
+  jobTitle?: string;
+  organization?: string;
+  professionalFocus?: string;
+  yearsExperience?: number;
+}
+
 function toAccount(row: AccountRow): Account {
   return {
     id: row.id,
@@ -98,6 +111,57 @@ async function createSession(
 function bearerToken(header: string | undefined): string | null {
   const match = header?.match(/^Bearer ([A-Za-z0-9_-]+)$/);
   return match?.[1] ?? null;
+}
+
+function readProfile(body: unknown, accountType: AccountType): Profile | null {
+  if (typeof body !== "object" || body === null) return null;
+
+  const input = body as Record<string, unknown>;
+  if (
+    typeof input.fullName !== "string" ||
+    input.fullName.trim().length === 0 ||
+    input.fullName.length > 120 ||
+    !Array.isArray(input.interests) ||
+    input.interests.length > 20 ||
+    !input.interests.every((interest) => typeof interest === "string" && interest.length <= 80)
+  ) {
+    return null;
+  }
+
+  if (accountType === "student") {
+    if (
+      typeof input.institution !== "string" || input.institution.length > 120 ||
+      typeof input.fieldOfStudy !== "string" || input.fieldOfStudy.length > 120 ||
+      !Number.isInteger(input.graduationYear)
+    ) return null;
+
+    return {
+      fullName: input.fullName.trim(),
+      interests: input.interests,
+      onboardingCompleted: true,
+      institution: input.institution,
+      fieldOfStudy: input.fieldOfStudy,
+      graduationYear: input.graduationYear as number,
+    };
+  }
+
+  if (
+    typeof input.jobTitle !== "string" || input.jobTitle.length > 120 ||
+    typeof input.organization !== "string" || input.organization.length > 120 ||
+    typeof input.professionalFocus !== "string" || input.professionalFocus.length > 120 ||
+    !Number.isInteger(input.yearsExperience) ||
+    (input.yearsExperience as number) < 0
+  ) return null;
+
+  return {
+    fullName: input.fullName.trim(),
+    interests: input.interests,
+    onboardingCompleted: true,
+    jobTitle: input.jobTitle,
+    organization: input.organization,
+    professionalFocus: input.professionalFocus,
+    yearsExperience: input.yearsExperience as number,
+  };
 }
 
 export function createAuthRouter(pool: Pool): Router {
@@ -206,6 +270,65 @@ export function createAuthRouter(pool: Pool): Router {
 
     await pool.query("DELETE FROM sessions WHERE token_hash = $1", [hashSessionToken(token)]);
     response.status(204).end();
+  });
+
+  router.get("/profile", async (request, response) => {
+    const token = bearerToken(request.header("authorization"));
+    if (!token) {
+      response.status(401).json({ error: "authentication required" });
+      return;
+    }
+
+    const result = await pool.query<{ profile: Profile | null }>(
+      `SELECT user_profiles.profile
+       FROM sessions
+       JOIN users ON users.id = sessions.user_id
+       LEFT JOIN user_profiles ON user_profiles.user_id = users.id
+       WHERE sessions.token_hash = $1 AND sessions.expires_at > now()`,
+      [hashSessionToken(token)],
+    );
+    if (!result.rows[0]) {
+      response.status(401).json({ error: "invalid or expired session" });
+      return;
+    }
+    response.json({ profile: result.rows[0].profile });
+  });
+
+  router.put("/profile", async (request, response) => {
+    const token = bearerToken(request.header("authorization"));
+    if (!token) {
+      response.status(401).json({ error: "authentication required" });
+      return;
+    }
+
+    const session = await pool.query<{ id: string; account_type: AccountType }>(
+      `SELECT users.id, users.account_type
+       FROM sessions
+       JOIN users ON users.id = sessions.user_id
+       WHERE sessions.token_hash = $1 AND sessions.expires_at > now()`,
+      [hashSessionToken(token)],
+    );
+    const account = session.rows[0];
+    if (!account) {
+      response.status(401).json({ error: "invalid or expired session" });
+      return;
+    }
+
+    const profile = readProfile(request.body, account.account_type);
+    if (!profile) {
+      response.status(400).json({ error: "valid profile details are required" });
+      return;
+    }
+
+    const result = await pool.query<{ profile: Profile }>(
+      `INSERT INTO user_profiles (user_id, profile)
+       VALUES ($1, $2::jsonb)
+       ON CONFLICT (user_id) DO UPDATE
+       SET profile = EXCLUDED.profile, updated_at = now()
+       RETURNING profile`,
+      [account.id, JSON.stringify(profile)],
+    );
+    response.json({ profile: result.rows[0].profile });
   });
 
   return router;

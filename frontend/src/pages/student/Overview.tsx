@@ -1,3 +1,5 @@
+import WorkspaceDataPage from '../../components/WorkspaceDataPage'
+
 export default function Overview() {
-  return <p className="text-gray-500">Student · Overview: not built yet.</p>
+  return <WorkspaceDataPage persona="student" resource="overview" title="Overview" emptyMessage="Nothing to show yet." />
 }

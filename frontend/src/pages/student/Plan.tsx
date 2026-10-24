@@ -1,3 +1,5 @@
+import WorkspaceDataPage from '../../components/WorkspaceDataPage'
+
 export default function Plan() {
-  return <p className="text-gray-500">Student · Plan: not built yet.</p>
+  return <WorkspaceDataPage persona="student" resource="plan" title="Plan" emptyMessage="Your plan is empty." />
 }

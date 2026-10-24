@@ -1,0 +1,8 @@
+{
+	"chat.tools.terminal.autoApprove": {
+		"Push-Location": true,
+		"npm run typecheck": true,
+		"Pop-Location": true,
+		"npm.cmd": true
+	}
+}
