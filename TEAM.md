@@ -21,7 +21,7 @@ You don't need PostgreSQL or the backend for any of this. The frontend uses mock
 
 | Files | Owner |
 |---|---|
-| `package.json`, `package-lock.json`, `vite.config.ts`, `App.tsx`, `main.tsx`, `index.css`, `components/Header.tsx` | A |
+| `package.json`, `package-lock.json`, `vite.config.ts`, `App.tsx`, `main.tsx`, `index.css`, `personas.tsx` (tabs and routes), `components/Header.tsx` | A |
 | `api/` (`types.ts`, `mockData.ts`, `client.ts`, `scoring.ts`), `store/AppStore.tsx` | A |
 | `components/ui/` | B |
 | `pages/mentor/`, `pages/recruiter/` | A |

@@ -1,17 +1,42 @@
-:root {
-  font-family: system-ui, sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@import "tailwindcss";
 
-* {
-  box-sizing: border-box;
-}
+/* Base text from the design files: Inter 15px, gray-900 on white, tabular numbers. */
+@layer base {
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: var(--color-white);
+    color: var(--color-gray-900);
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+  a {
+    color: var(--color-blue-600);
+  }
+
+  a:hover {
+    color: var(--color-blue-700);
+  }
+
+  button,
+  a {
+    font-family: inherit;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
 }
