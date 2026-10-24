@@ -4,6 +4,7 @@ import path from "node:path";
 import { readFile } from "node:fs/promises";
 import dotenv from "dotenv";
 import { createAuthRouter } from "./auth";
+import { createStudentRouter } from "./student";
 import { createWorkspaceRouter } from "./workspace";
 
 dotenv.config();
@@ -38,6 +39,7 @@ app.get("/api/catalog/interests", (_request, response) => {
 });
 
 app.use("/api/auth", createAuthRouter(pool));
+app.use("/api/student", createStudentRouter(pool));
 app.use("/api/workspace", createWorkspaceRouter(pool));
 
 app.use("/api", (_request, response) => {

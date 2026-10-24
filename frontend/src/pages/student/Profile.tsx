@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { cloneElement, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { getProfile } from '../../api/auth'
-import { getStudentProfile, saveStudentProfile, type SkillLevel, type StudentProfile } from '../../api/studentProfile'
+import { generateStudentTalent, getStudentProfile, saveStudentProfile, StudentProfileRequestError, type SkillLevel, type StudentProfile, type StudentTalent } from '../../api/studentProfile'
 
 const levels: SkillLevel[] = ['beginner', 'intermediate', 'advanced']
 
@@ -8,10 +8,10 @@ const inputClass = 'w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm
 const buttonClass = 'rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50'
 const primaryClass = 'rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
 
-function formatMonth(value: string | null) {
-  if (!value) return 'Present'
-  const [year, month] = value.split('-').map(Number)
-  return new Date(year, month - 1).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+function formatDate(value: string | null, emptyLabel = 'Present') {
+  if (!value) return emptyLabel
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function formatYears(start: number | null, end: number | null) {
@@ -46,7 +46,37 @@ function Description({ text }: { text: string }) {
   return text ? <p className="mt-1 text-sm whitespace-pre-line text-gray-700">{text}</p> : null
 }
 
-function ProfileView({ profile, fullName }: { profile: StudentProfile; fullName: string }) {
+function TalentSkeleton() {
+  return (
+    <div role="status" aria-label="Generating student talent" aria-busy="true" className="grid gap-5 sm:grid-cols-2">
+      <span className="sr-only">Generating skill rankings…</span>
+      {['Hard skills', 'Soft skills'].map((title) => (
+        <div key={title} className="flex flex-col gap-4">
+          <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+          {[0, 1, 2].map((row) => (
+            <div key={row} className="animate-pulse" aria-hidden="true">
+              <div className="flex justify-between gap-4">
+                <span className="h-4 w-2/5 rounded bg-gray-200" />
+                <span className="h-4 w-10 rounded bg-gray-200" />
+              </div>
+              <div className="mt-2 h-1.5 rounded-full bg-gray-200" />
+              <div className="mt-2 h-3 w-4/5 rounded bg-gray-100" />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ProfileView({ profile, fullName, studentTalent, talentGenerating, talentError, onRetryTalent }: {
+  profile: StudentProfile
+  fullName: string
+  studentTalent: StudentTalent | null
+  talentGenerating: boolean
+  talentError: string
+  onRetryTalent: () => void
+}) {
   const empty = !profile.headline && !profile.summary && !profile.education.length && !profile.jobs.length
     && !profile.projects.length && !profile.skills.length && !profile.links.length
 
@@ -73,7 +103,7 @@ function ProfileView({ profile, fullName }: { profile: StudentProfile; fullName:
         <Section title="Experience">
           {profile.jobs.map((job, index) => (
             <Entry key={index} title={`${job.title} · ${job.company}`}
-              meta={`${formatMonth(job.startDate)} – ${formatMonth(job.endDate)}`}>
+              meta={`${formatDate(job.startDate, 'Date not set')} – ${formatDate(job.endDate)}`}>
               {job.location && <p className="text-sm text-gray-500">{job.location}</p>}
               <Description text={job.description} />
             </Entry>
@@ -121,17 +151,91 @@ function ProfileView({ profile, fullName }: { profile: StudentProfile; fullName:
           </p>
         </Section>
       )}
+
+      <Section title="Student talent">
+        {talentGenerating ? (
+          <TalentSkeleton />
+        ) : talentError ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <p role="alert" className="text-sm text-red-700">{talentError}</p>
+            <button type="button" className={buttonClass} onClick={onRetryTalent}>Retry talent generation</button>
+          </div>
+        ) : studentTalent ? (
+          <>
+            <div className="grid gap-5 sm:grid-cols-2">
+              {([
+                ['Hard skills', studentTalent.hardSkills],
+                ['Soft skills', studentTalent.softSkills],
+              ] as const).map(([title, skills]) => (
+                <div key={title} className="flex flex-col gap-3">
+                  <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+                  {skills.length === 0 && <p className="text-sm text-gray-500">No profile evidence yet.</p>}
+                  {skills.map((skill) => (
+                    <div key={skill.name}>
+                      <div className="flex justify-between gap-3 text-sm">
+                        <span className="font-medium text-gray-800">{skill.name}</span>
+                        <span className="shrink-0 tabular-nums text-gray-600">{skill.score}/100</span>
+                      </div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-200">
+                        <div className="h-full rounded-full bg-blue-600" style={{ width: `${skill.score}%` }} />
+                      </div>
+                      <p className="mt-1 text-xs text-gray-600">{skill.evidence}</p>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500">Ranked by evidence strength · Updated {new Date(studentTalent.generatedAt).toLocaleDateString()}</p>
+          </>
+        ) : (
+          <p className="text-sm text-gray-500">Save your profile to generate your skill rankings.</p>
+        )}
+      </Section>
     </div>
   )
 }
 
 // ───────────── Edit ─────────────
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+interface FieldControlProps {
+  className?: string
+  id?: string
+  'aria-invalid'?: boolean
+  'aria-describedby'?: string
+}
+
+interface FormValidationError {
+  field: string | null
+  message: string
+}
+
+function fieldInputId(field: string) {
+  return `student-profile-${field.replace(/[^a-zA-Z0-9-]/g, '-')}`
+}
+
+function Field({ label, children, fieldPath, validationError }: {
+  label: string
+  children: ReactNode
+  fieldPath?: string
+  validationError?: FormValidationError | null
+}) {
+  const hasError = Boolean(fieldPath && validationError?.field === fieldPath)
+  const controlId = fieldPath ? fieldInputId(fieldPath) : undefined
+  const child = isValidElement<FieldControlProps>(children) ? children as ReactElement<FieldControlProps> : null
+  const control = child && controlId
+    ? cloneElement(child, {
+        id: controlId,
+        className: `${child.props.className ?? ''}${hasError ? ' border-red-600 focus:border-red-600 focus:ring-1 focus:ring-red-600' : ''}`,
+        'aria-invalid': hasError || undefined,
+        'aria-describedby': hasError ? `${controlId}-error` : undefined,
+      })
+    : children
+
   return (
     <label className="flex flex-col gap-1 text-sm">
       <span className="font-medium text-gray-700">{label}</span>
-      {children}
+      {control}
+      {hasError && <span id={`${controlId}-error`} role="alert" className="text-xs text-red-700">{validationError?.message}</span>}
     </label>
   )
 }
@@ -142,13 +246,13 @@ function ListEditor<T>({ title, items, blank, onChange, render }: {
   items: T[]
   blank: T
   onChange: (items: T[]) => void
-  render: (item: T, update: (patch: Partial<T>) => void) => ReactNode
+  render: (item: T, update: (patch: Partial<T>) => void, index: number) => ReactNode
 }) {
   return (
     <Section title={title}>
       {items.map((item, index) => (
         <div key={index} className="flex flex-col gap-3 rounded-md border border-gray-200 p-3">
-          {render(item, (patch) => onChange(items.map((existing, i) => (i === index ? { ...existing, ...patch } : existing))))}
+          {render(item, (patch) => onChange(items.map((existing, i) => (i === index ? { ...existing, ...patch } : existing))), index)}
           <button type="button" className={`${buttonClass} self-start`}
             onClick={() => onChange(items.filter((_, i) => i !== index))}>
             Remove
@@ -164,28 +268,38 @@ function ListEditor<T>({ title, items, blank, onChange, render }: {
 
 const numberOrNull = (value: string) => (value === '' ? null : Number(value))
 
-function ProfileForm({ initial, saving, error, onSave, onCancel }: {
+function ProfileForm({ initial, saving, error, validationError, onSave, onCancel, onClearValidation }: {
   initial: StudentProfile
   saving: boolean
   error: string
+  validationError: FormValidationError | null
   onSave: (profile: StudentProfile) => void
   onCancel: () => void
+  onClearValidation: () => void
 }) {
   const [draft, setDraft] = useState(initial)
   const set = (patch: Partial<StudentProfile>) => setDraft((current) => ({ ...current, ...patch }))
 
+  useEffect(() => {
+    if (!validationError?.field) return
+    const invalidControl = document.getElementById(fieldInputId(validationError.field))
+    invalidControl?.focus()
+    invalidControl?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [validationError])
+
   return (
-    <form className="flex flex-col gap-6" onSubmit={(event) => { event.preventDefault(); onSave(draft) }}>
+    <form className="flex flex-col gap-6" onSubmit={(event) => { event.preventDefault(); onSave(draft) }}
+      onChange={() => { if (validationError) onClearValidation() }}>
       <Section title="About">
-        <Field label="Headline">
+        <Field label="Headline" fieldPath="headline" validationError={validationError}>
           <input className={inputClass} maxLength={160} value={draft.headline}
             onChange={(e) => set({ headline: e.target.value })} placeholder="Mechanical engineering student" />
         </Field>
-        <Field label="Location">
+        <Field label="Location" fieldPath="location" validationError={validationError}>
           <input className={inputClass} maxLength={120} value={draft.location}
             onChange={(e) => set({ location: e.target.value })} />
         </Field>
-        <Field label="Summary">
+        <Field label="Summary" fieldPath="summary" validationError={validationError}>
           <textarea className={inputClass} rows={4} maxLength={2000} value={draft.summary}
             onChange={(e) => set({ summary: e.target.value })} />
         </Field>
@@ -193,62 +307,65 @@ function ProfileForm({ initial, saving, error, onSave, onCancel }: {
 
       <ListEditor title="Experience" items={draft.jobs} onChange={(jobs) => set({ jobs })}
         blank={{ title: '', company: '', location: '', startDate: '', endDate: null, description: '' }}
-        render={(job, update) => (
+        render={(job, update, index) => (
           <>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Title"><input required className={inputClass} maxLength={120} value={job.title} onChange={(e) => update({ title: e.target.value })} /></Field>
-              <Field label="Company"><input required className={inputClass} maxLength={120} value={job.company} onChange={(e) => update({ company: e.target.value })} /></Field>
-              <Field label="Location"><input className={inputClass} maxLength={120} value={job.location} onChange={(e) => update({ location: e.target.value })} /></Field>
+              <Field label="Title" fieldPath={`jobs.${index}.title`} validationError={validationError}><input required className={inputClass} maxLength={120} value={job.title} onChange={(e) => update({ title: e.target.value })} /></Field>
+              <Field label="Company" fieldPath={`jobs.${index}.company`} validationError={validationError}><input required className={inputClass} maxLength={120} value={job.company} onChange={(e) => update({ company: e.target.value })} /></Field>
+              <Field label="Location" fieldPath={`jobs.${index}.location`} validationError={validationError}><input className={inputClass} maxLength={120} value={job.location} onChange={(e) => update({ location: e.target.value })} /></Field>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Start"><input required type="month" className={inputClass} value={job.startDate} onChange={(e) => update({ startDate: e.target.value })} /></Field>
-                <Field label="End"><input type="month" className={inputClass} value={job.endDate ?? ''} min={job.startDate}
+                <Field label="Start date" fieldPath={`jobs.${index}.startDate`} validationError={validationError}>
+                  <input required type="date" className={inputClass} value={job.startDate} onChange={(e) => update({ startDate: e.target.value })} />
+                </Field>
+                <Field label="End date" fieldPath={`jobs.${index}.endDate`} validationError={validationError}>
+                  <input type="date" className={inputClass} value={job.endDate ?? ''} min={job.startDate || undefined}
                   onChange={(e) => update({ endDate: e.target.value || null })} /></Field>
               </div>
             </div>
             <p className="-mt-1 text-xs text-gray-500">Leave End empty for a current job.</p>
-            <Field label="Description"><textarea className={inputClass} rows={3} maxLength={2000} value={job.description} onChange={(e) => update({ description: e.target.value })} /></Field>
+            <Field label="Description" fieldPath={`jobs.${index}.description`} validationError={validationError}><textarea className={inputClass} rows={3} maxLength={2000} value={job.description} onChange={(e) => update({ description: e.target.value })} /></Field>
           </>
         )} />
 
       <ListEditor title="Projects" items={draft.projects} onChange={(projects) => set({ projects })}
         blank={{ name: '', description: '', url: '', skills: [] }}
-        render={(project, update) => (
+        render={(project, update, index) => (
           <>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Name"><input required className={inputClass} maxLength={120} value={project.name} onChange={(e) => update({ name: e.target.value })} /></Field>
-              <Field label="URL"><input type="url" className={inputClass} maxLength={500} value={project.url} onChange={(e) => update({ url: e.target.value })} placeholder="https://" /></Field>
+              <Field label="Name" fieldPath={`projects.${index}.name`} validationError={validationError}><input required className={inputClass} maxLength={120} value={project.name} onChange={(e) => update({ name: e.target.value })} /></Field>
+              <Field label="URL" fieldPath={`projects.${index}.url`} validationError={validationError}><input type="url" className={inputClass} maxLength={500} value={project.url} onChange={(e) => update({ url: e.target.value })} placeholder="https://" /></Field>
             </div>
-            <Field label="Skills used (comma separated)">
+            <Field label="Skills used (comma separated)" fieldPath={`projects.${index}.skills`} validationError={validationError}>
               <input className={inputClass} defaultValue={project.skills.join(', ')}
                 onBlur={(e) => update({ skills: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} />
             </Field>
-            <Field label="Description"><textarea className={inputClass} rows={3} maxLength={2000} value={project.description} onChange={(e) => update({ description: e.target.value })} /></Field>
+            <Field label="Description" fieldPath={`projects.${index}.description`} validationError={validationError}><textarea className={inputClass} rows={3} maxLength={2000} value={project.description} onChange={(e) => update({ description: e.target.value })} /></Field>
           </>
         )} />
 
       <ListEditor title="Education" items={draft.education} onChange={(education) => set({ education })}
         blank={{ institution: '', degree: '', field: '', startYear: null, endYear: null, description: '' }}
-        render={(item, update) => (
+        render={(item, update, index) => (
           <>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Institution"><input required className={inputClass} maxLength={120} value={item.institution} onChange={(e) => update({ institution: e.target.value })} /></Field>
-              <Field label="Degree"><input className={inputClass} maxLength={120} value={item.degree} onChange={(e) => update({ degree: e.target.value })} placeholder="BSc" /></Field>
-              <Field label="Field of study"><input className={inputClass} maxLength={120} value={item.field} onChange={(e) => update({ field: e.target.value })} /></Field>
+              <Field label="Institution" fieldPath={`education.${index}.institution`} validationError={validationError}><input required className={inputClass} maxLength={120} value={item.institution} onChange={(e) => update({ institution: e.target.value })} /></Field>
+              <Field label="Degree" fieldPath={`education.${index}.degree`} validationError={validationError}><input className={inputClass} maxLength={120} value={item.degree} onChange={(e) => update({ degree: e.target.value })} placeholder="BSc" /></Field>
+              <Field label="Field of study" fieldPath={`education.${index}.field`} validationError={validationError}><input className={inputClass} maxLength={120} value={item.field} onChange={(e) => update({ field: e.target.value })} /></Field>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Start year"><input type="number" min={1950} max={2100} className={inputClass} value={item.startYear ?? ''} onChange={(e) => update({ startYear: numberOrNull(e.target.value) })} /></Field>
-                <Field label="End year"><input type="number" min={1950} max={2100} className={inputClass} value={item.endYear ?? ''} onChange={(e) => update({ endYear: numberOrNull(e.target.value) })} /></Field>
+                <Field label="Start year" fieldPath={`education.${index}.startYear`} validationError={validationError}><input type="number" min={1950} max={2100} className={inputClass} value={item.startYear ?? ''} onChange={(e) => update({ startYear: numberOrNull(e.target.value) })} /></Field>
+                <Field label="End year" fieldPath={`education.${index}.endYear`} validationError={validationError}><input type="number" min={1950} max={2100} className={inputClass} value={item.endYear ?? ''} onChange={(e) => update({ endYear: numberOrNull(e.target.value) })} /></Field>
               </div>
             </div>
-            <Field label="Description"><textarea className={inputClass} rows={2} maxLength={1000} value={item.description} onChange={(e) => update({ description: e.target.value })} /></Field>
+            <Field label="Description" fieldPath={`education.${index}.description`} validationError={validationError}><textarea className={inputClass} rows={2} maxLength={1000} value={item.description} onChange={(e) => update({ description: e.target.value })} /></Field>
           </>
         )} />
 
       <ListEditor title="Skills" items={draft.skills} onChange={(skills) => set({ skills })}
         blank={{ name: '', level: 'beginner' as SkillLevel }}
-        render={(skill, update) => (
+        render={(skill, update, index) => (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Skill"><input required className={inputClass} maxLength={60} value={skill.name} onChange={(e) => update({ name: e.target.value })} /></Field>
-            <Field label="Level">
+            <Field label="Skill" fieldPath={`skills.${index}.name`} validationError={validationError}><input required className={inputClass} maxLength={60} value={skill.name} onChange={(e) => update({ name: e.target.value })} /></Field>
+            <Field label="Level" fieldPath={`skills.${index}.level`} validationError={validationError}>
               <select className={inputClass} value={skill.level} onChange={(e) => update({ level: e.target.value as SkillLevel })}>
                 {levels.map((level) => <option key={level} value={level}>{level}</option>)}
               </select>
@@ -258,14 +375,17 @@ function ProfileForm({ initial, saving, error, onSave, onCancel }: {
 
       <ListEditor title="Links" items={draft.links} onChange={(links) => set({ links })}
         blank={{ label: '', url: '' }}
-        render={(link, update) => (
+        render={(link, update, index) => (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Label"><input required className={inputClass} maxLength={60} value={link.label} onChange={(e) => update({ label: e.target.value })} placeholder="GitHub" /></Field>
-            <Field label="URL"><input required type="url" className={inputClass} maxLength={500} value={link.url} onChange={(e) => update({ url: e.target.value })} placeholder="https://" /></Field>
+            <Field label="Label" fieldPath={`links.${index}.label`} validationError={validationError}><input required className={inputClass} maxLength={60} value={link.label} onChange={(e) => update({ label: e.target.value })} placeholder="GitHub" /></Field>
+            <Field label="URL" fieldPath={`links.${index}.url`} validationError={validationError}><input required type="url" className={inputClass} maxLength={500} value={link.url} onChange={(e) => update({ url: e.target.value })} placeholder="https://" /></Field>
           </div>
         )} />
 
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      {validationError && !validationError.field && (
+        <p role="alert" className="text-sm text-red-700">{validationError.message}</p>
+      )}
       <div className="flex gap-2">
         <button type="submit" className={primaryClass} disabled={saving}>{saving ? 'Saving…' : 'Save profile'}</button>
         <button type="button" className={buttonClass} onClick={onCancel} disabled={saving}>Cancel</button>
@@ -279,9 +399,14 @@ function ProfileForm({ initial, saving, error, onSave, onCancel }: {
 export default function Profile() {
   const [fullName, setFullName] = useState('')
   const [profile, setProfile] = useState<StudentProfile | null>(null)
+  const [studentTalent, setStudentTalent] = useState<StudentTalent | null>(null)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [validationError, setValidationError] = useState<FormValidationError | null>(null)
+  const [talentGenerating, setTalentGenerating] = useState(false)
+  const [talentError, setTalentError] = useState('')
+  const talentRequestId = useRef(0)
 
   useEffect(() => {
     let cancelled = false
@@ -289,23 +414,52 @@ export default function Profile() {
     Promise.all([getStudentProfile(), getProfile(token)])
       .then(([result, account]) => {
         if (cancelled) return
-        setProfile(result)
+        setProfile(result.profile)
+        setStudentTalent(result.studentTalent)
         setFullName(account.profile?.fullName ?? '')
       })
       .catch((caught: unknown) => {
         if (!cancelled) setError(caught instanceof Error ? caught.message : 'Unable to load your profile.')
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      talentRequestId.current += 1
+    }
   }, [])
+
+  async function refreshTalent() {
+    const requestId = ++talentRequestId.current
+    setTalentGenerating(true)
+    setTalentError('')
+    try {
+      const result = await generateStudentTalent()
+      if (requestId === talentRequestId.current) setStudentTalent(result)
+    } catch (caught) {
+      if (requestId === talentRequestId.current) {
+        setTalentError(caught instanceof Error ? caught.message : 'Unable to generate talent rankings.')
+      }
+    } finally {
+      if (requestId === talentRequestId.current) setTalentGenerating(false)
+    }
+  }
 
   async function save(draft: StudentProfile) {
     setSaving(true)
     setError('')
+    setValidationError(null)
     try {
-      setProfile(await saveStudentProfile(draft))
+      const result = await saveStudentProfile(draft)
+      setProfile(result.profile)
+      setStudentTalent(result.studentTalent)
+      setTalentError('')
       setEditing(false)
+      void refreshTalent()
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Unable to save your profile.')
+      if (caught instanceof StudentProfileRequestError && caught.field) {
+        setValidationError({ field: caught.field, message: caught.message })
+      } else {
+        setError(caught instanceof Error ? caught.message : 'Unable to save your profile.')
+      }
     } finally {
       setSaving(false)
     }
@@ -320,12 +474,14 @@ export default function Profile() {
   return (
     <div className="flex flex-col gap-4">
       {editing
-        ? <ProfileForm initial={profile} saving={saving} error={error} onSave={save}
-            onCancel={() => { setEditing(false); setError('') }} />
+        ? <ProfileForm initial={profile} saving={saving} error={error} validationError={validationError} onSave={save}
+          onCancel={() => { setEditing(false); setError(''); setValidationError(null) }}
+          onClearValidation={() => setValidationError(null)} />
         : (
           <>
             <button type="button" className={`${buttonClass} self-end`} onClick={() => setEditing(true)}>Edit</button>
-            <ProfileView profile={profile} fullName={fullName} />
+            <ProfileView profile={profile} fullName={fullName} studentTalent={studentTalent}
+              talentGenerating={talentGenerating} talentError={talentError} onRetryTalent={refreshTalent} />
           </>
         )}
     </div>

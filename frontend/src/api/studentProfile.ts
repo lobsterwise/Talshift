@@ -13,7 +13,7 @@ export interface Job {
   title: string
   company: string
   location: string
-  // YYYY-MM; endDate is null for a current job.
+  // YYYY-MM-DD; endDate is null for a current job.
   startDate: string
   endDate: string | null
   description: string
@@ -47,28 +47,62 @@ export interface StudentProfile {
   links: Link[]
 }
 
-async function request<T>(options: RequestInit = {}): Promise<T> {
+export interface StudentTalentSkill {
+  name: string
+  score: number
+  evidence: string
+}
+
+export interface StudentTalent {
+  hardSkills: StudentTalentSkill[]
+  softSkills: StudentTalentSkill[]
+  generatedAt: string
+  model: string
+}
+
+interface StudentProfileResult {
+  profile: StudentProfile
+  studentTalent: StudentTalent | null
+}
+
+export class StudentProfileRequestError extends Error {
+  constructor(message: string, readonly field: string | null = null) {
+    super(message)
+    this.name = 'StudentProfileRequestError'
+  }
+}
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('talshift.session')
   if (!token) throw new Error('Your session has expired. Please sign in again.')
 
-  const response = await fetch('/api/student/profile', {
+  const response = await fetch(path, {
     ...options,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
   })
   if (!response.ok) {
-    const result = await response.json().catch(() => null) as { error?: string } | null
-    throw new Error(result?.error ?? 'Something went wrong. Please try again.')
+    const result = await response.json().catch(() => null) as { error?: string; field?: string } | null
+    throw new StudentProfileRequestError(
+      result?.error ?? 'Something went wrong. Please try again.',
+      result?.field || null,
+    )
   }
   return response.json() as Promise<T>
 }
 
 export async function getStudentProfile() {
-  return (await request<{ profile: StudentProfile }>()).profile
+  return request<StudentProfileResult>('/api/student/profile')
 }
 
 export async function saveStudentProfile(profile: StudentProfile) {
-  return (await request<{ profile: StudentProfile }>({
+  return request<StudentProfileResult>('/api/student/profile', {
     method: 'PUT',
     body: JSON.stringify(profile),
-  })).profile
+  })
+}
+
+export async function generateStudentTalent() {
+  return (await request<{ studentTalent: StudentTalent }>('/api/student/talent', {
+    method: 'POST',
+  })).studentTalent
 }

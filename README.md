@@ -21,6 +21,8 @@ For Command Prompt:
 set DATABASE_URL=postgres://postgres:password@localhost:5432/talshift
 ```
 
+Set `GEMINI_API_KEY` in the backend environment to enable automatic student talent analysis. The backend keeps the key private and uses the `gemini-3.8-flash` model by default; set `GEMINI_MODEL` to another model enabled for your API key. Student profile saves return an error if Gemini is not configured or unavailable, rather than storing stale talent rankings.
+
 Use credentials appropriate for your local database; do not commit them.
 
 ## Development
