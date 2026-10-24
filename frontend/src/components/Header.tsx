@@ -15,7 +15,7 @@ export default function Header({ persona }: { persona: Persona }) {
               <path d="M7 3v18M17 3v18M7 8h10M7 13h10M7 18h10" />
             </svg>
           </div>
-          <span className="text-[17px] font-semibold">Rungs</span>
+          <span className="text-[17px] font-semibold">Talshift</span>
         </div>
 
         <div className="flex items-center gap-2.5">

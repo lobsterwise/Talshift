@@ -1,6 +1,6 @@
-# Rungs: build brief for Claude Code
+# Talshift: build brief for Claude Code
 
-Rungs is a HackOHI/O 2026 entry for the Bridge Builder Challenge (Honda Research Institute × 99P Labs at Ohio State). It connects OSU students, industry mentors and recruiters around **verified real work**, not polished resumes.
+Talshift is a HackOHI/O 2026 entry for the Bridge Builder Challenge (Honda Research Institute × 99P Labs at Ohio State). It connects OSU students, industry mentors and recruiters around **verified real work**, not polished resumes.
 
 Your job: build the frontend in the existing `frontend/` app exactly as designed in `design/`, with mock data behind a clean API layer so the backend team can plug in later.
 
@@ -26,10 +26,13 @@ How to read them (they are NOT React):
 
 Match the design closely: spacing, sizes, colors, copy and the order of elements. If something in the design seems wrong, ask before changing it. Don't add features, sections or copy that aren't in the design.
 
+The product is called **Talshift**. The design files still say "Rungs" in a few places (the header logo, "earned on Rungs", "your verified Rungs link"). Always write "Talshift" instead. This is the one copy change that's allowed.
+
 ## 2. Stack
 
 - Vite + React 19 + TypeScript (the existing `frontend/` app; keep its config and scripts) + Tailwind CSS v4 (`@tailwindcss/vite`) + `lucide-react` + `react-router-dom`
 - `backend/` (Express + PostgreSQL) serves `frontend/dist`, and the Vite dev server proxies `/api/*` to it. Don't create a second app.
+- A separate teammate is building the backend at the same time. So far it has `GET /api/health` and `/api/auth/register|login|me|logout`. Accounts are `student` or `professional`; mentors and recruiters are both professionals. Pages use the mock functions in `client.ts` for now. Don't call the real backend, build login screens or edit `backend/` unless asked. When writing the endpoint comments in `client.ts`, check `backend/src/` first and reuse any routes that already exist.
 - Inter from Google Fonts (400/500/600/700). Default Tailwind colors only, no custom config.
 - Light theme only. Page column: `max-w-[832px] mx-auto px-6`.
 - Every interactive control is at least 44px tall (`h-11` / `min-h-11`). Real `<button>`, `<label>`, `<input>` elements, plus `aria-label` on icon-only buttons and `aria-pressed` on chips.
