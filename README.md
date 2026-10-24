@@ -1,11 +1,10 @@
 # Talshift
 
-Talshift is a blank React single-page app served by a Rocket HTTP server. Rocket also exposes the API and connects to PostgreSQL through SQLx.
+Talshift is a blank React single-page app served by an Express HTTP server. The backend exposes the API and connects to PostgreSQL through `pg`.
 
 ## Requirements
 
 - Node.js 20.19 or newer (Node.js 22 LTS recommended) and npm
-- Rust stable and Cargo
 - A reachable PostgreSQL database
 
 ## Configure PostgreSQL
@@ -26,13 +25,15 @@ Use credentials appropriate for your local database; do not commit them.
 
 ## Development
 
-Start Rocket from the repository root in one terminal:
+Start the backend from `backend/` in one terminal:
 
-```sh
-cargo run --manifest-path backend/Cargo.toml
+```powershell
+cd backend
+npm install
+npm run dev
 ```
 
-Start Vite in another terminal:
+Then, in another terminal, start Vite:
 
 ```sh
 cd frontend
@@ -40,21 +41,23 @@ npm install
 npm run dev
 ```
 
-Open the URL printed by Vite. Requests to `/api/*` are proxied to Rocket at `http://127.0.0.1:8000`.
+Open the URL it prints; requests to `/api/*` are proxied to the backend at `http://127.0.0.1:3000`.
 
 ## Production Build
 
-Build the frontend before starting Rocket:
+Build the frontend, then build and start the backend:
 
 ```sh
 cd frontend
 npm ci
 npm run build
-cd ..
-cargo run --manifest-path backend/Cargo.toml
+cd ../backend
+npm ci
+npm run build
+npm start
 ```
 
-Rocket serves `frontend/dist` by default. Set `FRONTEND_DIST` to use another build directory.
+The backend serves `frontend/dist` by default. Set `FRONTEND_DIST` to use another build directory, or `PORT` to change the HTTP port.
 
 ## Checks
 
@@ -62,10 +65,9 @@ Rocket serves `frontend/dist` by default. Set `FRONTEND_DIST` to use another bui
 cd frontend
 npm run typecheck
 npm run build
-cd ..
-cargo fmt --manifest-path backend/Cargo.toml --check
-cargo check --manifest-path backend/Cargo.toml
-cargo test --manifest-path backend/Cargo.toml
+cd ../backend
+npm run typecheck
+npm run build
 ```
 
-`GET /api/health` runs `SELECT 1` and returns `{"status":"ok"}` when the database is available. Unknown API routes return a JSON 404. No database schema or migrations are required for this starter.
+`GET /api/health` runs `SELECT 1` and returns `{"status":"ok"}` when the database is available, or HTTP 503 when it is not. Unknown API routes return a JSON 404. No database schema or migrations are required for this starter.
