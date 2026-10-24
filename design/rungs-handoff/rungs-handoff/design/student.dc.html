@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Student app</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+button,a{font-family:inherit}
+button:focus-visible,a:focus-visible{outline:2px solid #2563EB;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100%; background: #FFFFFF; color: #111827; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; line-height: 1.55; font-variant-numeric: tabular-nums">
+
+  <!-- Header -->
+  <header style="border-bottom: 1px solid #E5E7EB; background: #FFFFFF">
+    <div style="max-width: 832px; margin: 0 auto; padding: 0 24px; min-height: 72px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div aria-hidden="true" style="width: 32px; height: 32px; border-radius: 8px; background: #2563EB; display: flex; align-items: center; justify-content: center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><path d="M7 3v18M17 3v18M7 8h10M7 13h10M7 18h10"></path></svg>
+        </div>
+        <span style="font-size: 17px; font-weight: 600">Rungs</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <nav aria-label="Switch view" style="display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: #F3F4F6">
+          <span aria-current="page" style="min-height: 36px; padding: 0 16px; display: flex; align-items: center; border-radius: 999px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,.08)">Student</span>
+          <a href="FinalMentor.dc.html" style="min-height: 36px; padding: 0 16px; display: flex; align-items: center; border-radius: 999px; color: #4B5563; text-decoration: none; font-size: 14px; font-weight: 500">Mentor</a>
+          <a href="FinalRecruiter.dc.html" style="min-height: 36px; padding: 0 16px; display: flex; align-items: center; border-radius: 999px; color: #4B5563; text-decoration: none; font-size: 14px; font-weight: 500">Recruiter</a>
+        </nav>
+        <div aria-label="Sam Okafor" style="width: 36px; height: 36px; border-radius: 50%; background: #2563EB; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600">SO</div>
+      </div>
+    </div>
+    <div role="tablist" aria-label="Student sections" style="max-width: 832px; margin: 0 auto; padding: 0 24px; display: flex; gap: 4px; overflow-x: auto">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+        <button type="button" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}<sc-if value="{{t.hasBadge}}" hint-placeholder-val="{{false}}"><span style="margin-left: 6px; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: #2563EB; color: #FFFFFF">{{t.badge}}</span></sc-if></button>
+      </sc-for>
+    </div>
+  </header>
+
+  <main style="max-width: 832px; margin: 0 auto; padding: 36px 24px 96px; display: flex; flex-direction: column; gap: 24px">
+
+    <!-- ═════════ OVERVIEW ═════════ -->
+    <sc-if value="{{isOverview}}" hint-placeholder-val="{{true}}">
+      <div style="display: flex; flex-direction: column; gap: 24px">
+        <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px">
+          <div>
+            <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em">Hi, Sam</h1>
+            <p style="margin: 6px 0 0; font-size: 16px; color: #4B5563">Your work, scored the same way as every OSU student's.</p>
+          </div>
+          <span style="min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #D1D5DB; font-size: 14px; display: inline-flex; align-items: center">Track: Design Engineering Intern</span>
+        </div>
+
+        <!-- Score -->
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; box-shadow: 0 1px 2px rgba(17,24,39,.04); padding: 24px; display: flex; flex-wrap: wrap; gap: 24px">
+          <div style="flex: 999 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 600">Standardized rating</h2>
+            <sc-for list="{{dims}}" as="d" hint-placeholder-count="4">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <div style="display: flex; justify-content: space-between; font-size: 14px"><span>{{d.label}}</span><span><strong>{{d.value}}</strong><span style="color: #6B7280"> · next {{d.next}}</span></span></div>
+                <div style="position: relative; height: 8px; border-radius: 999px; background: #E5E7EB">
+                  <div style="{{d.barStyle}}"></div>
+                  <span aria-hidden="true" style="{{d.markStyle}}"></span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="flex: 1 1 240px; min-width: 0; background: #F3F4F6; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; align-self: flex-start">
+            <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 14px; color: #4B5563">Profile score</span><span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #DCFCE7; color: #166534">+9 this week</span></div>
+            <div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 40px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em">65</span><span style="color: #6B7280">/ 100</span></div>
+            <p style="margin: 0; font-size: 13px; color: #4B5563">10 points to the next tier (75).</p>
+            <button type="button" onClick="{{openExplain}}" style="min-height: 44px; border-radius: 999px; border: 1px solid #D1D5DB; background: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8v.01"></path></svg>
+              Explain my score
+            </button>
+          </div>
+        </article>
+
+        <!-- Latest verified review -->
+        <article style="border: 1px solid #BFDBFE; border-radius: 16px; background: #F8FBFF; padding: 20px 24px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: flex-start; gap: 12px">
+            <div aria-hidden="true" style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #EFF6FF; color: #1D4ED8; border: 1px solid #DBEAFE; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600">RM</div>
+            <div style="flex: 1; min-width: 0; line-height: 1.35">
+              <div style="font-weight: 600">Rina Matsuda · 5★ on your keyboard case</div>
+              <div style="font-size: 13px; color: #4B5563">Research Engineer, Honda Research Institute · verified, published 2 hours ago</div>
+            </div>
+          </div>
+          <blockquote style="margin: 0; font-size: 17px; line-height: 1.45">“Real daily-use testing is rare. Next, add a drawing with tolerances for the hinge so someone else could build it.”</blockquote>
+        </article>
+
+        <!-- Checklist -->
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; box-shadow: 0 1px 2px rgba(17,24,39,.04); padding: 24px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 8px">
+            <div>
+              <h2 style="margin: 0; font-size: 18px; font-weight: 600">What recruiters look for</h2>
+              <p style="margin: 2px 0 0; font-size: 14px; color: #4B5563">Design Engineering Intern · the same list for everyone</p>
+            </div>
+            <span style="font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 999px; background: #EFF6FF; color: #1D4ED8">6 of 9 proven</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; justify-content: space-between; font-size: 14px"><span><strong>1 more proof</strong> clears the 70% verified bar</span><span style="color: #4B5563">67%</span></div>
+            <div style="position: relative; height: 10px; border-radius: 999px; background: #E5E7EB"><div style="height: 10px; width: 67%; border-radius: 999px; background: #2563EB"></div><span aria-hidden="true" style="position: absolute; left: 70%; top: -4px; bottom: -4px; border-left: 2px dashed #111827"></span></div>
+          </div>
+          <ul style="list-style: none; margin: 0; padding: 0">
+            <sc-for list="{{gaps}}" as="g" hint-placeholder-count="3">
+              <li style="display: flex; align-items: center; gap: 12px; min-height: 52px; border-top: 1px solid #F3F4F6">
+                <svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Missing" style="flex: none"><circle cx="12" cy="12" r="10" fill="#FEF3C7"></circle><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" fill="none" stroke="#B45309" stroke-width="2.2" stroke-linecap="round"></path></svg>
+                <div style="flex: 1; min-width: 0; padding: 6px 0"><div style="font-weight: 600">{{g.label}}</div><div style="font-size: 13px; color: #6B7280">{{g.evidence}}</div></div>
+                <button type="button" onClick="{{goPlan}}" style="flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #D1D5DB; background: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer">Close it · {{g.hours}}h</button>
+              </li>
+            </sc-for>
+          </ul>
+          <p style="margin: 0; font-size: 13px; color: #4B5563">6 proven items hidden: CAD tools, prototyping, user testing, ergonomics, documentation, mentor verification.</p>
+        </article>
+      </div>
+    </sc-if>
+
+    <!-- ═════════ PLAN ═════════ -->
+    <sc-if value="{{isPlan}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div>
+          <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em">Your next 30 days</h1>
+          <p style="margin: 6px 0 0; font-size: 16px; color: #4B5563">Built from your 3 open gaps. Commit to one thing at a time.</p>
+        </div>
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; overflow: hidden">
+          <div style="display: flex; justify-content: space-between; gap: 8px; padding: 14px 24px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; font-size: 14px"><strong>This weekend</strong><span style="color: #4B5563">Sat Oct 24 – Sun Oct 25</span></div>
+          <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; flex-wrap: wrap; gap: 6px"><span style="font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 999px; background: #EFF6FF; color: #1D4ED8">1-day challenge</span><span style="font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #F3F4F6">5 hours</span><span style="font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #FEF3C7; color: #92400E">Closes: Stress analysis</span></div>
+            <h3 style="margin: 0; font-size: 18px; font-weight: 600">Stress-test a 3D-printed bracket with FEA</h3>
+            <p style="margin: 0; color: #374151">Run a static study in Fusion 360 on your keyboard hinge, then break a printed one to compare. Ship the plot and one paragraph.</p>
+            <sc-if value="{{notCommitted}}" hint-placeholder-val="{{true}}">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+                <span style="font-size: 14px; color: #4B5563">Start</span>
+                <sc-for list="{{whens}}" as="w" hint-placeholder-count="3">
+                  <button type="button" onClick="{{w.pick}}" aria-pressed="{{w.pressed}}" style="{{w.style}}">{{w.label}}</button>
+                </sc-for>
+                <button type="button" onClick="{{commit}}" style="margin-left: auto; min-height: 44px; padding: 0 22px; border-radius: 999px; border: 0; background: #2563EB; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer">Commit</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{committed}}" hint-placeholder-val="{{false}}">
+              <div style="padding: 12px 16px; border-radius: 12px; background: #F0FDF4; border: 1px solid #BBF7D0">If it's <strong>{{when}}</strong>, I'll be at <strong>Thompson Library</strong> running the stress test.</div>
+            </sc-if>
+          </div>
+        </article>
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; overflow: hidden">
+          <div style="display: flex; justify-content: space-between; gap: 8px; padding: 14px 24px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; font-size: 14px"><strong>This week</strong><span style="color: #4B5563">Mon Oct 26 – Fri Oct 30</span></div>
+          <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 6px">
+            <div style="font-weight: 600">15-min office hours · Daniel R., Mechanical engineer</div>
+            <div style="font-size: 13px; color: #4B5563">Tue, Oct 27 · 4:00–4:15 PM · Virtual · 3 AI-prepared questions ready</div>
+          </div>
+        </article>
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; overflow: hidden">
+          <div style="display: flex; justify-content: space-between; gap: 8px; padding: 14px 24px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; font-size: 14px"><strong>This month</strong><span style="color: #4B5563">5 weeks · starts Mon, Nov 2</span></div>
+          <div style="padding: 20px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+            <div style="flex: 999 1 320px; min-width: 0"><div style="font-weight: 600; font-size: 17px">In-cabin control knob study · Honda Research Institute</div><div style="font-size: 14px; color: #4B5563">Team of 4 · 6–8 hrs/week · proves team delivery and FEA</div></div>
+            <button type="button" style="min-height: 44px; padding: 0 20px; border-radius: 999px; border: 0; background: #111827; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer">Apply with verified profile</button>
+          </div>
+        </article>
+      </div>
+    </sc-if>
+
+    <!-- ═════════ EVENTS ═════════ -->
+    <sc-if value="{{isEvents}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 18px">
+        <div>
+          <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em">Upcoming events for you</h1>
+          <p style="margin: 6px 0 0; font-size: 16px; color: #4B5563">Hackathons, recruiter events and workshops near Columbus, ranked by your track and gaps.</p>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; border-radius: 12px; background: #F9FAFB; border: 1px solid #F3F4F6; font-size: 13px; color: #4B5563">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: #111827"><span style="width: 8px; height: 8px; border-radius: 50%; background: #16A34A"></span>Scanned 12 min ago</span>
+          <span>Handshake · OSU Events · Devpost · MLH · Eventbrite · Columbus meetups</span>
+        </div>
+        <div role="group" aria-label="Event type" style="display: flex; flex-wrap: wrap; gap: 8px">
+          <sc-for list="{{eventChips}}" as="ch" hint-placeholder-count="5">
+            <button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.pressed}}" style="{{ch.style}}">{{ch.label}}</button>
+          </sc-for>
+        </div>
+        <sc-for list="{{events}}" as="e" hint-placeholder-count="4">
+          <article style="border: 1px solid #E5E7EB; border-radius: 16px; padding: 20px; display: flex; gap: 18px; align-items: flex-start">
+            <div style="flex: none; width: 56px; border-radius: 12px; background: #F3F4F6; text-align: center; padding: 8px 0; line-height: 1.2">
+              <div style="font-size: 12px; font-weight: 600; color: #2563EB">{{e.month}}</div>
+              <div style="font-size: 22px; font-weight: 700">{{e.day}}</div>
+            </div>
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; flex-wrap: wrap; gap: 6px"><span style="{{e.kindStyle}}">{{e.kind}}</span><span style="font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #F3F4F6; color: #374151">via {{e.source}}</span></div>
+              <h3 style="margin: 0; font-size: 17px; font-weight: 600">{{e.title}}</h3>
+              <div style="font-size: 14px; color: #4B5563">{{e.when}} · {{e.where}}</div>
+              <div style="font-size: 13px; color: #1D4ED8">Why you: {{e.why}}</div>
+            </div>
+            <div style="flex: none; display: flex; flex-direction: column; gap: 8px">
+              <button type="button" onClick="{{e.toggle}}" aria-pressed="{{e.savedAttr}}" style="{{e.saveStyle}}">{{e.saveLabel}}</button>
+            </div>
+          </article>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ═════════ NETWORK ═════════ -->
+    <sc-if value="{{isNetwork}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 18px">
+        <div>
+          <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em">People to reach out to</h1>
+          <p style="margin: 6px 0 0; font-size: 16px; color: #4B5563">Mentors and recruiters are ranked by relevance to your track and by credibility. Students are matched by what you can teach each other.</p>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+          <sc-for list="{{netChips}}" as="ch" hint-placeholder-count="4">
+            <button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.pressed}}" style="{{ch.style}}">{{ch.label}}</button>
+          </sc-for>
+          <button type="button" onClick="{{toggleCredInfo}}" aria-expanded="{{credInfoOpen}}" style="margin-left: auto; min-height: 44px; padding: 0 14px; border: 0; background: none; color: #2563EB; font-size: 14px; font-weight: 500; cursor: pointer">How credibility works</button>
+        </div>
+        <sc-if value="{{credInfoOpen}}" hint-placeholder-val="{{false}}">
+          <div style="padding: 16px; border-radius: 14px; background: #F9FAFB; border: 1px solid #E5E7EB; font-size: 14px; color: #374151">
+            <strong style="color: #111827">Credibility (0–100)</strong> is earned on Rungs, not bought. It combines how often a mentor's or recruiter's advice is verified, how quickly they reply to students, how active they've been in the last 30 days, and whether students they helped went on to close a gap or get an interview. Higher credibility means they're shown to more students.
+          </div>
+        </sc-if>
+        <sc-for list="{{people}}" as="p" hint-placeholder-count="4">
+          <article style="border: 1px solid #E5E7EB; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: flex-start; gap: 12px">
+              <div aria-hidden="true" style="{{p.avatarStyle}}">{{p.initials}}</div>
+              <div style="flex: 1; min-width: 0; line-height: 1.35">
+                <div style="font-weight: 600; font-size: 16px">{{p.name}}</div>
+                <div style="font-size: 13px; color: #4B5563">{{p.role}}</div>
+              </div>
+              <sc-if value="{{p.hasCred}}" hint-placeholder-val="{{true}}">
+                <div style="flex: none; text-align: right; line-height: 1.2">
+                  <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"></path><path d="M9 12l2 2 4-4"></path></svg>{{p.cred}}</span>
+                  <div style="font-size: 12px; color: #4B5563">{{p.credLabel}}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{p.isStudent}}" hint-placeholder-val="{{false}}">
+                <span style="flex: none; font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 999px; background: #EFF6FF; color: #1D4ED8">{{p.match}}</span>
+              </sc-if>
+            </div>
+            <ul style="margin: 0; padding-left: 18px; font-size: 14px; color: #374151; display: flex; flex-direction: column; gap: 2px">
+              <sc-for list="{{p.why}}" as="w" hint-placeholder-count="2"><li>{{w}}</li></sc-for>
+            </ul>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid #F3F4F6">
+              <span style="flex: 1 1 280px; font-size: 13px; color: #4B5563">Opener: <span style="color: #111827">“{{p.opener}}”</span></span>
+              <button type="button" onClick="{{p.act}}" style="{{p.actStyle}}">{{p.actLabel}}</button>
+            </div>
+          </article>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ═════════ RESUME ═════════ -->
+    <sc-if value="{{isResume}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 18px">
+        <div>
+          <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em">Resume feedback</h1>
+          <p style="margin: 6px 0 0; font-size: 16px; color: #4B5563">See what each role's recruiters will look for in your resume. You make every change yourself.</p>
+        </div>
+        <div style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 12px; background: #F9FAFB; border: 1px solid #E5E7EB; font-size: 14px; color: #374151">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"></path></svg>
+          <span><strong style="color: #111827">We never rewrite your resume.</strong> Recruiters can tell AI-polished wording, and it doesn't change your score. Feedback only points to what's unclear or missing, so the words stay yours.</span>
+        </div>
+
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; padding: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px">
+          <div aria-hidden="true" style="width: 44px; height: 52px; flex: none; border-radius: 8px; background: #EFF6FF; color: #1D4ED8; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">PDF</div>
+          <div style="flex: 1 1 220px; min-width: 0"><div style="font-weight: 600">Sam_Okafor_Resume.pdf</div><div style="font-size: 13px; color: #4B5563">Uploaded Oct 20 · 1 page · 14 bullets read</div></div>
+          <label style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid #D1D5DB; display: inline-flex; align-items: center; font-size: 14px; font-weight: 500; cursor: pointer">Upload new version<input type="file" accept=".pdf,.docx" style="position: absolute; width: 1px; height: 1px; opacity: 0"></label>
+        </article>
+
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <span style="font-size: 14px; font-weight: 500; color: #374151">Show feedback for</span>
+          <div role="group" aria-label="Target roles" style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{roleChips}}" as="r" hint-placeholder-count="3">
+              <button type="button" onClick="{{r.pick}}" aria-pressed="{{r.pressed}}" style="{{r.style}}">{{r.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; box-shadow: 0 1px 2px rgba(17,24,39,.04); overflow: hidden">
+          <div style="padding: 16px 24px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px">
+            <strong>{{roleTitle}}</strong>
+            <span style="font-size: 13px; color: #4B5563">{{roleSummary}}</span>
+          </div>
+          <ul style="list-style: none; margin: 0; padding: 0">
+            <sc-for list="{{feedback}}" as="f" hint-placeholder-count="4">
+              <li style="padding: 16px 24px; border-top: 1px solid #F3F4F6; display: flex; gap: 12px">
+                <span style="{{f.dotStyle}}"></span>
+                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+                  <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline"><strong style="font-size: 15px">{{f.type}}</strong><span style="font-size: 12px; color: #6B7280">{{f.where}}</span></div>
+                  <sc-if value="{{f.hasQuote}}" hint-placeholder-val="{{true}}"><div style="font-size: 14px; color: #4B5563; padding-left: 10px; border-left: 2px solid #E5E7EB">{{f.quote}}</div></sc-if>
+                  <div style="font-size: 14px; color: #111827">{{f.note}}</div>
+                </div>
+              </li>
+            </sc-for>
+          </ul>
+        </article>
+      </div>
+    </sc-if>
+  </main>
+
+  <!-- Explain score dialog -->
+  <sc-if value="{{explainOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position: fixed; inset: 0; z-index: 20; background: rgba(17,24,39,.45); display: flex; align-items: flex-start; justify-content: center; padding: 48px 16px; overflow-y: auto">
+      <div role="dialog" aria-modal="true" aria-labelledby="explain-title" style="width: 100%; max-width: 600px; background: #FFFFFF; border-radius: 18px; box-shadow: 0 20px 50px rgba(17,24,39,.25); overflow: hidden">
+        <div style="padding: 20px 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px">
+          <div>
+            <h2 id="explain-title" style="margin: 0; font-size: 20px; font-weight: 700">Why you scored 65</h2>
+            <p style="margin: 2px 0 0; font-size: 14px; color: #4B5563">From your resume (Oct 20), 3 GitHub repos and 1 verified mentor review</p>
+          </div>
+          <button type="button" onClick="{{closeExplain}}" aria-label="Close" style="width: 44px; height: 44px; flex: none; border: 0; border-radius: 999px; background: #F3F4F6; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111827" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <div style="padding: 8px 24px 20px; display: flex; flex-direction: column">
+          <sc-for list="{{explain}}" as="x" hint-placeholder-count="4">
+            <section style="padding: 14px 0; border-bottom: 1px solid #F3F4F6; display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; justify-content: space-between; gap: 8px"><strong>{{x.label}}</strong><span style="color: #4B5563"><strong style="color: #111827">{{x.value}}</strong> · weight {{x.weight}}</span></div>
+              <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px">
+                <sc-for list="{{x.items}}" as="it" hint-placeholder-count="3">
+                  <li style="display: flex; gap: 8px; font-size: 14px; color: #374151"><span style="{{it.signStyle}}">{{it.sign}}</span><span>{{it.text}}</span></li>
+                </sc-for>
+              </ul>
+            </section>
+          </sc-for>
+          <p style="margin: 14px 0 0; font-size: 13px; color: #4B5563">Formatting, fonts and wording don't affect the score. Only evidence does: projects, demos, teams and verified reviews.</p>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'overview', explain: false, when: 'Sat 10 AM', committed: false, eventFilter: 'all', saved: { e1: true }, netFilter: 'all', credInfo: false, acted: {}, role: 'dei' };
+  }
+  renderVals() {
+    var self = this, S = this.state;
+    var chipStyle = function (on) { return 'min-height: 44px; padding: 0 18px; border-radius: 999px; font-size: 15px; font-weight: 500; cursor: pointer; ' + (on ? 'background: #2563EB; color: #FFFFFF; border: 1px solid #2563EB' : 'background: #FFFFFF; color: #111827; border: 1px solid #D1D5DB'); };
+    var set = function (patch) { return function () { self.setState(patch); }; };
+
+    var TABS = [['overview', 'Overview'], ['plan', 'Plan'], ['events', 'Events', 4], ['network', 'Network', 2], ['resume', 'Resume']];
+    var tabs = TABS.map(function (t) {
+      var on = S.tab === t[0];
+      return { label: t[1], selected: on ? 'true' : 'false', pick: set({ tab: t[0] }), hasBadge: !!t[2] && !on, badge: t[2],
+        style: 'min-height: 48px; padding: 0 14px; border: 0; background: none; cursor: pointer; font-size: 15px; display: inline-flex; align-items: center; white-space: nowrap; border-bottom: 2px solid ' + (on ? '#2563EB; color: #111827; font-weight: 600' : 'transparent; color: #4B5563; font-weight: 500') };
+    });
+
+    var dims = [['Technical depth', 72, 75], ['Real-world execution', 70, 75], ['Cross-functional teamwork', 48, 60], ['Mentor verification', 62, 75]].map(function (d) {
+      return { label: d[0], value: d[1], next: d[2], barStyle: 'height: 8px; border-radius: 999px; background: #2563EB; width: ' + d[1] + '%',
+        markStyle: 'position: absolute; left: ' + d[2] + '%; top: -4px; bottom: -4px; border-left: 2px dashed #111827' };
+    });
+    var gaps = [
+      { label: 'Engineering drawings and tolerances', evidence: 'Missing: a drawing with GD&T for one part', hours: 3 },
+      { label: 'Stress analysis (FEA)', evidence: 'Missing: one static study with a result you checked', hours: 5 },
+      { label: 'Cross-functional team delivery', evidence: 'Missing: a project with 3+ people from 2+ majors', hours: 6 }
+    ];
+    var plus = 'flex: none; width: 18px; font-weight: 700; color: #15803D', minus = 'flex: none; width: 18px; font-weight: 700; color: #B45309';
+    var explain = [
+      ['Technical depth', 72, '30%', [['+', 'Onshape and Fusion 360 used across 2 projects'], ['+', 'Three printed revisions show real iteration'], ['−', 'No stress analysis (FEA) or simulation in any project'], ['−', 'No drawings with tolerances']]],
+      ['Real-world execution', 70, '30%', [['+', 'Keyboard case repo has a build log and a 1:10 demo video'], ['+', 'Tested through two weeks of real daily use'], ['−', 'Only 1 of 3 projects has a demo someone can watch']]],
+      ['Cross-functional teamwork', 48, '20%', [['+', 'Design Club member, listed on your resume'], ['−', 'All 3 projects are solo'], ['−', 'No collaborator from another major yet']]],
+      ['Mentor verification', 62, '20%', [['+', '1 verified review: Rina Matsuda, 5★, endorsed your growth'], ['−', 'Mentor weight grows with more reviews; 3 reviews would count for 50%']]]
+    ].map(function (x) {
+      return { label: x[0], value: x[1], weight: x[2], items: x[3].map(function (i) { return { sign: i[0], text: i[1], signStyle: i[0] === '+' ? plus : minus }; }) };
+    });
+
+    var whens = ['Sat 10 AM', 'Sat 2 PM', 'Sun 10 AM'].map(function (w) {
+      var on = S.when === w;
+      return { label: w, pressed: on ? 'true' : 'false', pick: set({ when: w }), style: 'min-height: 40px; padding: 0 14px; border-radius: 999px; font-size: 14px; font-weight: 500; cursor: pointer; ' + (on ? 'background: #2563EB; color: #FFFFFF; border: 1px solid #2563EB' : 'background: #FFFFFF; color: #111827; border: 1px solid #D1D5DB') };
+    });
+
+    var KIND = { hack: ['Hackathon', '#EFF6FF', '#1D4ED8'], recruit: ['Recruiter event', '#DCFCE7', '#166534'], workshop: ['Workshop', '#F3F4F6', '#374151'], fair: ['Career fair', '#FEF3C7', '#92400E'] };
+    var EVENTS = [
+      { id: 'e1', k: 'hack', month: 'NOV', day: '7', title: 'Make-a-thon: Assistive Devices', when: 'Sat–Sun, Nov 7–8 · 24 hours', where: 'Pomerene Hall', source: 'Devpost', why: 'CAD + prototyping, and teams form on Friday (closes your team gap)' },
+      { id: 'e2', k: 'recruit', month: 'NOV', day: '3', title: 'Honda Research Institute: Meet the Human-Factors Team', when: 'Tue, Nov 3 · 5:30 PM', where: 'Ohio Union', source: 'Handshake', why: 'Hiring for your track; Rina Matsuda is presenting' },
+      { id: 'e3', k: 'workshop', month: 'OCT', day: '28', title: 'GD&T Basics', when: 'Wed, Oct 28 · 7:00 PM', where: 'Scott Lab', source: 'OSU Events', why: 'Closes your drawings and tolerances gap' },
+      { id: 'e4', k: 'hack', month: 'OCT', day: '29', title: 'Hardware Hack Night', when: 'Thu, Oct 29 · 6:00 PM', where: 'Downtown makerspace · 2.1 mi', source: 'Eventbrite', why: '3D printing and quick builds; 2 people in your network are going' },
+      { id: 'e5', k: 'fair', month: 'NOV', day: '12', title: 'Fall Engineering Expo', when: 'Thu, Nov 12 · 10 AM–3 PM', where: 'Ohio Union', source: 'Handshake', why: '14 employers listed design-engineering internships' },
+      { id: 'e6', k: 'recruit', month: 'NOV', day: '4', title: 'Product Design Portfolio Night', when: 'Wed, Nov 4 · 6:30 PM', where: 'Short North · 2.8 mi', source: 'Columbus meetups', why: '3 local studios reviewing student portfolios' }
+    ];
+    var EF = [['all', 'All'], ['hack', 'Hackathons'], ['recruit', 'Recruiter events'], ['workshop', 'Workshops'], ['fair', 'Career fairs']];
+    var eventChips = EF.map(function (f) { return { label: f[1], pressed: S.eventFilter === f[0] ? 'true' : 'false', pick: set({ eventFilter: f[0] }), style: chipStyle(S.eventFilter === f[0]) }; });
+    var events = EVENTS.filter(function (e) { return S.eventFilter === 'all' || e.k === S.eventFilter; }).map(function (e) {
+      var saved = !!S.saved[e.id];
+      return { month: e.month, day: e.day, title: e.title, when: e.when, where: e.where, source: e.source, why: e.why, kind: KIND[e.k][0],
+        kindStyle: 'font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: ' + KIND[e.k][1] + '; color: ' + KIND[e.k][2],
+        savedAttr: saved ? 'true' : 'false', saveLabel: saved ? 'Saved' : 'Save',
+        saveStyle: 'min-height: 40px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 600; cursor: pointer; ' + (saved ? 'background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE' : 'background: #FFFFFF; color: #111827; border: 1px solid #D1D5DB'),
+        toggle: function () { var n = Object.assign({}, self.state.saved); n[e.id] = !n[e.id]; self.setState({ saved: n }); } };
+    });
+
+    var PEOPLE = [
+      { id: 'n1', t: 'mentor', initials: 'RM', name: 'Rina Matsuda', role: 'Research Engineer · Honda Research Institute', cred: 94, why: ['Reviewed your keyboard case and endorsed you', '96% of her advice verified · replies in about a day'], opener: 'Thanks for the review. Could I show you the hinge drawing once it\'s done?', action: 'Message' },
+      { id: 'n2', t: 'recruiter', initials: 'JC', name: 'Jamie Cole', role: 'University Talent Partner · 99P Labs', cred: 91, why: ['Hiring Design Engineering interns this spring', '11 of 12 students she invited got a reply within a week'], opener: 'I\'m working toward your Design Engineering rubric; 6 of 9 verified so far.', action: 'Connect' },
+      { id: 'n3', t: 'mentor', initials: 'DR', name: 'Daniel R.', role: 'Mechanical Engineer · automotive supplier', cred: 88, why: ['Reviews CAD work weekly · 41 verified reviews', 'Office hours Tue 4:00 PM, 1 seat left'], opener: 'Which tolerances matter most on a printed hinge?', action: 'Request 15 min' },
+      { id: 'n4', t: 'student', initials: 'PS', name: 'Priya Shah', role: 'Mechanical Engineering · Sophomore', match: 'Complementary', why: ['Brings ANSYS FEA and GD&T, two of your open gaps', 'Looking for someone who does user testing'], opener: 'Want to team up on Saturday\'s FEA challenge? I\'ll handle the user testing side.', action: 'Team up' },
+      { id: 'n5', t: 'recruiter', initials: 'ML', name: 'Morgan Lee', role: 'Campus Recruiter · regional mobility company', cred: 72, why: ['Posted 2 product design internships on Handshake', 'Newer to Rungs: 3 invites sent so far'], opener: 'I saw your product design internship; my keyboard case covers ergonomics testing.', action: 'Connect' },
+      { id: 'n6', t: 'student', initials: 'AR', name: 'Ana Ruiz', role: 'Industrial Design · Junior', match: 'Similar', why: ['Also targeting design engineering; 2 points ahead of you', 'Going to Hardware Hack Night on Thursday'], opener: 'See you at Hack Night? Want to trade portfolio feedback?', action: 'Connect' }
+    ];
+    var NF = [['all', 'All'], ['mentor', 'Mentors'], ['recruiter', 'Recruiters'], ['student', 'Students']];
+    var netChips = NF.map(function (f) { return { label: f[1], pressed: S.netFilter === f[0] ? 'true' : 'false', pick: set({ netFilter: f[0] }), style: chipStyle(S.netFilter === f[0]) }; });
+    var people = PEOPLE.filter(function (p) { return S.netFilter === 'all' || p.t === S.netFilter; }).map(function (p) {
+      var done = !!S.acted[p.id];
+      var isStudent = p.t === 'student';
+      return { initials: p.initials, name: p.name, role: p.role, why: p.why, opener: p.opener,
+        hasCred: !isStudent, isStudent: isStudent, cred: p.cred, match: p.match,
+        credLabel: !isStudent ? (p.cred >= 90 ? 'Highly credible' : p.cred >= 80 ? 'Credible' : 'Building credibility') : '',
+        avatarStyle: 'width: 44px; height: 44px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; ' + (isStudent ? 'background: #F3F4F6; color: #374151' : 'background: #EFF6FF; color: #1D4ED8'),
+        actLabel: done ? 'Sent' : p.action,
+        actStyle: 'min-height: 44px; padding: 0 20px; border-radius: 999px; font-size: 15px; font-weight: 600; cursor: pointer; ' + (done ? 'background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0' : 'background: #2563EB; color: #FFFFFF; border: 1px solid #2563EB'),
+        act: function () { var n = Object.assign({}, self.state.acted); n[p.id] = true; self.setState({ acted: n }); } };
+    });
+
+    var ROLES = {
+      dei: { label: 'Design Engineering Intern', summary: '6 of 9 requirements visible on your resume', items: [
+        ['good', 'Strong evidence', 'Projects · line 6', 'Tested the case through two weeks of daily use and logged comfort each day.', 'Keep this. It\'s the kind of proof recruiters for this role ask about.'],
+        ['warn', 'Unclear impact', 'Projects · line 5', 'Designed and printed an ergonomic split keyboard case.', 'What changed for the user? Wrist angle, comfort rating, assembly time. Add the number you measured.'],
+        ['miss', 'Missing for this role', 'Whole resume', '', 'No drawings or tolerances anywhere. Recruiters check for this. Add it only after you\'ve done it; the GD&T workshop on Wed gets you there.'],
+        ['warn', 'Claim without a link', 'Projects', '', 'None of your projects link to proof. Add your verified Rungs link so each claim can be checked.']] },
+      pde: { label: 'Product Design Engineer', summary: '5 of 8 requirements visible on your resume', items: [
+        ['good', 'Strong evidence', 'Projects · line 6', 'Tested the case through two weeks of daily use and logged comfort each day.', 'User testing is a top requirement for this role. Keep it near the top.'],
+        ['miss', 'Missing for this role', 'Whole resume', '', 'No design-for-manufacturing (DFM) work. Mention it only if a project actually considered cost or production.'],
+        ['warn', 'Vague role', 'Activities · line 11', 'Member, Design Club', 'What did you build or lead in the club? One concrete outcome is enough.']] },
+      mdi: { label: 'Mechanical Design Intern', summary: '4 of 9 requirements visible on your resume', items: [
+        ['miss', 'Missing for this role', 'Skills', '', 'SolidWorks is listed in 8 of 10 postings for this role. You use Onshape and Fusion 360; say so plainly, don\'t claim SolidWorks.'],
+        ['miss', 'Missing for this role', 'Whole resume', '', 'No stress analysis. Saturday\'s FEA challenge would give you something true to write.'],
+        ['good', 'Strong evidence', 'Projects · line 4', 'Three printed revisions of the hinge.', 'Iteration is valued here. Say what you changed between revisions.']] }
+    };
+    var roleChips = [['dei', 'Design Engineering Intern'], ['pde', 'Product Design Engineer'], ['mdi', 'Mechanical Design Intern']].map(function (r) {
+      return { label: r[1], pressed: S.role === r[0] ? 'true' : 'false', pick: set({ role: r[0] }), style: chipStyle(S.role === r[0]) };
+    });
+    var DOT = { good: '#16A34A', warn: '#D97706', miss: '#DC2626' };
+    var R = ROLES[S.role];
+    var feedback = R.items.map(function (f) {
+      return { type: f[1], where: f[2], quote: f[3] ? '“' + f[3] + '”' : '', hasQuote: !!f[3], note: f[4],
+        dotStyle: 'flex: none; width: 10px; height: 10px; margin-top: 7px; border-radius: 50%; background: ' + DOT[f[0]] };
+    });
+
+    return {
+      tabs: tabs,
+      isOverview: S.tab === 'overview', isPlan: S.tab === 'plan', isEvents: S.tab === 'events', isNetwork: S.tab === 'network', isResume: S.tab === 'resume',
+      dims: dims, gaps: gaps, goPlan: set({ tab: 'plan' }),
+      explainOpen: S.explain, openExplain: set({ explain: true }), closeExplain: set({ explain: false }), explain: explain,
+      whens: whens, committed: S.committed, notCommitted: !S.committed, commit: set({ committed: true }),
+      when: S.when === 'Sat 10 AM' ? 'Saturday at 10 AM' : S.when === 'Sat 2 PM' ? 'Saturday at 2 PM' : 'Sunday at 10 AM',
+      eventChips: eventChips, events: events,
+      netChips: netChips, people: people, credInfoOpen: S.credInfo, toggleCredInfo: set({ credInfo: !S.credInfo }),
+      roleChips: roleChips, roleTitle: R.label, roleSummary: R.summary, feedback: feedback
+    };
+  }
+}
+</script>
+</body>
+</html>

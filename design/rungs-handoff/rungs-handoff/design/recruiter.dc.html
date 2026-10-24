@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Recruiter app</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+button,a,input{font-family:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #2563EB;outline-offset:2px}
+input::placeholder{color:#9CA3AF}
+</style>
+</helmet>
+<div style="min-height: 100%; background: #FFFFFF; color: #111827; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; line-height: 1.55; font-variant-numeric: tabular-nums">
+
+  <header style="border-bottom: 1px solid #E5E7EB; background: #FFFFFF">
+    <div style="max-width: 832px; margin: 0 auto; padding: 0 24px; min-height: 72px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div aria-hidden="true" style="width: 32px; height: 32px; border-radius: 8px; background: #2563EB; display: flex; align-items: center; justify-content: center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><path d="M7 3v18M17 3v18M7 8h10M7 13h10M7 18h10"></path></svg>
+        </div>
+        <span style="font-size: 17px; font-weight: 600">Rungs</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <nav aria-label="Switch view" style="display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: #F3F4F6">
+          <a href="FinalStudent.dc.html" style="min-height: 36px; padding: 0 16px; display: flex; align-items: center; border-radius: 999px; color: #4B5563; text-decoration: none; font-size: 14px; font-weight: 500">Student</a>
+          <a href="FinalMentor.dc.html" style="min-height: 36px; padding: 0 16px; display: flex; align-items: center; border-radius: 999px; color: #4B5563; text-decoration: none; font-size: 14px; font-weight: 500">Mentor</a>
+          <span aria-current="page" style="min-height: 36px; padding: 0 16px; display: flex; align-items: center; border-radius: 999px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,.08)">Recruiter</span>
+        </nav>
+        <div aria-label="Jamie Cole" style="width: 36px; height: 36px; border-radius: 50%; background: #EFF6FF; color: #1D4ED8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600">JC</div>
+      </div>
+    </div>
+    <div role="tablist" aria-label="Recruiter sections" style="max-width: 832px; margin: 0 auto; padding: 0 24px; display: flex; gap: 4px; overflow-x: auto">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+        <button type="button" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+  </header>
+
+  <main style="max-width: 832px; margin: 0 auto; padding: 36px 24px 96px; display: flex; flex-direction: column; gap: 20px">
+
+    <!-- ═════════ FIND STUDENTS ═════════ -->
+    <sc-if value="{{isSearch}}" hint-placeholder-val="{{true}}">
+      <div style="display: flex; flex-direction: column; gap: 18px">
+        <div>
+          <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em">Find students</h1>
+          <p style="margin: 6px 0 0; font-size: 16px; color: #4B5563">Search OSU students by verified work, not resume wording. Ranked against your published rubric.</p>
+        </div>
+
+        <label for="rq" style="position: relative; display: block">
+          <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search skills, projects or names</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 16px; top: 15px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <input id="rq" type="search" value="{{query}}" onChange="{{onQuery}}" placeholder="Search skills, projects or names (try FEA, Onshape, Go)" style="width: 100%; box-sizing: border-box; min-height: 48px; padding: 0 16px 0 44px; border: 1px solid #D1D5DB; border-radius: 999px; font-size: 15px; color: #111827; background: #FFFFFF">
+        </label>
+
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <span style="font-size: 14px; font-weight: 500; color: #374151">Hiring for</span>
+          <div role="group" aria-label="Role rubric" style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{roleChips}}" as="r" hint-placeholder-count="3">
+              <button type="button" onClick="{{r.pick}}" aria-pressed="{{r.pressed}}" style="{{r.style}}">{{r.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 14px">
+          <label style="min-height: 44px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer"><input type="checkbox" checked="{{verifiedOnly}}" onChange="{{toggleVerified}}" style="width: 18px; height: 18px; accent-color: #2563EB">Mentor-verified only</label>
+          <label style="min-height: 44px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer"><input type="checkbox" checked="{{clearsOnly}}" onChange="{{toggleClears}}" style="width: 18px; height: 18px; accent-color: #2563EB">Clears my 70% bar</label>
+          <div role="group" aria-label="Sort" style="margin-left: auto; display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: #F3F4F6">
+            <sc-for list="{{sorts}}" as="so" hint-placeholder-count="2">
+              <button type="button" onClick="{{so.pick}}" aria-pressed="{{so.pressed}}" style="{{so.style}}">{{so.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <span style="font-size: 13px; color: #4B5563">{{resultLine}}</span>
+
+        <sc-for list="{{results}}" as="s" hint-placeholder-count="4">
+          <article style="border: 1px solid #E5E7EB; border-radius: 16px; box-shadow: 0 1px 2px rgba(17,24,39,.04); padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; align-items: flex-start; gap: 12px">
+              <div aria-hidden="true" style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: #EFF6FF; color: #1D4ED8; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600">{{s.initials}}</div>
+              <div style="flex: 1; min-width: 0; line-height: 1.35">
+                <div style="font-size: 16px; font-weight: 600">{{s.name}}</div>
+                <div style="font-size: 13px; color: #4B5563">{{s.major}} · {{s.project}}</div>
+              </div>
+              <span style="{{s.matchStyle}}">{{s.match}}% match</span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <sc-for list="{{s.tags}}" as="t" hint-placeholder-count="4"><span style="{{t.style}}">{{t.label}}</span></sc-for>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; background: #F3F4F6; border-radius: 12px; padding: 12px">
+              <div><div style="font-size: 12px; color: #4B5563">Score</div><div style="font-size: 17px; font-weight: 600">{{s.score}}</div></div>
+              <div><div style="font-size: 12px; color: #4B5563">Your rubric</div><div style="font-size: 17px; font-weight: 600">{{s.rubric}}</div></div>
+              <div><div style="font-size: 12px; color: #4B5563">Verified reviews</div><div style="font-size: 17px; font-weight: 600">{{s.reviews}}</div></div>
+              <div><div style="font-size: 12px; color: #4B5563">30-day growth</div><div style="font-size: 17px; font-weight: 600; color: #15803D">+{{s.growth}}</div></div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px">
+              <button type="button" style="min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid #D1D5DB; background: #FFFFFF; font-size: 15px; font-weight: 500; cursor: pointer">View verified profile</button>
+              <button type="button" onClick="{{s.invite}}" style="{{s.inviteStyle}}">{{s.inviteLabel}}</button>
+            </div>
+          </article>
+        </sc-for>
+        <sc-if value="{{noResults}}" hint-placeholder-val="{{false}}">
+          <p style="margin: 0; padding: 24px; text-align: center; border: 1px dashed #D1D5DB; border-radius: 16px; color: #4B5563">No students match those filters. Try turning off "Clears my 70% bar".</p>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ═════════ INVITES ═════════ -->
+    <sc-if value="{{isInvites}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 18px">
+        <div>
+          <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em">Invites</h1>
+          <p style="margin: 6px 0 0; font-size: 16px; color: #4B5563">Two-way invites you've sent. Replying to students quickly raises your credibility.</p>
+        </div>
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; overflow: hidden">
+          <ul style="list-style: none; margin: 0; padding: 0">
+            <sc-for list="{{invites}}" as="i" hint-placeholder-count="4">
+              <li style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 16px 24px; border-top: 1px solid #F3F4F6">
+                <div aria-hidden="true" style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #F3F4F6; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600">{{i.initials}}</div>
+                <div style="flex: 1 1 240px; min-width: 0"><div style="font-weight: 600">{{i.name}}</div><div style="font-size: 13px; color: #4B5563">{{i.detail}}</div></div>
+                <span style="{{i.statusStyle}}">{{i.status}}</span>
+              </li>
+            </sc-for>
+          </ul>
+        </article>
+      </div>
+    </sc-if>
+
+    <!-- ═════════ PROFILE / CREDIBILITY ═════════ -->
+    <sc-if value="{{isProfile}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 18px">
+        <div style="display: flex; align-items: center; gap: 16px">
+          <div aria-hidden="true" style="width: 64px; height: 64px; flex: none; border-radius: 50%; background: #EFF6FF; color: #1D4ED8; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600">JC</div>
+          <div>
+            <h1 style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em">Jamie Cole</h1>
+            <p style="margin: 2px 0 0; color: #4B5563">University Talent Partner · 99P Labs · on Rungs since March</p>
+          </div>
+        </div>
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; box-shadow: 0 1px 2px rgba(17,24,39,.04); padding: 24px; display: flex; flex-wrap: wrap; gap: 24px">
+          <div style="flex: 999 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 600">What your credibility is made of</h2>
+            <sc-for list="{{credParts}}" as="cp" hint-placeholder-count="5">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 14px"><span>{{cp.label}}</span><strong>{{cp.value}}</strong></div>
+                <div style="height: 8px; border-radius: 999px; background: #E5E7EB"><div style="{{cp.barStyle}}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="flex: 1 1 240px; min-width: 0; background: #F3F4F6; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; align-self: flex-start">
+            <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 14px; color: #4B5563">Credibility</span><span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #DCFCE7; color: #166534">Highly credible</span></div>
+            <div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 40px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em">91</span><span style="color: #6B7280">/ 100</span></div>
+            <p style="margin: 0; font-size: 13px; color: #4B5563">Top 10% of recruiters on Rungs.</p>
+            <div style="background: #FFFFFF; border-radius: 10px; padding: 10px 12px"><div style="font-size: 12px; color: #4B5563">Shown to students this week</div><div style="font-size: 17px; font-weight: 600">340 <span style="font-size: 13px; font-weight: 500; color: #15803D">+22%</span></div></div>
+          </div>
+        </article>
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 600">To raise it</h2>
+          <ul style="margin: 0; padding-left: 18px; color: #374151; display: flex; flex-direction: column; gap: 4px">
+            <li>Answer 2 student questions waiting since yesterday.</li>
+            <li>Update the Product Design rubric. It hasn't changed in 60 days.</li>
+            <li>Tell 3 invited students whether they moved forward. Closing the loop counts.</li>
+          </ul>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #4B5563">Credibility can't be bought or boosted by posting more. It only moves when students get real replies and real outcomes.</p>
+        </article>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'search', role: 'de', query: '', verifiedOnly: false, clearsOnly: false, sort: 'match', invited: {} };
+  }
+  renderVals() {
+    var self = this, S = this.state;
+    var set = function (p) { return function () { self.setState(p); }; };
+    var chip = function (on) { return 'min-height: 44px; padding: 0 18px; border-radius: 999px; font-size: 15px; font-weight: 500; cursor: pointer; ' + (on ? 'background: #2563EB; color: #FFFFFF; border: 1px solid #2563EB' : 'background: #FFFFFF; color: #111827; border: 1px solid #D1D5DB'); };
+    var seg = function (on) { return 'min-height: 36px; padding: 0 14px; border: 0; border-radius: 999px; font-size: 13px; cursor: pointer; ' + (on ? 'background: #FFFFFF; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,.08)' : 'background: transparent; color: #4B5563'); };
+
+    var tabs = [['search', 'Find students'], ['invites', 'Invites'], ['profile', 'My profile']].map(function (t) {
+      var on = S.tab === t[0];
+      return { label: t[1], selected: on ? 'true' : 'false', pick: set({ tab: t[0] }),
+        style: 'min-height: 48px; padding: 0 14px; border: 0; background: none; cursor: pointer; font-size: 15px; white-space: nowrap; border-bottom: 2px solid ' + (on ? '#2563EB; color: #111827; font-weight: 600' : 'transparent; color: #4B5563; font-weight: 500') };
+    });
+
+    var ROLES = { de: 'Design Engineering Intern', ml: 'ML Engineer Intern', be: 'Backend Intern' };
+    var STUDENTS = [
+      { id: 'mc', role: 'de', initials: 'MC', name: 'Maya Chen', major: 'Mechanical Eng. · Junior', project: 'Servo-driven prosthetic wrist', skills: ['Fusion 360', 'GD&T', '3D printing', 'Arduino'], hit: 3, match: 92, score: 82, rubric: [8, 9], reviews: 5, growth: 4 },
+      { id: 'je', role: 'de', initials: 'JE', name: 'Jordan Ellis', major: 'Mechanical Eng. · Senior', project: 'Drone gimbal housing', skills: ['SolidWorks', 'DFM', 'FEA', 'Testing'], hit: 3, match: 86, score: 79, rubric: [7, 9], reviews: 3, growth: 2 },
+      { id: 'so', role: 'de', initials: 'SO', name: 'Sam Okafor', major: 'Industrial Design · Sophomore', project: 'Split ergonomic keyboard case', skills: ['Onshape', 'User testing', 'Ergonomics', '3D printing'], hit: 3, match: 78, score: 65, rubric: [6, 9], reviews: 1, growth: 9 },
+      { id: 'ar', role: 'de', initials: 'AR', name: 'Ana Ruiz', major: 'Industrial Design · Junior', project: 'Modular desk lamp', skills: ['Fusion 360', 'Rendering', 'User research'], hit: 2, match: 74, score: 67, rubric: [6, 9], reviews: 2, growth: 6 },
+      { id: 'ps', role: 'de', initials: 'PS', name: 'Priya Shah', major: 'Mechanical Eng. · Sophomore', project: 'Bike-rack load study', skills: ['ANSYS', 'FEA', 'GD&T', 'MATLAB'], hit: 2, match: 71, score: 63, rubric: [5, 9], reviews: 1, growth: 11 },
+      { id: 'nb', role: 'de', initials: 'NB', name: 'Noah Brooks', major: 'Electrical & Computer Eng. · Freshman', project: 'Rover suspension bracket', skills: ['SolidWorks', 'FEA', '3D printing'], hit: 2, match: 64, score: 58, rubric: [4, 9], reviews: 0, growth: 12 },
+      { id: 'lp', role: 'ml', initials: 'LP', name: 'Lena Park', major: 'Data Analytics · Senior', project: 'Parking demand forecast', skills: ['scikit-learn', 'SQL', 'Forecasting'], hit: 3, match: 88, score: 80, rubric: [7, 8], reviews: 4, growth: 3 },
+      { id: 'rm', role: 'ml', initials: 'RM', name: 'Ravi Menon', major: 'CSE · Junior', project: 'Lecture audio summarizer', skills: ['PyTorch', 'NLP', 'FastAPI'], hit: 3, match: 83, score: 74, rubric: [6, 8], reviews: 2, growth: 8 },
+      { id: 'ta', role: 'be', initials: 'TA', name: 'Tessa Alvarez', major: 'CSE · Senior', project: 'Fleet telemetry ingest service', skills: ['Go', 'Postgres', 'Docker'], hit: 3, match: 93, score: 85, rubric: [8, 8], reviews: 4, growth: 2 },
+      { id: 'oh', role: 'be', initials: 'OH', name: 'Omar Haddad', major: 'CSE · Sophomore', project: 'Club room booking API', skills: ['Node.js', 'REST', 'SQLite'], hit: 2, match: 72, score: 60, rubric: [5, 8], reviews: 0, growth: 10 }
+    ];
+    var q = S.query.trim().toLowerCase();
+    var list = STUDENTS.filter(function (s) {
+      if (s.role !== S.role) return false;
+      if (S.verifiedOnly && s.reviews === 0) return false;
+      if (S.clearsOnly && s.rubric[0] / s.rubric[1] < 0.7) return false;
+      if (q && (s.name + ' ' + s.project + ' ' + s.skills.join(' ')).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    }).sort(function (a, b) { return S.sort === 'growth' ? b.growth - a.growth : b.match - a.match; });
+
+    var results = list.map(function (s) {
+      var inv = !!S.invited[s.id];
+      return { initials: s.initials, name: s.name, major: s.major, project: s.project, match: s.match, score: s.score,
+        rubric: s.rubric[0] + '/' + s.rubric[1], reviews: s.reviews, growth: s.growth,
+        matchStyle: 'flex: none; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; ' + (s.match >= 80 ? 'background: #2563EB; color: #FFFFFF' : 'background: #EFF6FF; color: #1D4ED8'),
+        tags: s.skills.map(function (k, i) {
+          var hit = i < s.hit || (q && k.toLowerCase().indexOf(q) !== -1);
+          return { label: k, style: 'font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 999px; ' + (hit ? 'background: #EFF6FF; color: #1D4ED8' : 'background: #F3F4F6; color: #374151') };
+        }),
+        inviteLabel: inv ? 'Invited' : 'Send two-way invite',
+        inviteStyle: 'min-height: 44px; padding: 0 20px; border-radius: 999px; font-size: 15px; font-weight: 600; cursor: pointer; ' + (inv ? 'background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0' : 'background: #2563EB; color: #FFFFFF; border: 1px solid #2563EB'),
+        invite: function () { var n = Object.assign({}, self.state.invited); n[s.id] = true; self.setState({ invited: n }); } };
+    });
+
+    var STATUS = { accepted: ['Accepted', '#DCFCE7', '#166534'], question: ['Asked a question', '#FEF3C7', '#92400E'], pending: ['Waiting', '#F3F4F6', '#374151'] };
+    var base = [
+      ['MC', 'Maya Chen', 'Design Engineering Intern · fast-track interview · sent Oct 19', 'accepted'],
+      ['TA', 'Tessa Alvarez', 'Backend Intern · project seat · sent Oct 18', 'accepted'],
+      ['JE', 'Jordan Ellis', 'Design Engineering Intern · intro call · sent Oct 22', 'question']
+    ];
+    STUDENTS.forEach(function (s) { if (S.invited[s.id]) base.unshift([s.initials, s.name, ROLES[s.role] + ' · sent just now', 'pending']); });
+    var invites = base.map(function (i) {
+      var st = STATUS[i[3]];
+      return { initials: i[0], name: i[1], detail: i[2], status: st[0], statusStyle: 'flex: none; font-size: 13px; font-weight: 500; padding: 4px 12px; border-radius: 999px; background: ' + st[1] + '; color: ' + st[2] };
+    });
+
+    var credParts = [['Students who got a reply', '92% (11 of 12)', 92], ['Median reply time', '18 hours', 80], ['Invites that led to an interview', '64%', 64], ['Active days, last 30', '17 of 30', 57], ['Students\' rating of your process', '4.7 / 5 (9 ratings)', 94]].map(function (c) {
+      return { label: c[0], value: c[1], barStyle: 'height: 8px; border-radius: 999px; background: #2563EB; width: ' + c[2] + '%' };
+    });
+
+    return {
+      tabs: tabs, isSearch: S.tab === 'search', isInvites: S.tab === 'invites', isProfile: S.tab === 'profile',
+      query: S.query, onQuery: function (e) { self.setState({ query: e.target.value }); },
+      roleChips: Object.keys(ROLES).map(function (k) { return { label: ROLES[k], pressed: S.role === k ? 'true' : 'false', pick: set({ role: k }), style: chip(S.role === k) }; }),
+      verifiedOnly: S.verifiedOnly, toggleVerified: set({ verifiedOnly: !S.verifiedOnly }),
+      clearsOnly: S.clearsOnly, toggleClears: set({ clearsOnly: !S.clearsOnly }),
+      sorts: [['match', 'Best match'], ['growth', 'Fastest growing']].map(function (o) { return { label: o[1], pressed: S.sort === o[0] ? 'true' : 'false', pick: set({ sort: o[0] }), style: seg(S.sort === o[0]) }; }),
+      resultLine: list.length + ' students · ranked by ' + (S.sort === 'growth' ? '30-day growth' : 'match to your ' + ROLES[S.role] + ' rubric'),
+      results: results, noResults: list.length === 0,
+      invites: invites, credParts: credParts
+    };
+  }
+}
+</script>
+</body>
+</html>

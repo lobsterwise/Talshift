@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mentor project feed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+button,a,textarea,input{font-family:inherit}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid #2563EB;outline-offset:2px}
+textarea::placeholder{color:#9CA3AF}
+</style>
+</helmet>
+<div style="min-height: 100%; background: #FFFFFF; color: #111827; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 15px; line-height: 1.55; font-variant-numeric: tabular-nums">
+
+  <header style="border-bottom: 1px solid #E5E7EB; background: #FFFFFF">
+    <div style="max-width: 832px; margin: 0 auto; padding: 0 24px; min-height: 76px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div aria-hidden="true" style="width: 32px; height: 32px; border-radius: 8px; background: #2563EB; display: flex; align-items: center; justify-content: center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><path d="M7 3v18M17 3v18M7 8h10M7 13h10M7 18h10"></path></svg>
+        </div>
+        <span style="font-size: 17px; font-weight: 600">Rungs</span>
+      </div>
+      <nav aria-label="Switch view" style="display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: #F3F4F6">
+        <a href="FinalStudent.dc.html" style="min-height: 36px; padding: 0 16px; display: flex; align-items: center; border-radius: 999px; color: #4B5563; text-decoration: none; font-size: 14px; font-weight: 500">Student</a>
+        <span aria-current="page" style="min-height: 36px; padding: 0 16px; display: flex; align-items: center; border-radius: 999px; background: #FFFFFF; color: #111827; font-size: 14px; font-weight: 600; box-shadow: 0 1px 2px rgba(17,24,39,.08)">Mentor</span>
+        <a href="FinalRecruiter.dc.html" style="min-height: 36px; padding: 0 16px; display: flex; align-items: center; border-radius: 999px; color: #4B5563; text-decoration: none; font-size: 14px; font-weight: 500">Recruiter</a>
+      </nav>
+    </div>
+    <div role="tablist" aria-label="Mentor sections" style="max-width: 832px; margin: 0 auto; padding: 0 24px; display: flex; gap: 4px; overflow-x: auto">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+        <button type="button" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+  </header>
+
+  <sc-if value="{{isFeed}}" hint-placeholder-val="{{true}}">
+  <main style="max-width: 832px; margin: 0 auto; padding: 44px 24px 96px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em">Project feed</h1>
+      <p style="margin: 0; font-size: 16px; color: #4B5563">Student work matched to what you're looking for. Rating is optional. Leave a star, a sentence, both, or just browse.</p>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding: 12px 16px; border-radius: 12px; background: #F9FAFB; border: 1px solid #F3F4F6; font-size: 14px; color: #4B5563">
+      <span style="font-weight: 600; color: #111827">This week</span>
+      <span><strong style="color: #111827">{{reviewsDone}}</strong> reviews</span>
+      <span><strong style="color: #111827">{{minutes}}</strong> of your 15 min</span>
+      <span><strong style="color: #111827">92%</strong> of your advice verified</span>
+      <span style="margin-left: auto">Office hours Tue 4:00 PM · 2 of 3 booked</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <span style="font-size: 14px; font-weight: 500; color: #374151">Looking for</span>
+      <div role="group" aria-label="Filter projects" style="display: flex; flex-wrap: wrap; gap: 8px">
+        <sc-for list="{{chips}}" as="chip" hint-placeholder-count="4">
+          <button type="button" onClick="{{chip.pick}}" aria-pressed="{{chip.pressed}}" style="{{chip.style}}">{{chip.label}}</button>
+        </sc-for>
+      </div>
+      <span style="font-size: 13px; color: #4B5563">{{countLine}} · fewest mentor reviews first</span>
+    </div>
+
+    <sc-for list="{{cards}}" as="c" hint-placeholder-count="3">
+      <article style="border: 1px solid #E5E7EB; border-radius: 16px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(17,24,39,.04); padding: 24px; display: flex; flex-direction: column; gap: 20px">
+
+        <div style="display: flex; flex-wrap: wrap; gap: 24px">
+          <!-- Left: the work -->
+          <div style="flex: 999 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; align-items: flex-start; gap: 12px">
+              <div aria-hidden="true" style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: #EFF6FF; color: #1D4ED8; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600">{{c.initials}}</div>
+              <div style="flex: 1; min-width: 0; line-height: 1.35">
+                <div style="font-size: 16px; font-weight: 600">{{c.name}}</div>
+                <div style="font-size: 13px; color: #4B5563">{{c.major}}</div>
+                <div style="font-size: 13px; color: #4B5563">Targeting {{c.targeting}}</div>
+              </div>
+              <sc-if value="{{c.showMatch}}" hint-placeholder-val="{{true}}">
+                <span style="{{c.matchStyle}}">{{c.matchLabel}}</span>
+              </sc-if>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <h2 style="margin: 0; font-size: 18px; line-height: 1.3; font-weight: 600">{{c.title}}</h2>
+              <p style="margin: 0; color: #374151">{{c.summary}}</p>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <sc-for list="{{c.tags}}" as="t" hint-placeholder-count="4">
+                <span style="{{t.style}}">{{t.label}}</span>
+              </sc-for>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #374151">
+              <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #1D4ED8">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#2563EB" aria-hidden="true"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"></path></svg>
+                AI checked the repo
+              </span>
+              <div style="display: flex; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 3px" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>{{c.strength}}</span></div>
+              <div style="display: flex; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2.2" stroke-linecap="round" style="flex: none; margin-top: 3px" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.5v.01"></path></svg><span>{{c.risk}}</span></div>
+            </div>
+
+            <div>
+              <sc-if value="{{c.hasRelated}}" hint-placeholder-val="{{true}}">
+                <button type="button" onClick="{{c.toggleRelated}}" aria-expanded="{{c.relatedOpen}}" style="width: 100%; min-height: 44px; display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 0; cursor: pointer; color: #111827">
+                  <span style="font-size: 14px; color: #4B5563">{{c.relatedLabel}}</span>
+                  <span aria-hidden="true" style="flex: 1; height: 1px; background: #E5E7EB"></span>
+                  <span style="font-size: 16px; font-weight: 600">{{c.relatedCount}}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="{{c.relatedChevron}}"><path d="M6 9l6 6 6-6"></path></svg>
+                </button>
+              </sc-if>
+              <sc-if value="{{c.noRelated}}" hint-placeholder-val="{{false}}">
+                <div style="min-height: 44px; display: flex; align-items: center; gap: 12px; padding-right: 28px">
+                  <span style="font-size: 14px; color: #4B5563">{{c.relatedLabel}}</span>
+                  <span aria-hidden="true" style="flex: 1; height: 1px; background: #E5E7EB"></span>
+                  <span style="font-size: 16px; font-weight: 600">1</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{c.relatedOpen}}" hint-placeholder-val="{{false}}">
+                <ul style="list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px">
+                  <sc-for list="{{c.related}}" as="rp" hint-placeholder-count="2">
+                    <li style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 10px; background: #F9FAFB; font-size: 14px">
+                      <span>{{rp.title}}</span><span style="font-weight: 600; color: #1D4ED8">AI {{rp.ai}}</span>
+                    </li>
+                  </sc-for>
+                </ul>
+              </sc-if>
+            </div>
+          </div>
+
+          <!-- Right: rating panel (always visible; only verified reviews count) -->
+          <div style="flex: 1 1 300px; min-width: 0; max-width: 100%; background: #F3F4F6; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 14px; align-self: flex-start">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+              <span style="font-size: 14px; color: #4B5563">Overall rating</span>
+              <sc-if value="{{c.pending}}" hint-placeholder-val="{{false}}">
+                <span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #FFFFFF; color: #1D4ED8; border: 1px solid #DBEAFE">Your review: in verification</span>
+              </sc-if>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 6px; margin-top: -8px">
+              <span style="font-size: 40px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em">{{c.overall}}</span>
+              <span style="font-size: 15px; color: #6B7280">/ 100</span>
+            </div>
+            <p style="margin: -10px 0 0; font-size: 13px; color: #4B5563">{{c.caption}}</p>
+
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+              <div style="background: #FFFFFF; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px">
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #4B5563"><svg width="12" height="12" viewBox="0 0 24 24" fill="#2563EB" aria-hidden="true"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"></path></svg>AI rating</span>
+                <span style="font-size: 17px; font-weight: 600">{{c.ai}}</span>
+                <span style="font-size: 12px; color: #6B7280">out of 100</span>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px">
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #4B5563"><svg width="12" height="12" viewBox="0 0 24 24" fill="#2563EB" aria-hidden="true"><path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 2.9 1.1-6.3L2.9 9.4l6.3-.9z"></path></svg>Mentor rating</span>
+                <span style="font-size: 17px; font-weight: 600">{{c.mentorText}}</span>
+                <span style="font-size: 12px; color: #6B7280">{{c.mentorSub}}</span>
+              </div>
+            </div>
+
+            <div>
+              <button type="button" onClick="{{c.toggleSkills}}" aria-expanded="{{c.skillsOpen}}" style="width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; cursor: pointer; color: #111827">
+                <span style="font-size: 14px; color: #4B5563">Skill breakdown</span>
+                <span aria-hidden="true" style="flex: 1; height: 1px; background: #D1D5DB"></span>
+                <span style="font-size: 14px; font-weight: 600">{{c.skillCount}} skills</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="{{c.skillsChevron}}"><path d="M6 9l6 6 6-6"></path></svg>
+              </button>
+              <sc-if value="{{c.skillsOpen}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 4px">
+                  <sc-for list="{{c.skills}}" as="sk" hint-placeholder-count="3">
+                    <div style="display: flex; flex-direction: column; gap: 4px">
+                      <div style="display: flex; justify-content: space-between; font-size: 13px"><span>{{sk.label}}</span><span style="font-weight: 600">{{sk.score}}</span></div>
+                      <div style="height: 6px; border-radius: 999px; background: #E5E7EB"><div style="{{sk.barStyle}}"></div></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mentor notes (verified only) -->
+        <div style="border-top: 1px solid #E5E7EB; padding-top: 18px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+            <span style="font-size: 14px; font-weight: 500; color: #374151">What mentors wrote</span>
+            <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #4B5563">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"></path><path d="M9 12l2 2 4-4"></path></svg>
+              Verified reviews only
+            </span>
+          </div>
+          <sc-if value="{{c.hasQuotes}}" hint-placeholder-val="{{true}}">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <sc-for list="{{c.quotes}}" as="q" hint-placeholder-count="1">
+                <figure style="margin: 0">
+                  <blockquote style="margin: 0; font-size: 15px">“{{q.text}}”</blockquote>
+                  <figcaption style="font-size: 13px; color: #6B7280">{{q.who}}</figcaption>
+                </figure>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{c.noQuotes}}" hint-placeholder-val="{{false}}">
+            <p style="margin: 0; font-size: 15px; color: #4B5563">No written feedback yet.</p>
+          </sc-if>
+        </div>
+
+        <!-- Rate row: optional -->
+        <sc-if value="{{c.notSent}}" hint-placeholder-val="{{true}}">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px">
+            <span style="font-size: 14px; color: #4B5563">{{c.rateLabel}}</span>
+            <div role="radiogroup" aria-label="Rate this project (optional)" style="display: flex">
+              <sc-for list="{{c.stars}}" as="st" hint-placeholder-count="5">
+                <button type="button" onClick="{{st.rate}}" aria-label="{{st.label}}" aria-checked="{{st.on}}" role="radio" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: none; border: 0; border-radius: 10px; cursor: pointer">
+                  <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 2.9 1.1-6.3L2.9 9.4l6.3-.9z" fill="{{st.fill}}" stroke="{{st.stroke}}" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+                </button>
+              </sc-for>
+            </div>
+            <sc-if value="{{c.composerClosed}}" hint-placeholder-val="{{true}}">
+              <button type="button" onClick="{{c.openComposer}}" style="margin-left: auto; min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 15px; font-weight: 500; cursor: pointer">Leave feedback</button>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- Composer -->
+        <sc-if value="{{c.composerOpen}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 14px; background: #F9FAFB; border: 1px solid #E5E7EB">
+            <label for="{{c.noteId}}" style="font-size: 14px; font-weight: 600">What should {{c.firstName}} do next? <span style="font-weight: 400; color: #6B7280">One sentence</span></label>
+            <textarea id="{{c.noteId}}" rows="2" maxlength="140" value="{{c.note}}" onChange="{{c.onNote}}" placeholder="Next, add…" style="width: 100%; box-sizing: border-box; min-height: 64px; resize: vertical; border: 1px solid #D1D5DB; border-radius: 10px; padding: 10px 12px; font-size: 15px; color: #111827; background: #FFFFFF"></textarea>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px">
+              <span style="font-size: 12px; color: #6B7280">Start from</span>
+              <sc-for list="{{c.starters}}" as="sx" hint-placeholder-count="2">
+                <button type="button" onClick="{{sx.use}}" style="min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #DBEAFE; background: #EFF6FF; color: #1D4ED8; font-size: 13px; cursor: pointer">{{sx.label}}</button>
+              </sc-for>
+              <span style="margin-left: auto; font-size: 12px; color: #6B7280">{{c.noteLen}}/140</span>
+            </div>
+            <label style="min-height: 44px; display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: #374151; cursor: pointer">
+              <input type="checkbox" checked="{{c.endorse}}" onChange="{{c.toggleEndorse}}" style="width: 18px; height: 18px; accent-color: #2563EB">
+              Endorse {{c.firstName}}'s growth (your name shows to recruiters)
+            </label>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid #E5E7EB; padding-top: 12px">
+              <span style="flex: 1 1 260px; display: flex; gap: 8px; font-size: 13px; color: #4B5563">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"></path></svg>
+                Nothing reaches {{c.firstName}} or changes a score until your review is verified.
+              </span>
+              <button type="button" onClick="{{c.closeComposer}}" style="min-height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: transparent; color: #4B5563; font-size: 15px; font-weight: 500; cursor: pointer">Cancel</button>
+              <button type="button" onClick="{{c.send}}" style="{{c.sendStyle}}">Submit for verification</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- Verification tracker -->
+        <sc-if value="{{c.sent}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 14px; padding: 16px; border-radius: 14px; background: #F9FAFB; border: 1px solid #E5E7EB">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px">
+              <strong style="font-size: 15px">Your review is being verified</strong>
+              <span style="font-size: 13px; color: #4B5563">Usually within 24 hours</span>
+            </div>
+            <ol style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px">
+              <sc-for list="{{c.steps}}" as="sp" hint-placeholder-count="4">
+                <li style="display: flex; flex-direction: column; gap: 6px">
+                  <span style="{{sp.barStyle}}"></span>
+                  <span style="{{sp.titleStyle}}">{{sp.title}}</span>
+                  <span style="font-size: 12px; color: #4B5563">{{sp.desc}}</span>
+                </li>
+              </sc-for>
+            </ol>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid #E5E7EB; padding-top: 12px">
+              <span style="flex: 1 1 300px; font-size: 14px; color: #374151">{{c.impactText}}</span>
+              <button type="button" onClick="{{c.withdraw}}" style="min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid #D1D5DB; background: #FFFFFF; font-size: 14px; font-weight: 500; cursor: pointer">Withdraw</button>
+            </div>
+          </div>
+        </sc-if>
+      </article>
+    </sc-for>
+  </main>
+  </sc-if>
+  <!-- ═════════ FIND STUDENTS ═════════ -->
+  <sc-if value="{{isSearch}}" hint-placeholder-val="{{false}}">
+    <main style="max-width: 832px; margin: 0 auto; padding: 36px 24px 96px; display: flex; flex-direction: column; gap: 18px">
+      <div>
+        <h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em">Find students</h1>
+        <p style="margin: 6px 0 0; font-size: 16px; color: #4B5563">Students whose verified work lines up with what you know. Start with people who asked for help.</p>
+      </div>
+      <label for="mq" style="position: relative; display: block">
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search skills, projects or names</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 16px; top: 15px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input id="mq" type="search" value="{{mQuery}}" onChange="{{onMQuery}}" placeholder="Search skills, projects or names (try FEA, Onshape)" style="width: 100%; box-sizing: border-box; min-height: 48px; padding: 0 16px 0 44px; border: 1px solid #D1D5DB; border-radius: 999px; font-size: 15px; color: #111827; background: #FFFFFF">
+      </label>
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 14px">
+        <label style="min-height: 44px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer"><input type="checkbox" checked="{{askedOnly}}" onChange="{{toggleAsked}}" style="width: 18px; height: 18px; accent-color: #2563EB">Asked for a mentor</label>
+        <label style="min-height: 44px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer"><input type="checkbox" checked="{{unreviewedOnly}}" onChange="{{toggleUnreviewed}}" style="width: 18px; height: 18px; accent-color: #2563EB">No mentor reviews yet</label>
+        <span style="margin-left: auto; color: #4B5563">{{mResultLine}}</span>
+      </div>
+      <sc-for list="{{mResults}}" as="s" hint-placeholder-count="4">
+        <article style="border: 1px solid #E5E7EB; border-radius: 16px; padding: 18px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px">
+          <div aria-hidden="true" style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: #EFF6FF; color: #1D4ED8; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600">{{s.initials}}</div>
+          <div style="flex: 999 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px"><strong style="font-size: 16px">{{s.name}}</strong><span style="font-size: 13px; color: #4B5563">{{s.major}}</span></div>
+            <div style="font-size: 14px; color: #374151">{{s.project}} · score {{s.score}} · {{s.reviewText}}</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{s.tags}}" as="t" hint-placeholder-count="3"><span style="{{t.style}}">{{t.label}}</span></sc-for><sc-if value="{{s.asked}}" hint-placeholder-val="{{false}}"><span style="font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #DCFCE7; color: #166534">Asked for a mentor</span></sc-if></div>
+          </div>
+          <button type="button" onClick="{{s.act}}" style="{{s.actStyle}}">{{s.actLabel}}</button>
+        </article>
+      </sc-for>
+    </main>
+  </sc-if>
+
+  <!-- ═════════ PROFILE / CREDIBILITY ═════════ -->
+  <sc-if value="{{isProfile}}" hint-placeholder-val="{{false}}">
+    <main style="max-width: 832px; margin: 0 auto; padding: 36px 24px 96px; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; align-items: center; gap: 16px">
+        <div aria-hidden="true" style="width: 64px; height: 64px; flex: none; border-radius: 50%; background: #EFF6FF; color: #1D4ED8; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600">RM</div>
+        <div>
+          <h1 style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em">Rina Matsuda</h1>
+          <p style="margin: 2px 0 0; color: #4B5563">Research Engineer · Honda Research Institute · mentoring in CAD and human factors</p>
+        </div>
+      </div>
+      <article style="border: 1px solid #E5E7EB; border-radius: 16px; box-shadow: 0 1px 2px rgba(17,24,39,.04); padding: 24px; display: flex; flex-wrap: wrap; gap: 24px">
+        <div style="flex: 999 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 600">What your credibility is made of</h2>
+          <sc-for list="{{credParts}}" as="cp" hint-placeholder-count="5">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 14px"><span>{{cp.label}}</span><strong>{{cp.value}}</strong></div>
+              <div style="height: 8px; border-radius: 999px; background: #E5E7EB"><div style="{{cp.barStyle}}"></div></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex: 1 1 240px; min-width: 0; background: #F3F4F6; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; align-self: flex-start">
+          <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 14px; color: #4B5563">Credibility</span><span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #DCFCE7; color: #166534">Highly credible</span></div>
+          <div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 40px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em">94</span><span style="color: #6B7280">/ 100</span></div>
+          <p style="margin: 0; font-size: 13px; color: #4B5563">Top 8% of mentors on Rungs.</p>
+          <div style="background: #FFFFFF; border-radius: 10px; padding: 10px 12px"><div style="font-size: 12px; color: #4B5563">Suggested to students this week</div><div style="font-size: 17px; font-weight: 600">210 <span style="font-size: 13px; font-weight: 500; color: #15803D">+34%</span></div></div>
+        </div>
+      </article>
+      <article style="border: 1px solid #E5E7EB; border-radius: 16px; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 18px; font-weight: 600">To raise it</h2>
+        <ul style="margin: 0; padding-left: 18px; color: #374151; display: flex; flex-direction: column; gap: 4px">
+          <li>Review 2 CAD projects that have no mentor reviews yet.</li>
+          <li>Keep your Tuesday office-hour slot. Cancelled slots lower your reply score.</li>
+        </ul>
+        <p style="margin: 4px 0 0; font-size: 13px; color: #4B5563">Credibility comes from verified advice and student outcomes, so a few good reviews beat many quick ones.</p>
+      </article>
+    </main>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'feed', filter: 'cad', mine: {}, open: {}, notes: {}, sent: {}, checked: {}, endorse: {}, composer: {}, mQuery: '', askedOnly: false, unreviewedOnly: false, offered: {} };
+  }
+  componentWillUnmount() {
+    (this.timers || []).forEach(function (t) { clearTimeout(t); });
+  }
+  renderVals() {
+    var self = this;
+    var S = this.state;
+    var AREAS = [{ id: 'all', label: 'All projects' }, { id: 'cad', label: 'CAD' }, { id: 'ml', label: 'Machine learning' }, { id: 'backend', label: 'Backend' }];
+    var AREA_LABEL = { cad: 'CAD projects', ml: 'ML projects', backend: 'Backend projects' };
+    var STUDENTS = [
+      { id: 'mc', name: 'Maya Chen', initials: 'MC', major: 'Mechanical Engineering · Junior', targeting: 'Mechanical Design Intern', area: 'cad',
+        title: 'Servo-driven prosthetic wrist', summary: 'Modeled a 14-part wrist assembly in Fusion 360, printed three revisions, and tolerance-tested the servo mount. Documented every design change with drawings.',
+        tags: [['CAD', 'cad'], ['Fusion 360', 'cad'], ['3D printing', 'cad'], ['Arduino', '']],
+        strength: 'Drawings with tolerances for every revision', risk: 'No stress check on the servo bracket',
+        ai: 88, ratings: [5, 5, 4, 5, 4],
+        quotes: [{ text: "Clean part breakout and sensible tolerances. I'd love to see a stress check on the servo bracket next.", who: 'Daniel R. · Mechanical engineer' }, { text: 'Great iteration log. Easy to follow what changed and why.', who: 'Ana P. · Design lead' }],
+        related: [{ title: 'Compliant gripper', ai: 81 }, { title: 'Bike hub redesign', ai: 74 }, { title: 'Desk fan teardown', ai: 70 }],
+        skills: [['CAD modeling', 94, 'cad'], ['3D printing', 90, 'cad'], ['Mechanical design', 88, 'cad'], ['Electronics integration', 78, '']] },
+      { id: 'je', name: 'Jordan Ellis', initials: 'JE', major: 'Mechanical Engineering · Senior', targeting: 'Product Design Engineer', area: 'cad',
+        title: 'Drone gimbal housing', summary: 'Designed a lightweight gimbal housing in SolidWorks with snap-fit joints, cutting weight 22% against the stock part. Ran a simple drop test on the prototype.',
+        tags: [['CAD', 'cad'], ['SolidWorks', 'cad'], ['Design for manufacturing', 'cad'], ['Testing', '']],
+        strength: 'Weight savings measured against the stock part', risk: 'Snap-fit validation is not documented',
+        ai: 82, ratings: [4, 4, 5],
+        quotes: [{ text: 'Good weight reduction. Add more detail on how you validated the snap-fits.', who: 'Priya S. · Manufacturing engineer' }],
+        related: [{ title: 'Bike light mount', ai: 74 }],
+        skills: [['SolidWorks', 86, 'cad'], ['Design for manufacturing', 82, 'cad'], ['Testing', 70, '']] },
+      { id: 'so', name: 'Sam Okafor', initials: 'SO', major: 'Industrial Design · Sophomore', targeting: 'Design Engineering Intern', area: 'cad',
+        title: 'Split ergonomic keyboard case', summary: 'Sketched and modeled a two-piece adjustable keyboard case in Onshape, then printed it and tested it over two weeks of daily use.',
+        tags: [['CAD', 'cad'], ['Onshape', 'cad'], ['3D printing', 'cad'], ['Ergonomics', '']],
+        strength: 'Tested by real daily use for two weeks', risk: 'No drawings or tolerances in the repo',
+        ai: 72, ratings: [], quotes: [], related: [],
+        skills: [['CAD modeling', 76, 'cad'], ['3D printing', 80, 'cad'], ['Ergonomics', 74, '']] },
+      { id: 'lp', name: 'Lena Park', initials: 'LP', major: 'Data Analytics · Senior', targeting: 'Data Scientist', area: 'ml',
+        title: 'Campus parking demand forecast', summary: 'Gradient-boosted model that forecasts garage occupancy a day ahead, at 9.8% error on a held-out month. The parking office uses the dashboard.',
+        tags: [['Machine learning', 'ml'], ['scikit-learn', 'ml'], ['SQL', ''], ['Dashboards', '']],
+        strength: 'Honest holdout evaluation with a reported error', risk: 'An event-day feature may leak future information',
+        ai: 85, ratings: [5, 4, 5, 4],
+        quotes: [{ text: 'Real stakeholder, real metric. Drop the leaky feature and re-report.', who: 'Kenji T. · Data scientist' }],
+        related: [{ title: 'Rec center crowd model', ai: 76 }, { title: 'Bus ridership EDA', ai: 68 }, { title: 'Dining wait times', ai: 72 }],
+        skills: [['Modeling', 84, 'ml'], ['Evaluation', 88, 'ml'], ['SQL', 76, ''], ['Visualization', 80, '']] },
+      { id: 'rm', name: 'Ravi Menon', initials: 'RM', major: 'Computer Science & Eng. · Junior', targeting: 'ML Engineer Intern', area: 'ml',
+        title: 'Lecture audio summarizer', summary: 'Transcribes lecture recordings and builds topic-by-topic summaries. Tested on 40 hours of OSU lecture audio with a student rating study.',
+        tags: [['Machine learning', 'ml'], ['PyTorch', 'ml'], ['NLP', 'ml'], ['FastAPI', '']],
+        strength: 'Evaluated with real student ratings', risk: 'No latency or cost numbers',
+        ai: 79, ratings: [4, 4],
+        quotes: [{ text: 'Nice user study. Report how long a summary takes to generate.', who: 'Marcus H. · Software engineer' }],
+        related: [{ title: 'Course review sentiment', ai: 73 }],
+        skills: [['NLP', 82, 'ml'], ['Deep learning', 78, 'ml'], ['APIs', 72, '']] },
+      { id: 'tv', name: 'Tessa Alvarez', initials: 'TA', major: 'Computer Science & Eng. · Senior', targeting: 'Backend Engineer', area: 'backend',
+        title: 'Fleet telemetry ingest service', summary: 'A Go service that ingests 2,000 sample vehicle messages a second into Postgres and flags anomalies. Load-tested and deployed with Docker.',
+        tags: [['Backend', 'backend'], ['Go', 'backend'], ['Postgres', 'backend'], ['Docker', '']],
+        strength: 'Throughput measured under load', risk: 'Auth uses one shared key',
+        ai: 87, ratings: [5, 5, 4, 5],
+        quotes: [{ text: 'Production-minded. Swap the shared key for per-device tokens.', who: 'Omar K. · Platform engineer' }],
+        related: [{ title: 'Rate limiter library', ai: 84 }, { title: 'Club room booking API', ai: 77 }, { title: 'Log search CLI', ai: 72 }],
+        skills: [['API design', 88, 'backend'], ['Databases', 86, 'backend'], ['DevOps', 80, '']] },
+      { id: 'oh', name: 'Omar Haddad', initials: 'OH', major: 'Computer Science & Eng. · Sophomore', targeting: 'Backend Intern', area: 'backend',
+        title: 'Club room booking API', summary: 'REST API with auth for booking student-org rooms, used by two clubs this semester. Node, Express and SQLite.',
+        tags: [['Backend', 'backend'], ['Node.js', 'backend'], ['REST', 'backend'], ['SQLite', '']],
+        strength: 'Two clubs are using it now', risk: 'No automated tests',
+        ai: 70, ratings: [], quotes: [], related: [],
+        skills: [['API design', 72, 'backend'], ['Databases', 66, 'backend'], ['Testing', 40, '']] }
+    ];
+    var weight = function (n) { return Math.min(0.6, n / (n + 3)); };
+    var avgOf = function (r) { return r.length ? r.reduce(function (a, b) { return a + b; }, 0) / r.length : 0; };
+    var blend = function (ai, r) { return r.length ? Math.round(ai * (1 - weight(r.length)) + avgOf(r) * 20 * weight(r.length)) : ai; };
+    var setKey = function (key, id, val) { var n = Object.assign({}, self.state[key]); n[id] = val; var p = {}; p[key] = n; self.setState(p); };
+
+    var chips = AREAS.map(function (a) {
+      var on = S.filter === a.id;
+      return { label: a.label, pressed: on ? 'true' : 'false', pick: function () { self.setState({ filter: a.id }); },
+        style: 'min-height: 44px; padding: 0 20px; border-radius: 999px; font-size: 15px; font-weight: 500; cursor: pointer; ' +
+          (on ? 'background: #2563EB; color: #FFFFFF; border: 1px solid #2563EB' : 'background: #FFFFFF; color: #111827; border: 1px solid #D1D5DB') };
+    });
+
+    var list = STUDENTS.filter(function (s) { return S.filter === 'all' || s.area === S.filter; })
+      .sort(function (a, b) { return a.ratings.length - b.ratings.length || b.ai - a.ai; });
+
+    var cards = list.map(function (s) {
+      var my = S.mine[s.id] || 0;
+      var open = S.open[s.id] || {};
+      var note = S.notes[s.id] || '';
+      var sent = !!S.sent[s.id];
+      var checked = !!S.checked[s.id];
+      var endorse = !!S.endorse[s.id];
+      var composerOpen = !sent && (my > 0 || !!S.composer[s.id]);
+      var canSend = my > 0 || note.trim().length >= 10;
+      var first = s.name.split(' ')[0];
+      var published = blend(s.ai, s.ratings);
+      var projected = my > 0 ? blend(s.ai, s.ratings.concat([my])) : published;
+      var w = weight(s.ratings.length);
+      var matched = s.tags.filter(function (t) { return S.filter !== 'all' && t[1] === S.filter; });
+      var relCount = s.related.length + 1;
+      var bar = function (state) { return 'height: 4px; border-radius: 999px; background: ' + (state === 'done' ? '#16A34A' : state === 'active' ? '#2563EB' : '#E5E7EB'); };
+      var title = function (state) { return 'font-size: 14px; font-weight: 600; color: ' + (state === 'todo' ? '#6B7280' : '#111827'); };
+      var stepStates = ['done', checked ? 'done' : 'active', checked ? 'active' : 'todo', 'todo'];
+      var stepDefs = [
+        ['Submitted', my > 0 ? 'Your ' + my + '★' + (note ? ' and note' : '') : 'Your note'],
+        ['Quality check', checked ? 'Specific, actionable and matches the repo' : 'AI checks it is specific, actionable and fair'],
+        ['Peer confirm', 'A second mentor in this area confirms it'],
+        ['Published', first + ' sees it and it counts toward the score']
+      ];
+      return {
+        initials: s.initials, name: s.name, major: s.major, targeting: s.targeting, title: s.title, summary: s.summary, firstName: first,
+        showMatch: matched.length > 0,
+        matchLabel: matched.length >= 2 && s.ai >= 80 ? 'Strong match' : 'Good match',
+        matchStyle: 'flex: none; font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 999px; background: #EFF6FF; color: #1D4ED8',
+        tags: s.tags.map(function (t) {
+          var hit = S.filter === 'all' ? t[1] === s.area : t[1] === S.filter;
+          return { label: t[0], style: 'font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 999px; ' + (hit ? 'background: #EFF6FF; color: #1D4ED8' : 'background: #F3F4F6; color: #374151') };
+        }),
+        strength: s.strength, risk: s.risk,
+        hasRelated: s.related.length > 0, noRelated: s.related.length === 0,
+        relatedLabel: AREA_LABEL[s.area], relatedCount: relCount >= 3 ? '3+' : String(relCount),
+        relatedOpen: !!open.related, relatedChevron: open.related ? 'transform: rotate(180deg)' : '',
+        related: s.related,
+        toggleRelated: function () { setKey('open', s.id, Object.assign({}, open, { related: !open.related })); },
+        pending: sent,
+        overall: published,
+        caption: s.ratings.length ? 'Blend of AI and verified mentor ratings (AI ' + Math.round((1 - w) * 100) + '% · mentors ' + Math.round(w * 100) + '%)' : 'AI only so far',
+        ai: s.ai,
+        mentorText: s.ratings.length ? avgOf(s.ratings).toFixed(1) + ' / 5' : 'None yet',
+        mentorSub: s.ratings.length ? s.ratings.length + ' verified' : 'Be the first to rate',
+        skillCount: s.skills.length,
+        skillsOpen: !!open.skills, skillsChevron: open.skills ? 'transform: rotate(180deg)' : '',
+        toggleSkills: function () { setKey('open', s.id, Object.assign({}, open, { skills: !open.skills })); },
+        skills: s.skills.map(function (k) {
+          var hit = S.filter === 'all' ? k[2] === s.area : k[2] === S.filter;
+          return { label: k[0], score: k[1], barStyle: 'height: 6px; border-radius: 999px; width: ' + k[1] + '%; background: ' + (hit ? '#2563EB' : '#9CA3AF') };
+        }),
+        quotes: s.quotes, hasQuotes: s.quotes.length > 0, noQuotes: s.quotes.length === 0,
+        notSent: !sent, sent: sent,
+        rateLabel: my > 0 ? 'You rated this ' + my + '/5' : 'Rate this project (optional)',
+        stars: [1, 2, 3, 4, 5].map(function (n) {
+          var on = n <= my;
+          return { label: n + (n === 1 ? ' star' : ' stars'), on: n === my ? 'true' : 'false', fill: on ? '#2563EB' : 'none', stroke: on ? '#2563EB' : '#6B7280',
+            rate: function () { setKey('mine', s.id, my === n ? 0 : n); } };
+        }),
+        composerClosed: !composerOpen,
+        openComposer: function () { setKey('composer', s.id, true); },
+        closeComposer: function () { var m = Object.assign({}, self.state.mine); delete m[s.id]; var c = Object.assign({}, self.state.composer); delete c[s.id]; self.setState({ mine: m, composer: c }); },
+        composerOpen: composerOpen,
+        noteId: 'note-' + s.id, note: note, noteLen: note.length,
+        onNote: function (e) { setKey('notes', s.id, e.target.value.slice(0, 140)); },
+        starters: ['Next, fix: ' + s.risk.charAt(0).toLowerCase() + s.risk.slice(1) + '.', 'Keep going: ' + s.strength.charAt(0).toLowerCase() + s.strength.slice(1) + '.'].map(function (t) {
+          return { label: t.length > 48 ? t.slice(0, 46) + '…' : t, use: function () { setKey('notes', s.id, t.slice(0, 140)); } };
+        }),
+        endorse: endorse, toggleEndorse: function () { setKey('endorse', s.id, !endorse); },
+        send: function () {
+          if (!canSend) return;
+          setKey('sent', s.id, true);
+          self.timers = self.timers || [];
+          self.timers.push(setTimeout(function () { setKey('checked', s.id, true); }, 1600));
+        },
+        sendStyle: 'min-height: 44px; padding: 0 22px; border-radius: 999px; border: 0; font-size: 15px; font-weight: 600; ' + (canSend ? 'background: #2563EB; color: #FFFFFF; cursor: pointer' : 'background: #E5E7EB; color: #6B7280; cursor: not-allowed'),
+        steps: stepDefs.map(function (d, i) { return { title: d[0], desc: d[1], barStyle: bar(stepStates[i]), titleStyle: title(stepStates[i]) }; }),
+        impactText: my > 0
+          ? 'Once verified: rating ' + published + ' → ' + projected + (endorse ? ', your endorsement goes on ' + first + "'s profile," : ',') + ' and ' + first + ' gets your note.'
+          : 'Once verified, ' + first + ' gets your note. No rating was given, so the score will not change.',
+        withdraw: function () {
+          var a = Object.assign({}, self.state.sent); delete a[s.id];
+          var b = Object.assign({}, self.state.checked); delete b[s.id];
+          self.setState({ sent: a, checked: b });
+        }
+      };
+    });
+
+
+    var tabs = [['feed', 'Project feed'], ['search', 'Find students'], ['profile', 'My profile']].map(function (t) {
+      var on = S.tab === t[0];
+      return { label: t[1], selected: on ? 'true' : 'false', pick: function () { self.setState({ tab: t[0] }); },
+        style: 'min-height: 48px; padding: 0 14px; border: 0; background: none; cursor: pointer; font-size: 15px; white-space: nowrap; border-bottom: 2px solid ' + (on ? '#2563EB; color: #111827; font-weight: 600' : 'transparent; color: #4B5563; font-weight: 500') };
+    });
+    var POOL = [
+      ['ps', 'PS', 'Priya Shah', 'Mechanical Eng. · Sophomore', 'Bike-rack load study', 63, 1, true, ['FEA', 'ANSYS', 'GD&T']],
+      ['so', 'SO', 'Sam Okafor', 'Industrial Design · Sophomore', 'Split ergonomic keyboard case', 65, 1, true, ['Onshape', 'User testing', 'Ergonomics']],
+      ['nb', 'NB', 'Noah Brooks', 'ECE · Freshman', 'Rover suspension bracket', 58, 0, true, ['SolidWorks', 'FEA', '3D printing']],
+      ['ar', 'AR', 'Ana Ruiz', 'Industrial Design · Junior', 'Modular desk lamp', 67, 2, false, ['Fusion 360', 'Rendering']],
+      ['kt', 'KT', 'Kai Thompson', 'Mechanical Eng. · Sophomore', 'Wheelchair tray mount', 55, 0, false, ['Onshape', '3D printing', 'Ergonomics']],
+      ['mc', 'MC', 'Maya Chen', 'Mechanical Eng. · Junior', 'Servo-driven prosthetic wrist', 82, 5, false, ['Fusion 360', 'GD&T', '3D printing']]
+    ];
+    var mq = S.mQuery.trim().toLowerCase();
+    var MINE = ['fea', 'ergonomics', 'user testing', 'gd&t', 'onshape', 'fusion 360'];
+    var mList = POOL.filter(function (p) {
+      if (S.askedOnly && !p[7]) return false;
+      if (S.unreviewedOnly && p[6] > 0) return false;
+      if (mq && (p[2] + ' ' + p[4] + ' ' + p[8].join(' ')).toLowerCase().indexOf(mq) === -1) return false;
+      return true;
+    }).sort(function (a, b) { return (b[7] - a[7]) || (a[6] - b[6]); });
+    var mResults = mList.map(function (p) {
+      var done = !!S.offered[p[0]];
+      return { initials: p[1], name: p[2], major: p[3], project: p[4], score: p[5], asked: p[7],
+        reviewText: p[6] ? p[6] + (p[6] === 1 ? ' verified review' : ' verified reviews') : 'no reviews yet',
+        tags: p[8].map(function (k) { var hit = MINE.indexOf(k.toLowerCase()) !== -1 || (mq && k.toLowerCase().indexOf(mq) !== -1); return { label: k, style: 'font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 999px; ' + (hit ? 'background: #EFF6FF; color: #1D4ED8' : 'background: #F3F4F6; color: #374151') }; }),
+        actLabel: done ? 'Invited to office hours' : 'Invite to office hours',
+        actStyle: 'flex: none; min-height: 44px; padding: 0 20px; border-radius: 999px; font-size: 15px; font-weight: 600; cursor: pointer; ' + (done ? 'background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0' : 'background: #FFFFFF; color: #111827; border: 1px solid #D1D5DB'),
+        act: function () { var n = Object.assign({}, self.state.offered); n[p[0]] = true; self.setState({ offered: n }); } };
+    });
+    var credParts = [['Advice verified', '96% (24 of 25)', 96], ['Median reply to students', '1 day', 82], ['Active days, last 30', '12 of 30', 40], ['Students who closed a gap after your advice', '7', 70], ['Students\' rating of your help', '4.9 / 5 (18 ratings)', 98]].map(function (c) {
+      return { label: c[0], value: c[1], barStyle: 'height: 8px; border-radius: 999px; background: #2563EB; width: ' + c[2] + '%' };
+    });
+    var reviewsDone = 3 + Object.keys(S.sent).length;
+    var area = AREAS.filter(function (a) { return a.id === S.filter; })[0];
+    return {
+      tabs: tabs, isFeed: S.tab === 'feed', isSearch: S.tab === 'search', isProfile: S.tab === 'profile',
+      mQuery: S.mQuery, onMQuery: function (e) { self.setState({ mQuery: e.target.value }); },
+      askedOnly: S.askedOnly, toggleAsked: function () { self.setState({ askedOnly: !self.state.askedOnly }); },
+      unreviewedOnly: S.unreviewedOnly, toggleUnreviewed: function () { self.setState({ unreviewedOnly: !self.state.unreviewedOnly }); },
+      mResults: mResults, mResultLine: mList.length + ' students · people who asked for help first',
+      credParts: credParts,
+      chips: chips, cards: cards, reviewsDone: reviewsDone,
+      minutes: (Math.round(reviewsDone * 58 / 6) / 10) + ' min',
+      countLine: S.filter === 'all' ? list.length + ' projects' : list.length + ' students matching ' + area.label
+    };
+  }
+}
+</script>
+</body>
+</html>

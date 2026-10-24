@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Build spec</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+code{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;line-height:1.6;color:#1E3A8A;background:#EFF6FF;border-radius:6px;padding:8px 10px;display:block;white-space:pre-wrap;word-break:break-word}
+</style>
+</helmet>
+<div style="width: 1280px; height: 2000px; box-sizing: border-box; background: #FFFFFF; color: #111827; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1.5; padding: 56px 64px; display: flex; flex-direction: column; gap: 40px">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; border-bottom: 1px solid #E5E7EB; padding-bottom: 24px">
+    <div>
+      <div style="font-size: 13px; font-weight: 600; color: #2563EB">Build spec</div>
+      <h1 style="margin: 4px 0 0; font-size: 36px; font-weight: 700; letter-spacing: -0.02em">Rungs UI in React + Tailwind</h1>
+      <p style="margin: 6px 0 0; font-size: 16px; color: #4B5563; max-width: 70ch">Every screen is built from the 10 pieces below. Copy the class strings as-is. All colors are Tailwind defaults, so there's no config to change.</p>
+    </div>
+    <div style="font-size: 13px; color: #4B5563; text-align: right">Font: Inter 400/500/600/700<br>Page column: <strong style="color: #111827">max-w-[832px] mx-auto px-6</strong></div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px">
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 600">Color</h2>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; gap: 12px"><span style="width: 36px; height: 36px; border-radius: 8px; background: #2563EB"></span><div><strong>blue-600</strong> #2563EB<div style="font-size: 12px; color: #6B7280">Primary button, selected chip, stars, bars</div></div></div>
+        <div style="display: flex; align-items: center; gap: 12px"><span style="width: 36px; height: 36px; border-radius: 8px; background: #EFF6FF; border: 1px solid #DBEAFE"></span><div><strong>blue-50 / blue-700</strong><div style="font-size: 12px; color: #6B7280">Match tags, avatars, "Strong match" pill</div></div></div>
+        <div style="display: flex; align-items: center; gap: 12px"><span style="width: 36px; height: 36px; border-radius: 8px; background: #111827"></span><div><strong>gray-900</strong> #111827<div style="font-size: 12px; color: #6B7280">Text, numbers</div></div></div>
+        <div style="display: flex; align-items: center; gap: 12px"><span style="width: 36px; height: 36px; border-radius: 8px; background: #4B5563"></span><div><strong>gray-600</strong> #4B5563<div style="font-size: 12px; color: #6B7280">Secondary text (7.6:1 on white)</div></div></div>
+        <div style="display: flex; align-items: center; gap: 12px"><span style="width: 36px; height: 36px; border-radius: 8px; background: #F3F4F6; border: 1px solid #E5E7EB"></span><div><strong>gray-100 / gray-200</strong><div style="font-size: 12px; color: #6B7280">Rating panel fill / borders and dividers</div></div></div>
+        <div style="display: flex; align-items: center; gap: 12px"><span style="width: 36px; height: 36px; border-radius: 8px; background: #DCFCE7"></span><div><strong>green-100 / green-800</strong><div style="font-size: 12px; color: #6B7280">Proven ✓, "+7 from you", sent</div></div></div>
+        <div style="display: flex; align-items: center; gap: 12px"><span style="width: 36px; height: 36px; border-radius: 8px; background: #FEF3C7"></span><div><strong>amber-100 / amber-700</strong><div style="font-size: 12px; color: #6B7280">Gaps ✕, AI risks</div></div></div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 600">Type</h2>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid #F3F4F6; padding-bottom: 8px"><span style="font-size: 32px; font-weight: 700; letter-spacing: -0.02em">Page title</span><span style="font-size: 12px; color: #6B7280">text-3xl font-bold</span></div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid #F3F4F6; padding-bottom: 8px"><span style="font-size: 40px; font-weight: 700; letter-spacing: -0.02em">91</span><span style="font-size: 12px; color: #6B7280">text-4xl font-bold (score)</span></div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid #F3F4F6; padding-bottom: 8px"><span style="font-size: 18px; font-weight: 600">Card title</span><span style="font-size: 12px; color: #6B7280">text-lg font-semibold</span></div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid #F3F4F6; padding-bottom: 8px"><span style="font-size: 16px; font-weight: 600">Name</span><span style="font-size: 12px; color: #6B7280">text-base font-semibold</span></div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid #F3F4F6; padding-bottom: 8px"><span style="font-size: 15px; color: #374151">Body text</span><span style="font-size: 12px; color: #6B7280">text-[15px] text-gray-700</span></div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 13px; color: #4B5563">Meta and labels</span><span style="font-size: 12px; color: #6B7280">text-[13px] text-gray-600</span></div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 600">Shape and spacing</h2>
+      <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; color: #374151">
+        <li>Cards: <strong>rounded-2xl</strong>, padding <strong>p-6</strong></li>
+        <li>Panels: <strong>rounded-xl</strong>, padding <strong>p-4</strong></li>
+        <li>Buttons, chips, tags, pills: <strong>rounded-full</strong></li>
+        <li>Space between cards: <strong>gap-6</strong> (24px)</li>
+        <li>Inside a card: <strong>gap-5</strong> sections, <strong>gap-3</strong> rows</li>
+        <li>Every button: at least <strong>h-11</strong> (44px)</li>
+        <li>Numbers: add <strong>tabular-nums</strong></li>
+        <li>Card = left column <strong>flex-1</strong> + right panel <strong>md:w-[336px]</strong>; stacks below 768px</li>
+      </ul>
+    </section>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-size: 18px; font-weight: 600">Components</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+
+      <div style="border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between"><strong>1 · Button</strong><span style="color: #6B7280; font-size: 12px">Button.jsx</span></div>
+        <div style="display: flex; gap: 10px"><span style="min-height: 44px; padding: 0 22px; border-radius: 999px; background: #2563EB; color: #FFFFFF; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center">Send review</span><span style="min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid #D1D5DB; font-size: 15px; font-weight: 500; display: inline-flex; align-items: center">Leave feedback</span></div>
+        <code>primary: h-11 px-5 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-500
+outline: h-11 px-5 rounded-full border border-gray-300 bg-white font-medium hover:bg-gray-50</code>
+      </div>
+
+      <div style="border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between"><strong>2 · Filter chip</strong><span style="color: #6B7280; font-size: 12px">Chip.jsx</span></div>
+        <div style="display: flex; gap: 8px"><span style="min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid #D1D5DB; font-size: 15px; font-weight: 500; display: inline-flex; align-items: center">All projects</span><span style="min-height: 44px; padding: 0 20px; border-radius: 999px; background: #2563EB; color: #FFFFFF; font-size: 15px; font-weight: 500; display: inline-flex; align-items: center">CAD</span></div>
+        <code>base: h-11 px-5 rounded-full text-[15px] font-medium border
+off: border-gray-300 bg-white text-gray-900
+on:  border-blue-600 bg-blue-600 text-white   (aria-pressed="true")</code>
+      </div>
+
+      <div style="border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between"><strong>3 · Tag and pill</strong><span style="color: #6B7280; font-size: 12px">Tag.jsx</span></div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px"><span style="font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #EFF6FF; color: #1D4ED8">Fusion 360</span><span style="font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #F3F4F6; color: #374151">Arduino</span><span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #DCFCE7; color: #166534">+7 from you</span><span style="font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #FEF3C7; color: #92400E">Closes: Stress analysis</span></div>
+        <code>px-2.5 py-1 rounded-full text-[13px] font-medium
+match: bg-blue-50 text-blue-700 · other: bg-gray-100 text-gray-700
+good: bg-green-100 text-green-800 · gap: bg-amber-100 text-amber-800</code>
+      </div>
+
+      <div style="border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between"><strong>4 · Disclosure row</strong><span style="color: #6B7280; font-size: 12px">DisclosureRow.jsx</span></div>
+        <div style="min-height: 44px; display: flex; align-items: center; gap: 12px"><span style="color: #4B5563">CAD projects</span><span style="flex: 1; height: 1px; background: #E5E7EB"></span><strong style="font-size: 16px">3+</strong><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></div>
+        <code>&lt;button className="flex w-full min-h-11 items-center gap-3"&gt;
+  label (text-sm text-gray-600) · &lt;span className="h-px flex-1 bg-gray-200"/&gt;
+  value (font-semibold) · ChevronDown (rotate-180 when open)</code>
+      </div>
+
+      <div style="border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between"><strong>5 · Rating panel + verification tracker</strong><span style="color: #6B7280; font-size: 12px">RatingPanel.jsx</span></div>
+        <div style="display: flex; gap: 12px">
+          <div style="flex: 1; background: #F3F4F6; border-radius: 12px; padding: 12px"><div style="font-size: 12px; color: #4B5563">Overall rating</div><div style="font-size: 28px; font-weight: 700">84<span style="font-size: 13px; font-weight: 400; color: #6B7280"> / 100</span></div><div style="font-size: 12px; color: #4B5563">AI + 3 verified mentors</div></div>
+          <div style="flex: 1; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 12px"><div style="font-size: 12px; color: #4B5563">After submitting</div><div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 8px 0"><span style="height: 4px; border-radius: 9px; background: #16A34A"></span><span style="height: 4px; border-radius: 9px; background: #16A34A"></span><span style="height: 4px; border-radius: 9px; background: #2563EB"></span><span style="height: 4px; border-radius: 9px; background: #E5E7EB"></span></div><div style="font-size: 12px; color: #4B5563">Submitted · Quality check · Peer confirm · Published</div></div>
+        </div>
+        <code>wrapper: md:w-[336px] rounded-xl bg-gray-100 p-4 flex flex-col gap-3
+source cards: grid grid-cols-2 gap-2 → rounded-lg bg-white p-3
+always visible; counts only verified reviews
+tracker: grid grid-cols-4 gap-1 → h-1 rounded-full (green-600 done · blue-600 active · gray-200 todo)</code>
+      </div>
+
+      <div style="border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between"><strong>6 · Star rating</strong><span style="color: #6B7280; font-size: 12px">StarRating.jsx</span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span style="color: #4B5563">You rated this 4/5</span><div style="display: flex">
+          <svg width="24" height="24" viewBox="0 0 24 24" style="margin: 10px" aria-hidden="true"><path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 2.9 1.1-6.3L2.9 9.4l6.3-.9z" fill="#2563EB"></path></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" style="margin: 10px" aria-hidden="true"><path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 2.9 1.1-6.3L2.9 9.4l6.3-.9z" fill="#2563EB"></path></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" style="margin: 10px" aria-hidden="true"><path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 2.9 1.1-6.3L2.9 9.4l6.3-.9z" fill="#2563EB"></path></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" style="margin: 10px" aria-hidden="true"><path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 2.9 1.1-6.3L2.9 9.4l6.3-.9z" fill="#2563EB"></path></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" style="margin: 10px" aria-hidden="true"><path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 2.9 1.1-6.3L2.9 9.4l6.3-.9z" fill="none" stroke="#6B7280" stroke-width="1.6"></path></svg>
+        </div></div>
+        <code>5 × &lt;button aria-label="4 stars" className="h-11 w-11 grid place-items-center"&gt;
+lucide &lt;Star&gt; size 24 · filled: fill-blue-600 text-blue-600 · empty: text-gray-500</code>
+      </div>
+
+      <div style="border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between"><strong>7 · Progress bar with next-tier tick</strong><span style="color: #6B7280; font-size: 12px">TierBar.jsx</span></div>
+        <div style="position: relative; height: 8px; border-radius: 999px; background: #E5E7EB; margin: 8px 0"><div style="height: 8px; width: 67%; border-radius: 999px; background: #2563EB"></div><span style="position: absolute; left: 70%; top: -4px; bottom: -4px; border-left: 2px dashed #111827"></span></div>
+        <code>// fill = { width: value + '%' }, tick = { left: next + '%' }
+&lt;div className="relative h-2 rounded-full bg-gray-200"&gt;
+  &lt;div className="h-full rounded-full bg-blue-600" style={fill}/&gt;
+  &lt;span className="absolute -inset-y-1 border-l-2 border-dashed border-gray-900" style={tick}/&gt;</code>
+      </div>
+
+      <div style="border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between"><strong>8 · Card and 9 · Section header</strong><span style="color: #6B7280; font-size: 12px">Card.jsx</span></div>
+        <div style="border: 1px solid #E5E7EB; border-radius: 14px; overflow: hidden"><div style="padding: 10px 16px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; font-size: 13px"><strong>This weekend</strong><span style="color: #4B5563">Sat Oct 24 – Sun Oct 25</span></div><div style="padding: 14px 16px; color: #4B5563">Card body</div></div>
+        <code>card: rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
+header strip: -mx-6 -mt-6 mb-5 bg-gray-50 border-b border-gray-200 px-6 py-3.5 text-sm</code>
+      </div>
+
+      <div style="grid-column: span 2; border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between"><strong>10 · Score math (paste into client.js)</strong><span style="color: #6B7280; font-size: 12px">scoring.js</span></div>
+        <code>const mentorWeight = (n) =&gt; Math.min(0.6, n / (n + 3));          // 0 reviews → 0%, 1 → 25%, 3 → 50%, 5+ → 60%
+const overall = (ai, stars) =&gt; stars.length === 0 ? ai
+  : Math.round(ai * (1 - mentorWeight(stars.length)) + avg(stars) * 20 * mentorWeight(stars.length));
+// Feed order: fewest mentor reviews first, then AI score high → low.
+feed.sort((a, b) =&gt; a.ratings.length - b.ratings.length || b.ai - a.ai);
+// Rating is optional. A submitted review is stored as status: 'pending' and is NOT included above
+// until status === 'verified' (AI quality check passed + a second mentor confirmed). Only then notify the student.
+// Credibility (mentors + recruiters, 0–100) = 35% advice verified (mentors) or reply rate (recruiters)
+//   + 20% reply speed + 15% active days in last 30 + 20% student outcomes + 10% student rating.
+// Network ranking for a student = 0.6 × relevance to their track/gaps + 0.4 × credibility.
+// Tabs: role="tablist" row under the header → h-12 px-3.5 border-b-2 (active: border-blue-600 font-semibold, else border-transparent text-gray-600)</code>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
