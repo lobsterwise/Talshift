@@ -13,6 +13,7 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.810.0",
     "express": "^5.1.0",
     "pg": "^8.16.3"
   },
