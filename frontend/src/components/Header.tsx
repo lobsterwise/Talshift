@@ -1,7 +1,11 @@
+import { Bell } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 import { personas, type Persona } from '../personas.tsx'
+import { useAppStore } from '../store/appStoreContext.ts'
 
 export default function Header({ persona }: { persona: Persona }) {
+  const { unreadCount, markNotificationsRead } = useAppStore()
+
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex min-h-[72px] max-w-[832px] flex-wrap items-center justify-between gap-3 px-6">
@@ -36,6 +40,20 @@ export default function Header({ persona }: { persona: Persona }) {
               ),
             )}
           </nav>
+          {/* Not in the designs; CLAUDE.md §5 asks for a notification dot on Sam's bell. */}
+          {persona.id === 'student' && (
+            <button
+              type="button"
+              aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} new` : 'Notifications'}
+              onClick={markNotificationsRead}
+              className="relative flex size-11 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            >
+              <Bell size={20} aria-hidden="true" />
+              {unreadCount > 0 && (
+                <span className="absolute top-2.5 right-2.5 size-2.5 rounded-full bg-blue-600 ring-2 ring-white" />
+              )}
+            </button>
+          )}
           <div
             role="img"
             aria-label={persona.avatar.name}

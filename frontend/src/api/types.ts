@@ -43,6 +43,40 @@ export interface StudentOverview {
   // The review card as drawn in the design. In the demo loop, show the review the
   // professional actually submitted instead.
   designReview: PublishedReview
+  // Shown under "Why you scored N" in the Explain-score modal.
+  scoreSources: string
+}
+
+export interface PlanItem {
+  dates: string
+  title: string
+  detail: string
+}
+
+export interface StudentPlan {
+  weekend: {
+    dates: string
+    kind: string
+    hours: number
+    closes: string
+    title: string
+    description: string
+    // `label` is the chip text, `sentence` goes into "If it's …, I'll be at …".
+    slots: { label: string; sentence: string }[]
+    place: string
+  }
+  week: PlanItem
+  month: PlanItem
+}
+
+export interface EventScanInfo {
+  scanned: string
+  sources: string[]
+}
+
+export interface ResumeFile {
+  fileName: string
+  detail: string
 }
 
 export interface ScoreExplanation {
@@ -124,6 +158,14 @@ export interface FeedProject {
   quotes: { text: string; who: string }[]
   related: { title: string; ai: number }[]
   skills: { label: string; score: number; area: ProjectArea | '' }[]
+}
+
+// The "This week" strip at the top of the Project feed.
+export interface ProfessionalWeek {
+  // Reviews done before this session; the page adds the ones submitted now.
+  reviewsDone: number
+  adviceVerified: string
+  officeHours: string
 }
 
 export interface ReviewDraft {

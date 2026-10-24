@@ -5,15 +5,19 @@
 import type {
   CampusEvent,
   Candidate,
+  EventScanInfo,
   FeedProject,
   HiringRole,
   Invite,
   NetworkContact,
   ProfessionalProfile,
+  ProfessionalWeek,
   ProjectArea,
+  ResumeFile,
   ResumeRole,
   ScoreExplanation,
   StudentOverview,
+  StudentPlan,
 } from './types.ts'
 
 // ───────────── Student: Sam Okafor (design/student.dc.html) ─────────────
@@ -47,6 +51,44 @@ export const studentOverview: StudentOverview = {
     stars: 5,
     note: 'Real daily-use testing is rare. Next, add a drawing with tolerances for the hinge so someone else could build it.',
   },
+  scoreSources: 'From your resume (Oct 20), 3 GitHub repos and 1 verified mentor review',
+}
+
+export const studentPlan: StudentPlan = {
+  weekend: {
+    dates: 'Sat Oct 24 – Sun Oct 25',
+    kind: '1-day challenge',
+    hours: 5,
+    closes: 'Stress analysis',
+    title: 'Stress-test a 3D-printed bracket with FEA',
+    description: 'Run a static study in Fusion 360 on your keyboard hinge, then break a printed one to compare. Ship the plot and one paragraph.',
+    slots: [
+      { label: 'Sat 10 AM', sentence: 'Saturday at 10 AM' },
+      { label: 'Sat 2 PM', sentence: 'Saturday at 2 PM' },
+      { label: 'Sun 10 AM', sentence: 'Sunday at 10 AM' },
+    ],
+    place: 'Thompson Library',
+  },
+  week: {
+    dates: 'Mon Oct 26 – Fri Oct 30',
+    title: '15-min office hours · Daniel R., Mechanical engineer',
+    detail: 'Tue, Oct 27 · 4:00–4:15 PM · Virtual · 3 AI-prepared questions ready',
+  },
+  month: {
+    dates: '5 weeks · starts Mon, Nov 2',
+    title: 'In-cabin control knob study · Honda Research Institute',
+    detail: 'Team of 4 · 6–8 hrs/week · proves team delivery and FEA',
+  },
+}
+
+export const eventScanInfo: EventScanInfo = {
+  scanned: 'Scanned 12 min ago',
+  sources: ['Handshake', 'OSU Events', 'Devpost', 'MLH', 'Eventbrite', 'Columbus meetups'],
+}
+
+export const resumeFile: ResumeFile = {
+  fileName: 'Sam_Okafor_Resume.pdf',
+  detail: 'Uploaded Oct 20 · 1 page · 14 bullets read',
 }
 
 export const scoreExplanation: ScoreExplanation[] = [
@@ -137,7 +179,13 @@ export const resumeRoles: ResumeRole[] = [
 
 // Project feed (design/mentor.dc.html)
 
-export const projectAreas: { id: ProjectArea | 'all'; label: string; relatedLabel: string }[] = [
+export const professionalWeek: ProfessionalWeek = {
+  reviewsDone: 3,
+  adviceVerified: '92%',
+  officeHours: 'Office hours Tue 4:00 PM · 2 of 3 booked',
+}
+
+export const projectAreas:{ id: ProjectArea | 'all'; label: string; relatedLabel: string }[] = [
   { id: 'all', label: 'All projects', relatedLabel: '' },
   { id: 'cad', label: 'CAD', relatedLabel: 'CAD projects' },
   { id: 'ml', label: 'Machine learning', relatedLabel: 'ML projects' },

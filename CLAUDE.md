@@ -69,6 +69,10 @@ Routes: `/student/:tab`, `/professional/:tab`. `/` redirects to `/student/overvi
 
 Every function in `client.ts` is `async`, returns plain JSON typed with `api/types.ts`, and has a comment above it naming the REST endpoint it will become (e.g. `// GET /api/students/search?q=&role=&verified=`). Components never import `mockData.ts` directly.
 
+Anything that would come from the backend goes through `client.ts`, even when the design writes it straight into the markup: names, numbers, dates, scores, counts and lists. Only fixed UI copy stays in the page (headings, button labels, explanations). If a page needs data `client.ts` doesn't have yet, ask Person A to add it rather than typing it into the page.
+
+Shared demo state (reviews, invites, Sam's live score, notifications) lives in `store/AppStore.tsx`. Pages read it with `useAppStore()` from `store/appStoreContext.ts`.
+
 ## 4. Behaviors that must work
 
 **Student**

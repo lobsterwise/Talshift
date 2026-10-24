@@ -10,18 +10,22 @@ import type {
   CampusEvent,
   Candidate,
   CandidateSearch,
+  EventScanInfo,
   FeedProject,
   HiringRole,
   HiringRoleId,
   Invite,
   NetworkContact,
   ProfessionalProfile,
+  ProfessionalWeek,
   ProjectArea,
+  ResumeFile,
   ResumeRole,
   Review,
   ReviewDraft,
   ScoreExplanation,
   StudentOverview,
+  StudentPlan,
 } from './types.ts'
 
 function copy<T>(value: T): Promise<T> {
@@ -44,10 +48,21 @@ export async function getScoreExplanation(): Promise<ScoreExplanation[]> {
   return copy(mock.scoreExplanation)
 }
 
+// GET /api/students/me/plan
+export async function getStudentPlan(): Promise<StudentPlan> {
+  return copy(mock.studentPlan)
+}
+
 // GET /api/events
 // The backend's event scraper/feeds (Handshake, Devpost, OSU Events, …) plug in here.
 export async function getEvents(): Promise<CampusEvent[]> {
   return copy(mock.events)
+}
+
+// GET /api/events/scan-info
+// When the event feeds were last scanned, and which sources they came from.
+export async function getEventScanInfo(): Promise<EventScanInfo> {
+  return copy(mock.eventScanInfo)
 }
 
 // GET /api/students/me/saved-events
@@ -82,7 +97,17 @@ export async function getResumeFeedback(): Promise<ResumeRole[]> {
   return copy(mock.resumeRoles)
 }
 
+// GET /api/students/me/resume
+export async function getResumeFile(): Promise<ResumeFile> {
+  return copy(mock.resumeFile)
+}
+
 // ───────────── Professional ─────────────
+
+// GET /api/professionals/me/week
+export async function getProfessionalWeek(): Promise<ProfessionalWeek> {
+  return copy(mock.professionalWeek)
+}
 
 // GET /api/projects/areas
 export async function getProjectAreas(): Promise<typeof mock.projectAreas> {

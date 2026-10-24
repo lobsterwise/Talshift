@@ -1,6 +1,7 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import Header from './components/Header.tsx'
 import { personas, type Persona } from './personas.tsx'
+import { AppStoreProvider } from './store/AppStore.tsx'
 
 function PersonaLayout({ persona }: { persona: Persona }) {
   return (
@@ -15,21 +16,23 @@ function PersonaLayout({ persona }: { persona: Persona }) {
 
 function App() {
   return (
-    <Routes>
-      {personas.map((persona) => {
-        const firstTab = persona.tabs[0].slug
-        return (
-          <Route key={persona.id} path={persona.id} element={<PersonaLayout persona={persona} />}>
-            <Route index element={<Navigate to={firstTab} replace />} />
-            {persona.tabs.map((tab) => (
-              <Route key={tab.slug} path={tab.slug} element={<tab.page />} />
-            ))}
-            <Route path="*" element={<Navigate to={firstTab} replace />} />
-          </Route>
-        )
-      })}
-      <Route path="*" element={<Navigate to="/student/overview" replace />} />
-    </Routes>
+    <AppStoreProvider>
+      <Routes>
+        {personas.map((persona) => {
+          const firstTab = persona.tabs[0].slug
+          return (
+            <Route key={persona.id} path={persona.id} element={<PersonaLayout persona={persona} />}>
+              <Route index element={<Navigate to={firstTab} replace />} />
+              {persona.tabs.map((tab) => (
+                <Route key={tab.slug} path={tab.slug} element={<tab.page />} />
+              ))}
+              <Route path="*" element={<Navigate to={firstTab} replace />} />
+            </Route>
+          )
+        })}
+        <Route path="*" element={<Navigate to="/student/overview" replace />} />
+      </Routes>
+    </AppStoreProvider>
   )
 }
 
