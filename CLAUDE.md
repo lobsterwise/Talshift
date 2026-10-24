@@ -4,6 +4,8 @@ Rungs is a HackOHI/O 2026 entry for the Bridge Builder Challenge (Honda Research
 
 Your job: build the frontend in the existing `frontend/` app exactly as designed in `design/`, with mock data behind a clean API layer so the backend team can plug in later.
 
+Two people share this work. Read `TEAM.md` for who owns which files, and only edit files the current person owns.
+
 ## 1. The design files are the source of truth
 
 `design/` holds the final design. Each `.dc.html` file is a complete, interactive mockup of one persona:
