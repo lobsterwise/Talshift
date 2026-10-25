@@ -194,6 +194,12 @@ CREATE TABLE IF NOT EXISTS student_connections (
 CREATE UNIQUE INDEX IF NOT EXISTS student_connections_pair_uidx
   ON student_connections (LEAST(requester_id, recipient_id), GREATEST(requester_id, recipient_id));
 
+CREATE TABLE IF NOT EXISTS student_roadmaps (
+  student_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  roadmap JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS peer_comparison_advice (
   student_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   peer_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

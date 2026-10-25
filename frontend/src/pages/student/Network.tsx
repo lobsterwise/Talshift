@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getSavedStudentPostings, searchStudentDiscovery, setStudentPostingSaved, type StudentOpportunity } from '../../api/studentDiscovery'
+import { Link } from 'react-router-dom'
 
 export default function Network() {
   const [queryDraft, setQueryDraft] = useState('')
@@ -102,6 +103,12 @@ export default function Network() {
                       </li>
                     ))}
                   </ul>
+                  {item.kind === 'position' && (
+                    <Link to={`/student/roadmap?postingId=${encodeURIComponent(item.id)}`}
+                      className="self-start rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-50">
+                      Build roadmap for this position
+                    </Link>
+                  )}
                 </article>
               ))}
             </div>

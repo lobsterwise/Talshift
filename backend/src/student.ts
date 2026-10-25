@@ -622,6 +622,7 @@ export function createStudentRouter(pool: Pool): Router {
       );
       await client.query("DELETE FROM student_talent WHERE student_id = $1", [studentId]);
       await client.query("DELETE FROM student_credibility WHERE student_id = $1", [studentId]);
+      await client.query("DELETE FROM student_roadmaps WHERE student_id = $1", [studentId]);
       await client.query(
         "DELETE FROM search_attributes WHERE owner_id = $1 AND source_type IN ('student_profile', 'student_learning_goal')",
         [studentId],

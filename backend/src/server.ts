@@ -11,6 +11,7 @@ import { createProfessionalSearchRouter } from "./professionalSearch";
 import { createDiscoveryRouter } from "./discovery";
 import { createStudentDiscoveryRouter } from "./studentDiscovery";
 import { createPeersRouter } from "./peers";
+import { createRoadmapRouter } from "./roadmap";
 
 // Resolve backend/.env from this file rather than the working directory, so the
 // server finds it whether it's started from backend/ or the repo root.
@@ -49,6 +50,7 @@ app.use("/api/auth", createAuthRouter(pool));
 app.use("/api/student", createStudentRouter(pool));
 app.use("/api/student/discovery", createStudentDiscoveryRouter(pool));
 app.use("/api/student/peers", createPeersRouter(pool));
+app.use("/api/student/roadmap", createRoadmapRouter(pool));
 app.use("/api/professional/postings", createPostingsRouter(pool));
 app.use("/api/professional/search", createProfessionalSearchRouter(pool));
 app.use("/api/discovery", createDiscoveryRouter(pool));
