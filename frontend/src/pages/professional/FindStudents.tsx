@@ -3,6 +3,7 @@ import { getProfile } from '../../api/auth'
 import { getPostings, type ProfessionalPosting } from '../../api/postings'
 import { getReviewQueue, startReviewQueue, submitCandidateReview, type ReviewQueue } from '../../api/professionalSearch'
 import ProjectCredibilityPanel, { VerifiedExperienceBadge } from '../../components/ProjectCredibility'
+import StarRatingIndicator from '../../components/StarRatingIndicator'
 
 export default function FindStudents() {
   const [postings, setPostings] = useState<ProfessionalPosting[]>([])
@@ -155,17 +156,22 @@ export default function FindStudents() {
           </div>
           <article className="flex flex-col gap-5 py-1">
             <header className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <h2 className="text-xl font-semibold text-gray-900">{queue.current.name}</h2>
-                  <VerifiedExperienceBadge projects={queue.current.projectCredibility} />
+              <div className="flex min-w-0 items-start gap-4">
+                <div className="flex shrink-0 flex-col items-center">
+                  <StarRatingIndicator rating={queue.current.reputationStars} />
+                  <p className="text-xs text-gray-500">{queue.current.reviewCount} reviews</p>
                 </div>
-                {queue.current.headline && <p className="mt-1 text-sm text-gray-700">{queue.current.headline}</p>}
-                <p className="mt-1 text-sm text-gray-500">{[queue.current.fieldOfStudy, queue.current.institution, queue.current.location].filter(Boolean).join(' · ')}</p>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <h2 className="text-xl font-semibold text-gray-900">{queue.current.name}</h2>
+                    <VerifiedExperienceBadge projects={queue.current.projectCredibility} />
+                  </div>
+                  {queue.current.headline && <p className="mt-1 text-sm text-gray-700">{queue.current.headline}</p>}
+                  <p className="mt-1 text-sm text-gray-500">{[queue.current.fieldOfStudy, queue.current.institution, queue.current.location].filter(Boolean).join(' · ')}</p>
+                </div>
               </div>
               <div className="flex gap-6 text-sm">
                 <div><p className="text-xs text-gray-500">Match</p><p className="font-semibold tabular-nums text-gray-900">{Math.round(queue.current.relevance * 100)}%</p></div>
-                <div><p className="text-xs text-gray-500">Reputation</p><p className="font-semibold tabular-nums text-gray-900">{queue.current.reputationStars.toFixed(1)} / 5</p><p className="text-xs text-gray-500">{queue.current.reviewCount} reviews</p></div>
               </div>
             </header>
             <ul className="flex flex-col divide-y divide-gray-100 border-y border-gray-200">

@@ -11,6 +11,7 @@ import { getProfile } from "../../api/auth";
 import ProjectCredibilityPanel, {
   VerifiedExperienceBadge,
 } from "../../components/ProjectCredibility";
+import StarRatingIndicator from "../../components/StarRatingIndicator";
 import ResumeUpload from "../../components/ResumeUpload";
 import {
   clearResumeDraft,
@@ -124,6 +125,7 @@ function TalentSkeleton() {
 function ProfileView({
   profile,
   fullName,
+  onEdit,
   studentTalent,
   reputation,
   reputationError,
@@ -139,6 +141,7 @@ function ProfileView({
 }: {
   profile: StudentProfile;
   fullName: string;
+  onEdit: () => void;
   studentTalent: StudentTalent | null;
   reputation: StudentReputation | null;
   reputationError: string;
@@ -164,70 +167,69 @@ function ProfileView({
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <h1 className="text-2xl font-semibold text-gray-900">{fullName}</h1>
-          {!credibilityRunning && (
-            <VerifiedExperienceBadge projects={credibility?.projects} />
+      <header className="flex items-start gap-4">
+        {reputation && !reputationError && (
+          <StarRatingIndicator rating={reputation.stars} />
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="text-2xl font-semibold text-gray-900">{fullName}</h1>
+            {!credibilityRunning && (
+              <VerifiedExperienceBadge projects={credibility?.projects} />
+            )}
+          </div>
+          {profile.headline && (
+            <p className="text-gray-700">{profile.headline}</p>
+          )}
+          {profile.location && (
+            <p className="text-sm text-gray-500">{profile.location}</p>
+          )}
+          {((profile.githubUsernames?.length ?? 0) > 0 ||
+            profile.links.length > 0) && (
+            <p className="mt-1 flex flex-wrap gap-x-4 text-sm">
+              {(profile.githubUsernames ?? []).map((username) => (
+                <a
+                  key={username}
+                  href={`https://github.com/${username}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  GitHub · @{username}
+                </a>
+              ))}
+              {profile.links.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </p>
           )}
         </div>
-        {profile.headline && (
-          <p className="text-gray-700">{profile.headline}</p>
-        )}
-        {profile.location && (
-          <p className="text-sm text-gray-500">{profile.location}</p>
-        )}
-        {((profile.githubUsernames?.length ?? 0) > 0 ||
-          profile.links.length > 0) && (
-          <p className="mt-1 flex flex-wrap gap-x-4 text-sm">
-            {(profile.githubUsernames ?? []).map((username) => (
-              <a
-                key={username}
-                href={`https://github.com/${username}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                GitHub · @{username}
-              </a>
-            ))}
-            {profile.links.map((link, index) => (
-              <a
-                key={index}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {link.label}
-              </a>
-            ))}
-          </p>
-        )}
+        <button
+          type="button"
+          className={`${buttonClass} shrink-0`}
+          onClick={onEdit}
+        >
+          Edit
+        </button>
       </header>
 
-      <Section title="Recruiter reputation">
+      <Section title="Reviews">
         {reputationError ? (
           <p role="status" className="text-sm text-amber-800">
             {reputationError}
           </p>
         ) : reputation ? (
           <>
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <p className="text-xl font-semibold tabular-nums text-gray-900">
-                {reputation.stars.toFixed(1)} / 5
-              </p>
-              <p className="text-sm text-gray-600">
-                {reputation.reviewCount}{" "}
-                {reputation.reviewCount === 1 ? "review" : "reviews"}
-              </p>
-            </div>
-            <p className="text-xs text-gray-500">
-              Ratings use a confidence-adjusted average; new profiles start at a
-              neutral 3 stars.
+            <p className="text-sm text-gray-600">
+              {reputation.reviewCount}{" "}
+              {reputation.reviewCount === 1 ? "review" : "reviews"}
             </p>
-            <div className="border-t border-gray-200 pt-3">
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Reviews
-              </h3>
               {reputation.reviews.length > 0 ? (
                 <ul className="flex flex-col gap-2">
                   {reputation.reviews.map((review) => (
@@ -235,27 +237,26 @@ function ProfileView({
                       key={review.id}
                       className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3"
                     >
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span className="font-medium tabular-nums text-gray-800">
-                          {review.rating} / 5 stars
-                        </span>
-                        <time
-                          className="text-xs text-gray-500"
-                          dateTime={review.updatedAt}
-                        >
-                          {new Date(review.updatedAt).toLocaleDateString()}
-                        </time>
+                      <div className="flex items-center gap-3">
+                        <StarRatingIndicator rating={review.rating} compact />
+                        <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                          <p className="whitespace-pre-line text-sm text-gray-700">
+                            {review.reviewText}
+                          </p>
+                          <time
+                            className="shrink-0 text-xs text-gray-500"
+                            dateTime={review.updatedAt}
+                          >
+                            {new Date(review.updatedAt).toLocaleDateString()}
+                          </time>
+                        </div>
                       </div>
-                      <p className="mt-1 whitespace-pre-line text-sm text-gray-700">
-                        {review.reviewText}
-                      </p>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <p className="text-sm text-gray-500">No written feedback yet.</p>
               )}
-            </div>
           </>
         ) : (
           <p className="text-sm text-gray-500">Loading recruiter reputation…</p>
@@ -1378,16 +1379,10 @@ export default function Profile() {
         </>
       ) : (
         <>
-          <button
-            type="button"
-            className={`${buttonClass} self-end`}
-            onClick={() => setEditing(true)}
-          >
-            Edit
-          </button>
           <ProfileView
             profile={profile}
             fullName={fullName}
+            onEdit={() => setEditing(true)}
             studentTalent={studentTalent}
             reputation={reputation}
             reputationError={reputationError}
