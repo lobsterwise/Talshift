@@ -126,6 +126,11 @@ CREATE TABLE IF NOT EXISTS professional_postings (
 CREATE INDEX IF NOT EXISTS professional_postings_owner_status_idx
   ON professional_postings (owner_id, status, updated_at DESC);
 
+-- Where students apply. Required for new and edited postings; older postings have ''
+-- until their owner adds one.
+ALTER TABLE professional_postings
+  ADD COLUMN IF NOT EXISTS application_url TEXT NOT NULL DEFAULT '' CHECK (length(application_url) <= 500);
+
 CREATE TABLE IF NOT EXISTS saved_professional_candidates (
   professional_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   student_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

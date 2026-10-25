@@ -3,7 +3,8 @@ import { getProfile, saveProfile, type Profile as ProfessionalProfile } from '..
 import { createPosting, deletePosting, getPostings, updatePosting, type ProfessionalPosting, type PostingStatus } from '../../api/postings'
 import { getProfessionalAttributes, indexProfessionalSource, updateProfessionalPriority, type ProfessionalAttribute } from '../../api/professionalSearch'
 import {
-  Briefcase, Building2, ClipboardList, FilePen, Globe, Pencil, Plus, RefreshCw, Save, SlidersHorizontal, Tags, Trash2, UserRound, X,
+  Briefcase, Building2, ClipboardList, ExternalLink, FilePen, Globe, Pencil, Plus, RefreshCw, Save, SlidersHorizontal, Tags, Trash2,
+  TriangleAlert, UserRound, X,
 } from 'lucide-react'
 import EmptyState from '../../components/ui/EmptyState'
 import PageHeading from '../../components/ui/PageHeading'
@@ -12,6 +13,18 @@ import StatusText from '../../components/ui/StatusText'
 
 const buttonClass = 'inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50'
 const primaryClass = 'inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
+
+// Required on every position: saved positions give students an "Apply online" button that opens it.
+function ApplicationLinkField({ id, value, onChange }: { id: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="flex flex-col gap-1 text-sm" htmlFor={id}>
+      <span className="font-medium text-gray-700">Application link <span className="font-normal text-red-700">required</span></span>
+      <input id={id} type="text" inputMode="url" autoComplete="url" className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-600 focus:outline-none"
+        maxLength={500} required value={value} onChange={(event) => onChange(event.target.value)} placeholder="https://careers.example.com/jobs/123" />
+      <span className="text-xs text-gray-500">Students who save this position use this link to apply online.</span>
+    </label>
+  )
+}
 
 export default function Profile() {
   const [profile, setProfile] = useState<ProfessionalProfile | null>(null)
@@ -23,6 +36,7 @@ export default function Profile() {
   const [postings, setPostings] = useState<ProfessionalPosting[] | null>(null)
   const [postingTitle, setPostingTitle] = useState('')
   const [postingDescription, setPostingDescription] = useState('')
+  const [postingApplicationUrl, setPostingApplicationUrl] = useState('')
   const [postingStatus, setPostingStatus] = useState<PostingStatus>('draft')
   const [addingPosting, setAddingPosting] = useState(true)
   const [editingPosting, setEditingPosting] = useState<ProfessionalPosting | null>(null)
@@ -109,7 +123,12 @@ export default function Profile() {
     setPostingSaving(true)
     setPostingError('')
     try {
-      const posting = await createPosting({ title: postingTitle, description: postingDescription, status: postingStatus })
+      const posting = await createPosting({
+        title: postingTitle,
+        description: postingDescription,
+        applicationUrl: postingApplicationUrl,
+        status: postingStatus,
+      })
       setPostings((current) => [posting, ...(current ?? [])])
       try {
         await indexProfessionalSource('job_posting', posting.id)
@@ -122,6 +141,7 @@ export default function Profile() {
       }
       setPostingTitle('')
       setPostingDescription('')
+      setPostingApplicationUrl('')
       setPostingStatus('draft')
       setAddingPosting(false)
     } catch (caught) {
@@ -140,6 +160,7 @@ export default function Profile() {
       const updated = await updatePosting(editingPosting.id, {
         title: editingPosting.title,
         description: editingPosting.description,
+        applicationUrl: editingPosting.applicationUrl,
         status: editingPosting.status,
       })
       setPostings((current) => (current ?? []).map((posting) => posting.id === updated.id ? updated : posting))
@@ -292,6 +313,7 @@ export default function Profile() {
             <span className="font-medium text-gray-700">Description</span>
             <textarea id="posting-description" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" rows={4} maxLength={4000} required value={postingDescription} onChange={(event) => setPostingDescription(event.target.value)} />
           </label>
+          <ApplicationLinkField id="posting-application-url" value={postingApplicationUrl} onChange={setPostingApplicationUrl} />
           <label className="flex items-center gap-2 text-sm text-gray-700" htmlFor="posting-status">
             <input id="posting-status" type="checkbox" checked={postingStatus === 'published'} onChange={(event) => setPostingStatus(event.target.checked ? 'published' : 'draft')} />
             Publish for student search
@@ -316,6 +338,8 @@ export default function Profile() {
                   <span className="font-medium text-gray-700">Description</span>
                   <textarea id={`edit-description-${posting.id}`} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" rows={4} maxLength={4000} required value={editingPosting.description} onChange={(event) => setEditingPosting({ ...editingPosting, description: event.target.value })} />
                 </label>
+                <ApplicationLinkField id={`edit-application-url-${posting.id}`} value={editingPosting.applicationUrl}
+                  onChange={(applicationUrl) => setEditingPosting({ ...editingPosting, applicationUrl })} />
                 <label className="flex items-center gap-2 text-sm text-gray-700">
                   <input type="checkbox" checked={editingPosting.status === 'published'} onChange={(event) => setEditingPosting({ ...editingPosting, status: event.target.checked ? 'published' : 'draft' })} />
                   Published for student search
@@ -340,6 +364,19 @@ export default function Profile() {
                     : <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-600"><FilePen aria-hidden="true" className="size-3" />Draft</span>}
                 </div>
                 <p className="whitespace-pre-line text-sm text-gray-700">{posting.description}</p>
+                {posting.applicationUrl
+                  ? (
+                    <a className="inline-flex items-center gap-1 self-start text-sm" href={posting.applicationUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink aria-hidden="true" className="size-3.5 shrink-0" />
+                      {posting.applicationUrl}
+                    </a>
+                  )
+                  : (
+                    <p className="flex items-center gap-1.5 text-sm text-amber-800">
+                      <TriangleAlert aria-hidden="true" className="size-4 shrink-0" />
+                      No application link. Edit this position to add one so students can apply.
+                    </p>
+                  )}
                 <div className="flex flex-wrap gap-2">
                   <button type="button" className={buttonClass} onClick={() => setEditingPosting(posting)}>
                     <Pencil aria-hidden="true" className="size-4" />

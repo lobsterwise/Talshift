@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   Briefcase,
+  Contact,
   ExternalLink,
   FileCheck2,
   FileText,
@@ -17,9 +18,12 @@ import {
   GraduationCap,
   Lightbulb,
   Link2,
+  Lock,
+  Mail,
   MapPin,
   MessageSquareText,
   Pencil,
+  Phone,
   Plus,
   RotateCcw,
   Save,
@@ -57,12 +61,14 @@ import {
   verifyStudentCredibility,
   type CredibilityReport,
   type SkillLevel,
+  type StudentContact,
   type StudentProfile,
   type StudentReputation,
   type StudentTalent,
 } from "../../api/studentProfile";
 
 const levels: SkillLevel[] = ["beginner", "intermediate", "advanced"];
+const emptyContact: StudentContact = { email: "", phone: "", linkedin: "" };
 const maxGithubAccounts = 5;
 const keywordCategoryLabels: Record<string, string> = {
   hard_skill: "Hard skills",
@@ -111,6 +117,7 @@ const sectionIcons: Record<string, { icon: LucideIcon; tone?: "blue" | "green" |
   Education: { icon: GraduationCap },
   Skills: { icon: Wrench },
   Links: { icon: Link2 },
+  Contact: { icon: Contact },
   "Extracted keywords": { icon: Tags },
 };
 
@@ -572,6 +579,41 @@ function ProfileView({
         </Section>
       )}
 
+      <Section title="Contact">
+        {profile.contact?.email || profile.contact?.phone || profile.contact?.linkedin ? (
+          <ul className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            {profile.contact.email && (
+              <li className="inline-flex items-center gap-1.5 text-gray-700">
+                <Mail aria-hidden="true" className="size-4 shrink-0 text-gray-400" />
+                {profile.contact.email}
+              </li>
+            )}
+            {profile.contact.phone && (
+              <li className="inline-flex items-center gap-1.5 text-gray-700">
+                <Phone aria-hidden="true" className="size-4 shrink-0 text-gray-400" />
+                {profile.contact.phone}
+              </li>
+            )}
+            {profile.contact.linkedin && (
+              <li>
+                <a className="inline-flex items-center gap-1.5" href={profile.contact.linkedin} target="_blank" rel="noopener noreferrer">
+                  <Link2 aria-hidden="true" className="size-4 shrink-0" />
+                  LinkedIn
+                </a>
+              </li>
+            )}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-500">
+            Add your email, phone number, or LinkedIn (Edit) so mentors who save you can reach out.
+          </p>
+        )}
+        <p className="flex items-center gap-1.5 text-xs text-gray-500">
+          <Lock aria-hidden="true" className="size-3.5 shrink-0" />
+          Only visible to you and to mentors or recruiters who save you as a candidate.
+        </p>
+      </Section>
+
       <Section title="Extracted keywords">
         {talentGenerating ? (
           <TalentSkeleton />
@@ -811,6 +853,9 @@ function ProfileForm({
     ? draft.githubUsernames
     : [""];
   const setGithubRows = (rows: string[]) => set({ githubUsernames: rows });
+  const contact = draft.contact ?? emptyContact;
+  const setContact = (patch: Partial<StudentContact>) =>
+    set({ contact: { ...contact, ...patch } });
 
   useEffect(() => {
     if (!validationError?.field) return;
@@ -946,6 +991,46 @@ function ProfileForm({
             placeholder="Topics or skills you want guidance on."
           />
         </Field>
+      </Section>
+
+      <Section title="Contact">
+        <p className="-mt-1 flex items-start gap-1.5 text-xs text-gray-500">
+          <Lock aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+          Only mentors and recruiters who save you as a candidate can see these. All fields are optional.
+        </p>
+        <Field label="Email" fieldPath="contact.email" validationError={validationError}>
+          <input
+            className={inputClass}
+            type="email"
+            autoComplete="email"
+            maxLength={254}
+            value={contact.email}
+            onChange={(e) => setContact({ email: e.target.value })}
+          />
+        </Field>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Phone number" fieldPath="contact.phone" validationError={validationError}>
+            <input
+              className={inputClass}
+              type="tel"
+              autoComplete="tel"
+              maxLength={40}
+              value={contact.phone}
+              onChange={(e) => setContact({ phone: e.target.value })}
+              placeholder="(555) 123-4567"
+            />
+          </Field>
+          <Field label="LinkedIn" fieldPath="contact.linkedin" validationError={validationError}>
+            <input
+              className={inputClass}
+              inputMode="url"
+              maxLength={500}
+              value={contact.linkedin}
+              onChange={(e) => setContact({ linkedin: e.target.value })}
+              placeholder="linkedin.com/in/your-name"
+            />
+          </Field>
+        </div>
       </Section>
 
       <ListEditor

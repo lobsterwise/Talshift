@@ -14,6 +14,7 @@ export interface SavedStudentPosting {
   id: string
   title: string
   description: string
+  application_url: string
   organization: string | null
   saved_at: string
 }

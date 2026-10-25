@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Bookmark, BookmarkMinus } from 'lucide-react'
+import { Bookmark, BookmarkMinus, ExternalLink } from 'lucide-react'
 import { getSavedStudentPostings, setStudentPostingSaved, type SavedStudentPosting } from '../../api/studentDiscovery'
 import EmptyState from '../../components/ui/EmptyState'
 import PageHeading from '../../components/ui/PageHeading'
@@ -53,6 +53,15 @@ export default function SavedPositions() {
                 </button>
               </div>
               {posting.description && <p className="whitespace-pre-line text-sm leading-6 text-gray-700">{posting.description}</p>}
+              {posting.application_url
+                ? (
+                  <a href={posting.application_url} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 self-start rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white no-underline hover:bg-blue-700 hover:text-white">
+                    Apply online
+                    <ExternalLink aria-hidden="true" className="size-4" />
+                  </a>
+                )
+                : <p className="text-sm text-gray-500">The poster hasn&apos;t added an application link yet.</p>}
             </article>
           ))}
         </div>}

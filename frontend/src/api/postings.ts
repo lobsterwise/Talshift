@@ -4,6 +4,8 @@ export interface ProfessionalPosting {
   id: string
   title: string
   description: string
+  // Where students apply. Older postings have '' until the owner adds one.
+  applicationUrl: string
   status: PostingStatus
   createdAt: string
   updatedAt: string

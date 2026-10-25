@@ -94,6 +94,10 @@ export interface SavedCandidate {
   field_of_study: string | null
   institution: string | null
   summary: string
+  // Contact details the student added to their profile; '' when not given.
+  email: string
+  phone: string
+  linkedin: string
   saved_at: string
 }
 

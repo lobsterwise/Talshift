@@ -48,6 +48,14 @@ export interface StudentProfile {
   projects: Project[]
   skills: Skill[]
   links: Link[]
+  // Shared only with professionals who save the student. Never sent to the AI.
+  contact: StudentContact
+}
+
+export interface StudentContact {
+  email: string
+  phone: string
+  linkedin: string
 }
 
 export interface StudentTalentSkill {

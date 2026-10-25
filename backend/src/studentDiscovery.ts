@@ -302,11 +302,12 @@ export function createStudentDiscoveryRouter(pool: Pool): Router {
       id: string;
       title: string;
       description: string;
+      application_url: string;
       organization: string | null;
       saved_at: string;
     }>(
       `SELECT professional_postings.id::text AS id, professional_postings.title,
-              professional_postings.description,
+              professional_postings.description, professional_postings.application_url,
               user_profiles.profile->>'organization' AS organization,
               saved_student_postings.created_at AS saved_at
        FROM saved_student_postings

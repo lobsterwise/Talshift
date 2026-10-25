@@ -178,10 +178,17 @@ export function createProfessionalSearchRouter(pool: Pool): Router {
       field_of_study: string | null;
       institution: string | null;
       summary: string;
+      email: string;
+      phone: string;
+      linkedin: string;
       saved_at: string;
     }>(
+      // Contact details are shared only with professionals who saved the student.
       `SELECT saved_professional_candidates.student_id::text AS id,
               COALESCE(user_profiles.profile->>'fullName', 'Student') AS name,
+              COALESCE(student_profiles.profile->'contact'->>'email', '') AS email,
+              COALESCE(student_profiles.profile->'contact'->>'phone', '') AS phone,
+              COALESCE(student_profiles.profile->'contact'->>'linkedin', '') AS linkedin,
               COALESCE(student_profiles.profile->>'headline', '') AS headline,
               COALESCE(student_profiles.profile->>'location', '') AS location,
               user_profiles.profile->>'fieldOfStudy' AS field_of_study,

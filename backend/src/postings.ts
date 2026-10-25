@@ -8,6 +8,7 @@ interface Posting {
   id: string;
   title: string;
   description: string;
+  applicationUrl: string;
   status: PostingStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -17,9 +18,26 @@ interface PostingRow {
   id: string;
   title: string;
   description: string;
+  application_url: string;
   status: PostingStatus;
   created_at: Date;
   updated_at: Date;
+}
+
+const postingColumns = "id, title, description, application_url, status, created_at, updated_at";
+const invalidPosting = "title, description, an application link (http or https), and a valid draft or published status are required";
+
+// Accepts "careers.example.com/job" as well as full URLs; only http(s) links are stored.
+function readApplicationUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const raw = value.trim();
+  if (!raw || raw.length > 500) return null;
+  try {
+    const url = new URL(/^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`);
+    return (url.protocol === "http:" || url.protocol === "https:") && url.hostname.includes(".") ? url.toString().slice(0, 500) : null;
+  } catch {
+    return null;
+  }
 }
 
 function bearerToken(header: string | undefined): string | null {
@@ -33,7 +51,9 @@ function readPosting(value: unknown): Omit<Posting, "id" | "createdAt" | "update
   if (typeof input.title !== "string" || input.title.trim().length === 0 || input.title.trim().length > 120 ||
     typeof input.description !== "string" || input.description.trim().length === 0 || input.description.length > 4000 ||
     (input.status !== "draft" && input.status !== "published")) return null;
-  return { title: input.title.trim(), description: input.description.trim(), status: input.status };
+  const applicationUrl = readApplicationUrl(input.applicationUrl);
+  if (!applicationUrl) return null;
+  return { title: input.title.trim(), description: input.description.trim(), applicationUrl, status: input.status };
 }
 
 function toPosting(row: PostingRow): Posting {
@@ -41,6 +61,7 @@ function toPosting(row: PostingRow): Posting {
     id: row.id,
     title: row.title,
     description: row.description,
+    applicationUrl: row.application_url,
     status: row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -71,7 +92,7 @@ export function createPostingsRouter(pool: Pool): Router {
       return;
     }
     const result = await pool.query<PostingRow>(
-      `SELECT id, title, description, status, created_at, updated_at
+      `SELECT ${postingColumns}
        FROM professional_postings
        WHERE owner_id = $1
        ORDER BY updated_at DESC, id DESC`,
@@ -88,14 +109,14 @@ export function createPostingsRouter(pool: Pool): Router {
     }
     const posting = readPosting(request.body);
     if (!posting) {
-      response.status(400).json({ error: "title, description, and a valid draft or published status are required" });
+      response.status(400).json({ error: invalidPosting });
       return;
     }
     const result = await pool.query<PostingRow>(
-      `INSERT INTO professional_postings (owner_id, title, description, status)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, title, description, status, created_at, updated_at`,
-      [professionalId, posting.title, posting.description, posting.status],
+      `INSERT INTO professional_postings (owner_id, title, description, application_url, status)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING ${postingColumns}`,
+      [professionalId, posting.title, posting.description, posting.applicationUrl, posting.status],
     );
     response.status(201).json({ posting: toPosting(result.rows[0]) });
   });
@@ -113,15 +134,15 @@ export function createPostingsRouter(pool: Pool): Router {
     }
     const posting = readPosting(request.body);
     if (!posting) {
-      response.status(400).json({ error: "title, description, and a valid draft or published status are required" });
+      response.status(400).json({ error: invalidPosting });
       return;
     }
     const result = await pool.query<PostingRow>(
       `UPDATE professional_postings
-       SET title = $3, description = $4, status = $5, updated_at = now()
+       SET title = $3, description = $4, application_url = $5, status = $6, updated_at = now()
        WHERE id = $1 AND owner_id = $2
-       RETURNING id, title, description, status, created_at, updated_at`,
-      [postingId, professionalId, posting.title, posting.description, posting.status],
+       RETURNING ${postingColumns}`,
+      [postingId, professionalId, posting.title, posting.description, posting.applicationUrl, posting.status],
     );
     if (!result.rows[0]) {
       response.status(404).json({ error: "posting not found" });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookmarkMinus, UsersRound } from 'lucide-react'
+import { BookmarkMinus, Link2, Mail, Phone, UsersRound } from 'lucide-react'
 import { getSavedCandidates, setCandidateSaved, type SavedCandidate } from '../../api/professionalSearch'
 import EmptyState from '../../components/ui/EmptyState'
 import PageHeading from '../../components/ui/PageHeading'
@@ -54,6 +54,21 @@ export default function SavedCandidates() {
                 </button>
               </div>
               {candidate.summary && <p className="whitespace-pre-line text-sm leading-6 text-gray-700">{candidate.summary}</p>}
+              {candidate.email || candidate.phone || candidate.linkedin
+                ? (
+                  <ul aria-label={`Contact ${candidate.name}`} className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+                    {candidate.email && (
+                      <li><a className="inline-flex items-center gap-1.5" href={`mailto:${candidate.email}`}><Mail aria-hidden="true" className="size-4 shrink-0" />{candidate.email}</a></li>
+                    )}
+                    {candidate.phone && (
+                      <li><a className="inline-flex items-center gap-1.5" href={`tel:${candidate.phone.replace(/[^\d+]/g, '')}`}><Phone aria-hidden="true" className="size-4 shrink-0" />{candidate.phone}</a></li>
+                    )}
+                    {candidate.linkedin && (
+                      <li><a className="inline-flex items-center gap-1.5" href={candidate.linkedin} target="_blank" rel="noopener noreferrer"><Link2 aria-hidden="true" className="size-4 shrink-0" />LinkedIn</a></li>
+                    )}
+                  </ul>
+                )
+                : <p className="text-sm text-gray-500">This student hasn&apos;t added contact details yet.</p>}
             </article>
           ))}
         </div>}
