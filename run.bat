@@ -1,6 +1,6 @@
 cd frontend
-npm run build
+call npm run build
 cd ..
 cd backend
-npm run dev
+call npm run dev
 cd ..
