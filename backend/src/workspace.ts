@@ -5,7 +5,7 @@ import type { Pool } from "pg";
 type Persona = "student" | "professional";
 
 const resources: Record<Persona, readonly string[]> = {
-  student: ["overview", "plan", "events", "network", "resume"],
+  student: ["overview", "plan", "events", "network"],
   professional: ["feed", "search", "invites", "profile"],
 };
 

@@ -11,7 +11,9 @@ import { createProfessionalSearchRouter } from "./professionalSearch";
 import { createDiscoveryRouter } from "./discovery";
 import { createStudentDiscoveryRouter } from "./studentDiscovery";
 
-dotenv.config();
+// Resolve backend/.env from this file rather than the working directory, so the
+// server finds it whether it's started from backend/ or the repo root.
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {

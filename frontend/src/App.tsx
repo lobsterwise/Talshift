@@ -9,6 +9,7 @@ import {
   type AuthSession,
   type Profile,
 } from './api/auth.ts'
+import { clearResumeDraft } from './api/studentProfile.ts'
 import Header from './components/Header.tsx'
 import AuthFlow from './pages/auth/AuthFlow.tsx'
 import { personas, type Persona } from './personas.tsx'
@@ -104,6 +105,7 @@ function App() {
   async function signOut() {
     if (token) await logout(token).catch(() => undefined)
     localStorage.removeItem('talshift.session')
+    clearResumeDraft()
     setToken(null)
     setAccount(null)
     setProfile(null)
