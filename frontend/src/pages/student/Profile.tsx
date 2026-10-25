@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from "react";
 import { getProfile } from "../../api/auth";
-import { getDiscoverability, setDiscoverability } from "../../api/discovery";
 import ProjectCredibilityPanel, {
   VerifiedExperienceBadge,
 } from "../../components/ProjectCredibility";
@@ -130,10 +129,6 @@ function ProfileView({
   reputationError,
   searchAttributeCount,
   searchIndexingError,
-  discoverable,
-  visibilitySaving,
-  visibilityError,
-  onDiscoverabilityChange,
   talentGenerating,
   talentError,
   onRetryTalent,
@@ -149,10 +144,6 @@ function ProfileView({
   reputationError: string;
   searchAttributeCount: number;
   searchIndexingError: string;
-  discoverable: boolean;
-  visibilitySaving: boolean;
-  visibilityError: string;
-  onDiscoverabilityChange: (discoverable: boolean) => void;
   talentGenerating: boolean;
   talentError: string;
   onRetryTalent: () => void;
@@ -514,33 +505,7 @@ function ProfileView({
           )}
       </Section>
 
-      <Section title="Search visibility">
-        <label className="flex items-start gap-3 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            className="mt-0.5"
-            checked={discoverable}
-            disabled={visibilitySaving}
-            onChange={(event) => onDiscoverabilityChange(event.target.checked)}
-          />
-          <span>Show my profile in professional search</span>
-        </label>
-        <p className="text-xs text-gray-500">
-          Only a limited profile and matched skills are shown. Contact details
-          stay private.
-        </p>
-        {visibilitySaving && (
-          <p role="status" className="text-xs text-gray-500">
-            Updating visibility…
-          </p>
-        )}
-        {visibilityError && (
-          <p role="alert" className="text-sm text-red-700">
-            {visibilityError}
-          </p>
-        )}
-      </Section>
-    </div>
+        </div>
   );
 }
 
@@ -1224,9 +1189,6 @@ export default function Profile() {
   const [reputationError, setReputationError] = useState("");
   const [searchAttributeCount, setSearchAttributeCount] = useState(0);
   const [searchIndexingError, setSearchIndexingError] = useState("");
-  const [discoverable, setDiscoverable] = useState(false);
-  const [visibilitySaving, setVisibilitySaving] = useState(false);
-  const [visibilityError, setVisibilityError] = useState("");
   // A parsed resume (from onboarding, or the upload at the bottom of this page)
   // opens straight into the form for review.
   const [resumeDraft, setResumeDraft] = useState<StudentProfile | null>(() =>
@@ -1250,14 +1212,13 @@ export default function Profile() {
   useEffect(() => {
     let cancelled = false;
     const token = localStorage.getItem("talshift.session") ?? "";
-    Promise.all([getStudentProfile(), getProfile(token), getDiscoverability()])
-      .then(([result, account, isDiscoverable]) => {
+    Promise.all([getStudentProfile(), getProfile(token)])
+      .then(([result, account]) => {
         if (cancelled) return;
         setProfile(result.profile);
         setStudentTalent(result.studentTalent);
         setCredibility(result.credibility);
         setSearchAttributeCount(result.searchAttributeCount);
-        setDiscoverable(isDiscoverable);
         setFullName(account.profile?.fullName ?? "");
       })
       .catch((caught: unknown) => {
@@ -1331,22 +1292,6 @@ export default function Profile() {
     } finally {
       if (requestId === credibilityRequestId.current)
         setCredibilityRunning(false);
-    }
-  }
-
-  async function updateDiscoverability(value: boolean) {
-    setVisibilitySaving(true);
-    setVisibilityError("");
-    try {
-      setDiscoverable(await setDiscoverability(value));
-    } catch (caught) {
-      setVisibilityError(
-        caught instanceof Error
-          ? caught.message
-          : "Unable to update search visibility.",
-      );
-    } finally {
-      setVisibilitySaving(false);
     }
   }
 
@@ -1440,10 +1385,6 @@ export default function Profile() {
             reputationError={reputationError}
             searchAttributeCount={searchAttributeCount}
             searchIndexingError={searchIndexingError}
-            discoverable={discoverable}
-            visibilitySaving={visibilitySaving}
-            visibilityError={visibilityError}
-            onDiscoverabilityChange={updateDiscoverability}
             talentGenerating={talentGenerating}
             talentError={talentError}
             onRetryTalent={() => void refreshTalent()}

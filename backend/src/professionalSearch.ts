@@ -485,7 +485,7 @@ export function createProfessionalSearchRouter(pool: Pool): Router {
         `SELECT entry.student_id::text
          FROM professional_review_queue_entries AS entry
          JOIN users ON users.id = entry.student_id AND users.account_type = 'student'
-         JOIN search_settings ON search_settings.user_id = users.id AND search_settings.discoverable = true
+         LEFT JOIN search_settings ON search_settings.user_id = users.id
          WHERE entry.queue_id = $1 AND entry.position = $2 AND entry.status = 'pending'
          FOR UPDATE OF entry`,
         [request.params.queueId, queue.cursor_position],

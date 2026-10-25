@@ -29,11 +29,14 @@ export function createDiscoveryRouter(pool: Pool): Router {
       response.status(401).json({ error: "valid authentication is required" });
       return;
     }
-    const result = await pool.query<{ discoverable: boolean }>(
-      "SELECT discoverable FROM search_settings WHERE user_id = $1",
+    await pool.query(
+      `INSERT INTO search_settings (user_id, discoverable)
+       VALUES ($1, true)
+       ON CONFLICT (user_id) DO UPDATE
+       SET discoverable = true, updated_at = now()`,
       [accountId],
     );
-    response.json({ discoverable: result.rows[0]?.discoverable ?? false });
+    response.json({ discoverable: true });
   });
 
   router.put("/settings", async (request, response) => {
@@ -42,19 +45,18 @@ export function createDiscoveryRouter(pool: Pool): Router {
       response.status(401).json({ error: "valid authentication is required" });
       return;
     }
-    if (typeof request.body?.discoverable !== "boolean") {
-      response.status(400).json({ error: "discoverable must be a boolean" });
+    if (request.body?.discoverable !== true) {
+      response.status(400).json({ error: "profiles cannot be hidden from discovery" });
       return;
     }
-    const result = await pool.query<{ discoverable: boolean }>(
+    await pool.query(
       `INSERT INTO search_settings (user_id, discoverable)
-       VALUES ($1, $2)
+       VALUES ($1, true)
        ON CONFLICT (user_id) DO UPDATE
-       SET discoverable = EXCLUDED.discoverable, updated_at = now()
-       RETURNING discoverable`,
-      [accountId, request.body.discoverable],
+       SET discoverable = true, updated_at = now()`,
+      [accountId],
     );
-    response.json({ discoverable: result.rows[0].discoverable });
+    response.json({ discoverable: true });
   });
 
   return router;

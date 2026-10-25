@@ -100,9 +100,16 @@ ALTER TABLE search_attributes
 
 CREATE TABLE IF NOT EXISTS search_settings (
   user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-  discoverable BOOLEAN NOT NULL DEFAULT false,
+  discoverable BOOLEAN NOT NULL DEFAULT true,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE search_settings
+  ALTER COLUMN discoverable SET DEFAULT true;
+
+UPDATE search_settings
+  SET discoverable = true, updated_at = now()
+  WHERE discoverable = false;
 
 CREATE TABLE IF NOT EXISTS professional_postings (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

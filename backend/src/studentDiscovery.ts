@@ -217,7 +217,7 @@ export function createStudentDiscoveryRouter(pool: Pool): Router {
         AND professional_postings.id::text = search_attributes.source_id
         AND professional_postings.owner_id = users.id
              WHERE ((search_attributes.source_type = 'professional_offer' AND search_attributes.source_id = 'profile'
-               AND search_settings.discoverable IS TRUE)
+               AND COALESCE(search_settings.discoverable, true))
          OR (search_attributes.source_type = 'job_posting' AND professional_postings.status = 'published'))
         AND search_attributes.extractor_model = $1
        ORDER BY search_attributes.owner_id, search_attributes.source_type, search_attributes.source_id,

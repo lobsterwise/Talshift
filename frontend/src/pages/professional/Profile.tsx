@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { getProfile, saveProfile, type Profile as ProfessionalProfile } from '../../api/auth'
-import { getDiscoverability, setDiscoverability } from '../../api/discovery'
 import { createPosting, deletePosting, getPostings, updatePosting, type ProfessionalPosting, type PostingStatus } from '../../api/postings'
 import { getProfessionalAttributes, indexProfessionalSource, updateProfessionalPriority, type ProfessionalAttribute } from '../../api/professionalSearch'
 
@@ -22,9 +21,6 @@ export default function Profile() {
   const [priorityDrafts, setPriorityDrafts] = useState<Record<string, number>>({})
   const [attributeError, setAttributeError] = useState('')
   const [prioritiesSaving, setPrioritiesSaving] = useState(false)
-  const [mentorDiscoverable, setMentorDiscoverable] = useState(false)
-  const [mentorVisibilitySaving, setMentorVisibilitySaving] = useState(false)
-  const [mentorVisibilityError, setMentorVisibilityError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -38,16 +34,6 @@ export default function Profile() {
       })
       .catch((caught: unknown) => {
         if (!cancelled) setError(caught instanceof Error ? caught.message : 'Unable to load your profile.')
-      })
-    return () => { cancelled = true }
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    getDiscoverability()
-      .then((value) => { if (!cancelled) setMentorDiscoverable(value) })
-      .catch((caught: unknown) => {
-        if (!cancelled) setMentorVisibilityError(caught instanceof Error ? caught.message : 'Unable to load mentor visibility.')
       })
     return () => { cancelled = true }
   }, [])
@@ -192,18 +178,6 @@ export default function Profile() {
     }
   }
 
-  async function updateMentorVisibility(value: boolean) {
-    setMentorVisibilitySaving(true)
-    setMentorVisibilityError('')
-    try {
-      setMentorDiscoverable(await setDiscoverability(value))
-    } catch (caught) {
-      setMentorVisibilityError(caught instanceof Error ? caught.message : 'Unable to update mentor visibility.')
-    } finally {
-      setMentorVisibilitySaving(false)
-    }
-  }
-
   function sourceLabel(attribute: ProfessionalAttribute) {
     if (attribute.source_type === 'professional_offer') return 'Mentor offer'
     if (attribute.source_type === 'professional_demand') return 'General hiring'
@@ -240,16 +214,6 @@ export default function Profile() {
           {saving ? 'Saving…' : 'Save profile'}
         </button>
       </form>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Mentor visibility</h2>
-        <label className="flex items-start gap-3 text-sm text-gray-700">
-          <input type="checkbox" className="mt-0.5" checked={mentorDiscoverable} disabled={mentorVisibilitySaving}
-            onChange={(event) => void updateMentorVisibility(event.target.checked)} />
-          <span>Show my mentoring offer in student search</span>
-        </label>
-        {mentorVisibilityError && <p role="alert" className="text-sm text-red-700">{mentorVisibilityError}</p>}
-      </section>
 
       <section className="flex flex-col gap-4">
         <header>

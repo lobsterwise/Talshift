@@ -139,7 +139,6 @@ export async function rankProfessionalCandidates(
             student_credibility.report AS credibility
      FROM search_attributes
      JOIN users ON users.id = search_attributes.owner_id AND users.account_type = 'student'
-     JOIN search_settings ON search_settings.user_id = users.id AND search_settings.discoverable = true
      JOIN student_talent ON student_talent.student_id = users.id
      JOIN attribute_embeddings
        ON attribute_embeddings.content_hash = search_attributes.embedding_hash

@@ -80,4 +80,4 @@ npm run typecheck
 npm run build
 ```
 
-`GET /api/health` runs `SELECT 1` and returns `{"status":"ok"}` when the database is available, or HTTP 503 when it is not. Authentication, profiles, postings, search attributes, and cached embeddings are stored in PostgreSQL. Student discovery is opt-in. Unknown API routes return a JSON 404.
+`GET /api/health` runs `SELECT 1` and returns `{"status":"ok"}` when the database is available, or HTTP 503 when it is not. Authentication, profiles, postings, search attributes, and cached embeddings are stored in PostgreSQL. Student and professional profiles are discoverable by default; published job postings are searchable separately. Unknown API routes return a JSON 404.
