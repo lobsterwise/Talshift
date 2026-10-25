@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getProfile } from '../../api/auth'
 import { getPostings, type ProfessionalPosting } from '../../api/postings'
-import { getReviewQueue, startReviewQueue, submitCandidateReview, type ReviewQueue } from '../../api/professionalSearch'
+import { getReviewQueue, getSavedCandidates, setCandidateSaved, startReviewQueue, submitCandidateReview, type ReviewQueue } from '../../api/professionalSearch'
 import ProjectCredibilityPanel, { VerifiedExperienceBadge } from '../../components/ProjectCredibility'
 import StarRatingIndicator from '../../components/StarRatingIndicator'
 
@@ -19,6 +19,8 @@ export default function FindStudents() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [ready, setReady] = useState(false)
+  const [savedIds, setSavedIds] = useState<string[]>([])
+  const [savingCandidate, setSavingCandidate] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -41,6 +43,14 @@ export default function FindStudents() {
           setLoading(false)
         }
       })
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    getSavedCandidates()
+      .then((saved) => { if (!cancelled) setSavedIds(saved.map((candidate) => candidate.id)) })
+      .catch((caught: unknown) => { if (!cancelled) setError(caught instanceof Error ? caught.message : 'Unable to load saved candidates.') })
     return () => { cancelled = true }
   }, [])
 
@@ -128,6 +138,22 @@ export default function FindStudents() {
     }
   }
 
+  async function toggleCandidateSaved() {
+    const candidateId = queue?.current?.id
+    if (!candidateId || savingCandidate) return
+    const saved = savedIds.includes(candidateId)
+    setSavingCandidate(true)
+    setError('')
+    try {
+      await setCandidateSaved(candidateId, !saved)
+      setSavedIds((ids) => saved ? ids.filter((id) => id !== candidateId) : [...ids, candidateId])
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Unable to update saved candidates.')
+    } finally {
+      setSavingCandidate(false)
+    }
+  }
+
   return (
     <section className="flex flex-col gap-5" aria-live="polite">
       <header>
@@ -170,7 +196,7 @@ export default function FindStudents() {
                   <p className="mt-1 text-sm text-gray-500">{[queue.current.fieldOfStudy, queue.current.institution, queue.current.location].filter(Boolean).join(' · ')}</p>
                 </div>
               </div>
-              <div className="flex gap-6 text-sm">
+              <div className="flex items-center gap-4 text-sm">
                 <div><p className="text-xs text-gray-500">Match</p><p className="font-semibold tabular-nums text-gray-900">{Math.round(queue.current.relevance * 100)}%</p></div>
               </div>
             </header>
@@ -249,9 +275,14 @@ export default function FindStudents() {
               </label>
               <div className="flex items-center justify-between gap-4">
                 <p className="text-xs text-gray-500">Your note is only visible to this student.</p>
-                <button type="submit" disabled={rating === 0 || reviewText.trim().length === 0 || submitting} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50">
-                  {submitting ? 'Saving…' : 'Rate and continue'}
-                </button>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <button type="button" className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void toggleCandidateSaved()} disabled={savingCandidate} aria-pressed={savedIds.includes(queue.current.id)}>
+                    {savingCandidate ? 'Saving…' : savedIds.includes(queue.current.id) ? 'Saved' : 'Save candidate'}
+                  </button>
+                  <button type="submit" disabled={rating === 0 || reviewText.trim().length === 0 || submitting} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50">
+                    {submitting ? 'Saving…' : 'Rate and continue'}
+                  </button>
+                </div>
               </div>
             </form>
           </article>

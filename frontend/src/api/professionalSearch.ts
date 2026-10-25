@@ -86,6 +86,27 @@ export interface ReviewQueue {
   current: (StudentSearchResult & { position: number }) | null
 }
 
+export interface SavedCandidate {
+  id: string
+  name: string
+  headline: string
+  location: string
+  field_of_study: string | null
+  institution: string | null
+  summary: string
+  saved_at: string
+}
+
+export async function getSavedCandidates() {
+  return (await request<{ items: SavedCandidate[] }>('/saved-candidates')).items
+}
+
+export function setCandidateSaved(studentId: string, saved: boolean) {
+  return request<{ studentId: string; saved: boolean }>(`/saved-candidates/${encodeURIComponent(studentId)}`, {
+    method: saved ? 'PUT' : 'DELETE',
+  })
+}
+
 export async function searchStudents(sourceType: 'professional_demand' | 'job_posting', sourceId: string, offset = 0) {
   const query = new URLSearchParams({ sourceType, sourceId, limit: '20', offset: String(offset) })
   return request<{ items: StudentSearchResult[]; total: number; limit: number; offset: number; message?: string }>(`/students?${query}`)

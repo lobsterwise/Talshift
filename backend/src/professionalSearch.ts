@@ -164,6 +164,104 @@ export function createProfessionalSearchRouter(pool: Pool): Router {
     response.json({ items: result.rows });
   });
 
+  router.get("/saved-candidates", async (request, response) => {
+    const professionalId = await getProfessionalId(request.header("authorization"));
+    if (!professionalId) {
+      response.status(401).json({ error: "valid professional authentication is required" });
+      return;
+    }
+    const result = await pool.query<{
+      id: string;
+      name: string;
+      headline: string;
+      location: string;
+      field_of_study: string | null;
+      institution: string | null;
+      summary: string;
+      saved_at: string;
+    }>(
+      `SELECT saved_professional_candidates.student_id::text AS id,
+              COALESCE(user_profiles.profile->>'fullName', 'Student') AS name,
+              COALESCE(student_profiles.profile->>'headline', '') AS headline,
+              COALESCE(student_profiles.profile->>'location', '') AS location,
+              user_profiles.profile->>'fieldOfStudy' AS field_of_study,
+              user_profiles.profile->>'institution' AS institution,
+              COALESCE(student_profiles.profile->>'summary', '') AS summary,
+              saved_professional_candidates.created_at AS saved_at
+       FROM saved_professional_candidates
+       JOIN users ON users.id = saved_professional_candidates.student_id AND users.account_type = 'student'
+       LEFT JOIN student_profiles ON student_profiles.student_id = users.id
+       LEFT JOIN user_profiles ON user_profiles.user_id = users.id
+       WHERE saved_professional_candidates.professional_id = $1
+       ORDER BY saved_professional_candidates.created_at DESC, name`,
+      [professionalId],
+    );
+    response.json({ items: result.rows });
+  });
+
+  router.put("/saved-candidates/:studentId", async (request, response) => {
+    const professionalId = await getProfessionalId(request.header("authorization"));
+    if (!professionalId) {
+      response.status(401).json({ error: "valid professional authentication is required" });
+      return;
+    }
+    const { studentId } = request.params;
+    if (!/^\d+$/.test(studentId)) {
+      response.status(400).json({ error: "a valid candidate is required" });
+      return;
+    }
+    const result = await pool.query(
+      `INSERT INTO saved_professional_candidates (professional_id, student_id)
+       SELECT $1, users.id FROM users
+       WHERE users.id = $2 AND users.account_type = 'student'
+         AND EXISTS (
+           SELECT 1
+           FROM professional_review_queue_entries
+           JOIN professional_review_queues
+             ON professional_review_queues.id = professional_review_queue_entries.queue_id
+           WHERE professional_review_queues.professional_id = $1
+             AND professional_review_queue_entries.student_id = users.id
+         )
+       ON CONFLICT (professional_id, student_id) DO NOTHING
+       RETURNING student_id`,
+      [professionalId, studentId],
+    );
+    if (!result.rowCount && !(await pool.query(
+      `SELECT 1 FROM saved_professional_candidates
+       WHERE professional_id = $1 AND student_id = $2
+         AND EXISTS (
+           SELECT 1
+           FROM professional_review_queue_entries
+           JOIN professional_review_queues
+             ON professional_review_queues.id = professional_review_queue_entries.queue_id
+           WHERE professional_review_queues.professional_id = $1
+             AND professional_review_queue_entries.student_id = saved_professional_candidates.student_id
+         )`,
+      [professionalId, studentId],
+    )).rowCount) {
+      response.status(404).json({ error: "candidate not found" });
+      return;
+    }
+    response.json({ studentId, saved: true });
+  });
+
+  router.delete("/saved-candidates/:studentId", async (request, response) => {
+    const professionalId = await getProfessionalId(request.header("authorization"));
+    if (!professionalId) {
+      response.status(401).json({ error: "valid professional authentication is required" });
+      return;
+    }
+    if (!/^\d+$/.test(request.params.studentId)) {
+      response.status(400).json({ error: "a valid candidate is required" });
+      return;
+    }
+    await pool.query(
+      "DELETE FROM saved_professional_candidates WHERE professional_id = $1 AND student_id = $2",
+      [professionalId, request.params.studentId],
+    );
+    response.status(204).end();
+  });
+
   router.get("/students", async (request, response) => {
     const professionalId = await getProfessionalId(request.header("authorization"));
     if (!professionalId) {

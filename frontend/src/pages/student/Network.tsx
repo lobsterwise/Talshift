@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { searchStudentDiscovery, type StudentDiscoveryMode, type StudentOpportunity } from '../../api/studentDiscovery'
+import { getSavedStudentPostings, searchStudentDiscovery, setStudentPostingSaved, type StudentDiscoveryMode, type StudentOpportunity } from '../../api/studentDiscovery'
 
 export default function Network() {
   const [mode, setMode] = useState<StudentDiscoveryMode>('mentors')
@@ -8,6 +8,8 @@ export default function Network() {
   const [includeProfile, setIncludeProfile] = useState(true)
   const [offset, setOffset] = useState(0)
   const [items, setItems] = useState<StudentOpportunity[]>([])
+  const [savedIds, setSavedIds] = useState<string[]>([])
+  const [savingId, setSavingId] = useState('')
   const [total, setTotal] = useState(0)
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
@@ -18,12 +20,13 @@ export default function Network() {
     setLoading(true)
     setError('')
     setNotice('')
-    searchStudentDiscovery(mode, query, includeProfile, offset)
-      .then((result) => {
+    Promise.all([searchStudentDiscovery(mode, query, includeProfile, offset), getSavedStudentPostings()])
+      .then(([result, saved]) => {
         if (cancelled) return
         setItems(result.items)
         setTotal(result.total)
         setNotice(result.message ?? '')
+        setSavedIds(saved.map((posting) => posting.id))
       })
       .catch((caught: unknown) => {
         if (!cancelled) setError(caught instanceof Error ? caught.message : 'Unable to search right now.')
@@ -36,6 +39,20 @@ export default function Network() {
     event.preventDefault()
     setOffset(0)
     setQuery(queryDraft.trim())
+  }
+
+  async function toggleSaved(postingId: string) {
+    const saved = savedIds.includes(postingId)
+    setSavingId(postingId)
+    setError('')
+    try {
+      await setStudentPostingSaved(postingId, !saved)
+      setSavedIds((ids) => saved ? ids.filter((id) => id !== postingId) : [...ids, postingId])
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Unable to update saved positions.')
+    } finally {
+      setSavingId('')
+    }
   }
 
   return (
@@ -84,6 +101,9 @@ export default function Network() {
                     </div>
                     <span className="text-xs tabular-nums text-gray-600">{Math.round(item.score * 100)}% similarity</span>
                   </div>
+                  {item.kind === 'position' && <button type="button" className="self-start rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void toggleSaved(item.id)} disabled={savingId === item.id} aria-pressed={savedIds.includes(item.id)}>
+                    {savingId === item.id ? 'Saving…' : savedIds.includes(item.id) ? 'Saved' : 'Save position'}
+                  </button>}
                   <ul className="flex flex-wrap gap-2">
                     {item.matches.map((match) => (
                       <li key={`${match.goalOrSkill}:${match.offeredAttribute}`} className="rounded border border-gray-200 px-2 py-1 text-xs text-gray-700">

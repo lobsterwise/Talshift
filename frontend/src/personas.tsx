@@ -3,6 +3,8 @@ import StudentNetwork from './pages/student/Network.tsx'
 import StudentPeerComparison from './pages/student/PeerComparison.tsx'
 import StudentProfile from './pages/student/Profile.tsx'
 import ProfessionalFindStudents from './pages/professional/FindStudents.tsx'
+import StudentSavedPositions from './pages/student/SavedPositions.tsx'
+import ProfessionalSavedCandidates from './pages/professional/SavedCandidates.tsx'
 import ProfessionalProfile from './pages/professional/Profile.tsx'
 
 // Matches the backend's account types.
@@ -29,6 +31,7 @@ export const personas: Persona[] = [
     tabs: [
       { slug: 'network', label: 'Network', page: StudentNetwork },
       { slug: 'compare', label: 'Compare', page: StudentPeerComparison },
+      { slug: 'saved', label: 'Saved positions', page: StudentSavedPositions },
       { slug: 'profile', label: 'Profile', page: StudentProfile },
     ],
   },
@@ -37,6 +40,7 @@ export const personas: Persona[] = [
     label: 'Professional',
     tabs: [
       { slug: 'search', label: 'Find students', page: ProfessionalFindStudents },
+      { slug: 'saved', label: 'Saved candidates', page: ProfessionalSavedCandidates },
       { slug: 'profile', label: 'My profile', page: ProfessionalProfile },
     ],
   },

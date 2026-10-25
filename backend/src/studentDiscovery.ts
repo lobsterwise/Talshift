@@ -291,5 +291,83 @@ export function createStudentDiscoveryRouter(pool: Pool): Router {
 
   router.get("/mentors", async (request, response) => { await search(request, response, "mentors"); });
   router.get("/postings", async (request, response) => { await search(request, response, "postings"); });
+
+  router.get("/saved-postings", async (request, response) => {
+    const studentId = await getStudentId(request.header("authorization"));
+    if (!studentId) {
+      response.status(401).json({ error: "valid student authentication is required" });
+      return;
+    }
+    const result = await pool.query<{
+      id: string;
+      title: string;
+      description: string;
+      organization: string | null;
+      saved_at: string;
+    }>(
+      `SELECT professional_postings.id::text AS id, professional_postings.title,
+              professional_postings.description,
+              user_profiles.profile->>'organization' AS organization,
+              saved_student_postings.created_at AS saved_at
+       FROM saved_student_postings
+       JOIN professional_postings ON professional_postings.id = saved_student_postings.posting_id
+       LEFT JOIN user_profiles ON user_profiles.user_id = professional_postings.owner_id
+       WHERE saved_student_postings.student_id = $1 AND professional_postings.status = 'published'
+       ORDER BY saved_student_postings.created_at DESC, professional_postings.title`,
+      [studentId],
+    );
+    response.json({ items: result.rows });
+  });
+
+  router.put("/saved-postings/:postingId", async (request, response) => {
+    const studentId = await getStudentId(request.header("authorization"));
+    if (!studentId) {
+      response.status(401).json({ error: "valid student authentication is required" });
+      return;
+    }
+    const { postingId } = request.params;
+    if (!/^\d+$/.test(postingId)) {
+      response.status(400).json({ error: "a valid position is required" });
+      return;
+    }
+    const result = await pool.query(
+      `INSERT INTO saved_student_postings (student_id, posting_id)
+       SELECT $1, professional_postings.id
+       FROM professional_postings
+       WHERE professional_postings.id = $2 AND professional_postings.status = 'published'
+       ON CONFLICT (student_id, posting_id) DO NOTHING
+       RETURNING posting_id`,
+      [studentId, postingId],
+    );
+    if (!result.rowCount && !(await pool.query(
+      `SELECT 1 FROM saved_student_postings
+       JOIN professional_postings ON professional_postings.id = saved_student_postings.posting_id
+       WHERE saved_student_postings.student_id = $1 AND saved_student_postings.posting_id = $2
+         AND professional_postings.status = 'published'`,
+      [studentId, postingId],
+    )).rowCount) {
+      response.status(404).json({ error: "published position not found" });
+      return;
+    }
+    response.json({ postingId, saved: true });
+  });
+
+  router.delete("/saved-postings/:postingId", async (request, response) => {
+    const studentId = await getStudentId(request.header("authorization"));
+    if (!studentId) {
+      response.status(401).json({ error: "valid student authentication is required" });
+      return;
+    }
+    if (!/^\d+$/.test(request.params.postingId)) {
+      response.status(400).json({ error: "a valid position is required" });
+      return;
+    }
+    await pool.query(
+      "DELETE FROM saved_student_postings WHERE student_id = $1 AND posting_id = $2",
+      [studentId, request.params.postingId],
+    );
+    response.status(204).end();
+  });
+
   return router;
 }

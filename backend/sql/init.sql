@@ -126,6 +126,23 @@ CREATE TABLE IF NOT EXISTS professional_postings (
 CREATE INDEX IF NOT EXISTS professional_postings_owner_status_idx
   ON professional_postings (owner_id, status, updated_at DESC);
 
+CREATE TABLE IF NOT EXISTS saved_professional_candidates (
+  professional_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  student_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (professional_id, student_id)
+);
+
+CREATE TABLE IF NOT EXISTS saved_student_postings (
+  student_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  posting_id BIGINT NOT NULL REFERENCES professional_postings(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (student_id, posting_id)
+);
+
+CREATE INDEX IF NOT EXISTS saved_student_postings_student_created_idx
+  ON saved_student_postings (student_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS student_reputation_reviews (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   reviewer_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
