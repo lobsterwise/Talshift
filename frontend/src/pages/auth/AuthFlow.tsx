@@ -176,7 +176,7 @@ export default function AuthFlow({
           </span>
           <span>Rungs</span>
         </button>
-        <div className="topbar-note">A better signal for real work</div>
+        <div className="topbar-note">Connecting talent with opportunity</div>
         {screen === "welcome" ? (
           <button className="quiet-button" type="button" onClick={onLogout}>
             Sign out
@@ -205,21 +205,12 @@ export default function AuthFlow({
           <div className="aside-rule">
             <span />
           </div>
-          <p className="eyebrow">WORK THAT SPEAKS</p>
           <h1>
-            Build a profile around what you <em>make.</em>
+            Turn your skills into real <em>value.</em>
           </h1>
           <p className="aside-copy">
-            Show the work, the learning, and the people who can speak to it.
+            Recruiters give feedback to make the best candidates stand out.
           </p>
-          <div className="aside-stamp">
-            <span className="stamp-number">01</span>
-            <span>
-              Start with your path.
-              <br />
-              Grow it with proof.
-            </span>
-          </div>
           <div className="aside-lines" aria-hidden="true">
             <i />
             <i />
@@ -254,7 +245,7 @@ export default function AuthFlow({
                 >
                   <span className="option-index">01</span>
                   <strong>Student</strong>
-                  <span>Show projects and build credibility.</span>
+                  <span>Show what you've done and build credibility.</span>
                 </button>
                 <button
                   type="button"
@@ -333,10 +324,9 @@ export default function AuthFlow({
           {screen === "login" && (
             <>
               <p className="eyebrow">WELCOME BACK</p>
-              <h2>Pick up where your work left off.</h2>
-              <p className="panel-intro">
+              <h2>
                 Sign in to continue to your Rungs profile.
-              </p>
+              </h2>
               <form
                 className="auth-form login-form"
                 onSubmit={submitCredentials}
@@ -649,8 +639,6 @@ export default function AuthFlow({
         </section>
       </div>
       <footer className="auth-footer">
-        <span>RUNGS · VERIFIED REAL WORK</span>
-        <span>Built for people who make things.</span>
       </footer>
     </main>
   );
