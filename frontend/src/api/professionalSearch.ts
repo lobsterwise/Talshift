@@ -1,3 +1,5 @@
+import type { ProjectCredibility } from './studentProfile'
+
 export type ProfessionalAttributeSource = 'professional_offer' | 'professional_demand' | 'job_posting'
 
 export interface ProfessionalAttribute {
@@ -67,6 +69,8 @@ export interface StudentSearchResult {
     projects: { name: string; description: string; skills: string[] }[]
     skills: { name: string; level: string }[]
   }
+  // Missing on queue entries snapshotted before credibility checks existed.
+  projectCredibility?: ProjectCredibility[]
   matches: { requirement: string; skill: string; similarity: number }[]
 }
 

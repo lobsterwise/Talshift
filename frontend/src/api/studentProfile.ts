@@ -38,6 +38,8 @@ export interface Link {
 
 export interface StudentProfile {
   headline: string
+  // Normalized GitHub usernames (up to 5); the form also accepts "@user" or profile links.
+  githubUsernames: string[]
   summary: string
   learningGoals: string
   location: string
@@ -62,9 +64,47 @@ export interface StudentTalent {
   model: string
 }
 
+export interface RepositoryEvidence {
+  fullName: string
+  url: string
+  description: string
+  // False for someone else's repository the student contributed commits to.
+  ownedByStudent: boolean
+  isFork: boolean
+  parentFullName: string | null
+  languages: string[]
+  commitCount: number
+  // The student's accounts that authored at least one of those commits.
+  commitAuthors: string[]
+  activeDays: number
+  firstCommitAt: string | null
+  lastCommitAt: string | null
+}
+
+export interface ProjectCredibility {
+  projectName: string
+  score: number
+  status: 'verified' | 'unverified'
+  repository: RepositoryEvidence | null
+  findings: string[]
+  // Present only when the project could not be fully verified.
+  reviewerNote: string | null
+  reviewerQuestion: string | null
+}
+
+export interface CredibilityReport {
+  githubUsernames: string[]
+  // Listed accounts GitHub could not find.
+  unavailableAccounts: string[]
+  projects: ProjectCredibility[]
+  generatedAt: string
+  model: string
+}
+
 interface StudentProfileResult {
   profile: StudentProfile
   studentTalent: StudentTalent | null
+  credibility: CredibilityReport | null
   searchAttributeCount: number
 }
 
@@ -185,4 +225,10 @@ export async function indexStudentTalent() {
   }>('/api/student/talent/index', {
     method: 'POST',
   })
+}
+
+export async function verifyStudentCredibility() {
+  return (await request<{ credibility: CredibilityReport }>('/api/student/credibility', {
+    method: 'POST',
+  })).credibility
 }

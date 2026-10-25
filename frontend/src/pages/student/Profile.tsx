@@ -1,10 +1,12 @@
 import { cloneElement, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { getProfile } from '../../api/auth'
 import { getDiscoverability, setDiscoverability } from '../../api/discovery'
+import ProjectCredibilityPanel, { VerifiedExperienceBadge } from '../../components/ProjectCredibility'
 import ResumeUpload from '../../components/ResumeUpload'
-import {clearResumeDraft,  generateStudentTalent, getStudentProfile, getStudentReputation, indexStudentTalent, readResumeDraft, saveStudentProfile, StudentProfileRequestError, type SkillLevel, type StudentProfile, type StudentReputation, type StudentTalent } from '../../api/studentProfile'
+import {clearResumeDraft,  generateStudentTalent, getStudentProfile, getStudentReputation, indexStudentTalent, readResumeDraft, saveStudentProfile, StudentProfileRequestError, verifyStudentCredibility, type CredibilityReport, type SkillLevel, type StudentProfile, type StudentReputation, type StudentTalent } from '../../api/studentProfile'
 
 const levels: SkillLevel[] = ['beginner', 'intermediate', 'advanced']
+const maxGithubAccounts = 5
 
 const inputClass = 'w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-600 focus:outline-none'
 const buttonClass = 'rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50'
@@ -71,7 +73,7 @@ function TalentSkeleton() {
   )
 }
 
-function ProfileView({ profile, fullName, studentTalent, reputation, reputationError, searchAttributeCount, searchIndexingError, discoverable, visibilitySaving, visibilityError, onDiscoverabilityChange, talentGenerating, talentError, onRetryTalent }: {
+function ProfileView({ profile, fullName, studentTalent, reputation, reputationError, searchAttributeCount, searchIndexingError, discoverable, visibilitySaving, visibilityError, onDiscoverabilityChange, talentGenerating, talentError, onRetryTalent, credibility, credibilityRunning, credibilityError, onVerifyCredibility }: {
   profile: StudentProfile
   fullName: string
   studentTalent: StudentTalent | null
@@ -86,6 +88,10 @@ function ProfileView({ profile, fullName, studentTalent, reputation, reputationE
   talentGenerating: boolean
   talentError: string
   onRetryTalent: () => void
+  credibility: CredibilityReport | null
+  credibilityRunning: boolean
+  credibilityError: string
+  onVerifyCredibility: () => void
 }) {
   const empty = !profile.headline && !profile.summary && !profile.learningGoals && !profile.education.length && !profile.jobs.length
     && !profile.projects.length && !profile.skills.length && !profile.links.length
@@ -93,11 +99,17 @@ function ProfileView({ profile, fullName, studentTalent, reputation, reputationE
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <h1 className="text-2xl font-semibold text-gray-900">{fullName}</h1>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h1 className="text-2xl font-semibold text-gray-900">{fullName}</h1>
+          {!credibilityRunning && <VerifiedExperienceBadge projects={credibility?.projects} />}
+        </div>
         {profile.headline && <p className="text-gray-700">{profile.headline}</p>}
         {profile.location && <p className="text-sm text-gray-500">{profile.location}</p>}
-        {profile.links.length > 0 && (
+        {((profile.githubUsernames?.length ?? 0) > 0 || profile.links.length > 0) && (
           <p className="mt-1 flex flex-wrap gap-x-4 text-sm">
+            {(profile.githubUsernames ?? []).map((username) => (
+              <a key={username} href={`https://github.com/${username}`} target="_blank" rel="noopener noreferrer">GitHub · @{username}</a>
+            ))}
             {profile.links.map((link, index) => (
               <a key={index} href={link.url} target="_blank" rel="noopener noreferrer">{link.label}</a>
             ))}
@@ -162,8 +174,32 @@ function ProfileView({ profile, fullName, studentTalent, reputation, reputationE
                   ))}
                 </p>
               )}
+              {!credibilityRunning && credibility?.projects[index] && <ProjectCredibilityPanel credibility={credibility.projects[index]} />}
             </Entry>
           ))}
+          {credibilityRunning ? (
+            <p role="status" className="text-sm text-gray-500">Checking GitHub commits for your projects…</p>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              {credibilityError && <p role="alert" className="text-sm text-red-700">{credibilityError}</p>}
+              {!credibilityError && !profile.githubUsernames?.length && (
+                <p className="text-sm text-gray-500">Add your GitHub accounts (Edit) or link each project to its repository so reviewers can verify your work.</p>
+              )}
+              {!credibilityError && (credibility?.unavailableAccounts?.length ?? 0) > 0 && (
+                <p role="status" className="text-sm text-amber-800">
+                  GitHub couldn't find {credibility?.unavailableAccounts?.map((username) => `@${username}`).join(', ')}, so those repositories weren't checked. Check the spelling in Edit.
+                </p>
+              )}
+              {!credibilityError && credibility && (
+                <p className="text-xs text-gray-500">
+                  {credibility.projects.filter((item) => item.status === 'verified').length} of {credibility.projects.length} projects commit-verified · Checked {new Date(credibility.generatedAt).toLocaleDateString()}
+                </p>
+              )}
+              <button type="button" className={buttonClass} onClick={onVerifyCredibility}>
+                {credibility ? 'Re-check on GitHub' : 'Verify projects on GitHub'}
+              </button>
+            </div>
+          )}
         </Section>
       )}
 
@@ -338,6 +374,9 @@ function ProfileForm({ initial, saving, error, validationError, onSave, onCancel
 }) {
   const [draft, setDraft] = useState(initial)
   const set = (patch: Partial<StudentProfile>) => setDraft((current) => ({ ...current, ...patch }))
+  // Always show at least one GitHub field; the backend drops blank rows on save.
+  const githubRows = draft.githubUsernames?.length ? draft.githubUsernames : ['']
+  const setGithubRows = (rows: string[]) => set({ githubUsernames: rows })
 
   useEffect(() => {
     if (!validationError?.field) return
@@ -358,6 +397,32 @@ function ProfileForm({ initial, saving, error, validationError, onSave, onCancel
           <input className={inputClass} maxLength={120} value={draft.location}
             onChange={(e) => set({ location: e.target.value })} />
         </Field>
+        <div className="flex flex-col gap-2">
+          {githubRows.map((username, index) => (
+            <div key={index} className="flex items-end gap-2">
+              <div className="flex-1">
+                <Field label={index === 0 ? 'GitHub username or profile link' : `GitHub account ${index + 1}`}
+                  fieldPath={`githubUsernames.${index}`} validationError={validationError}>
+                  <input className={inputClass} maxLength={200} value={username}
+                    onChange={(e) => setGithubRows(githubRows.map((row, i) => (i === index ? e.target.value : row)))}
+                    placeholder={index === 0 ? 'octocat or https://github.com/octocat' : 'Another account, e.g. a school or work profile'} />
+                </Field>
+              </div>
+              {githubRows.length > 1 && (
+                <button type="button" className={buttonClass}
+                  onClick={() => setGithubRows(githubRows.filter((_, i) => i !== index))}>
+                  Remove
+                </button>
+              )}
+            </div>
+          ))}
+          {githubRows.length < maxGithubAccounts && (
+            <button type="button" className={`${buttonClass} self-start`} onClick={() => setGithubRows([...githubRows, ''])}>
+              Add another GitHub account
+            </button>
+          )}
+          <p className="text-xs text-gray-500">Projects are checked against repositories from every account you list.</p>
+        </div>
         <Field label="Summary" fieldPath="summary" validationError={validationError}>
           <textarea className={inputClass} rows={4} maxLength={2000} value={draft.summary}
             onChange={(e) => set({ summary: e.target.value })} />
@@ -396,7 +461,7 @@ function ProfileForm({ initial, saving, error, validationError, onSave, onCancel
           <>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Name" fieldPath={`projects.${index}.name`} validationError={validationError}><input required className={inputClass} maxLength={120} value={project.name} onChange={(e) => update({ name: e.target.value })} /></Field>
-              <Field label="URL" fieldPath={`projects.${index}.url`} validationError={validationError}><input type="url" className={inputClass} maxLength={500} value={project.url} onChange={(e) => update({ url: e.target.value })} placeholder="https://" /></Field>
+              <Field label="GitHub repository or demo URL" fieldPath={`projects.${index}.url`} validationError={validationError}><input type="url" className={inputClass} maxLength={500} value={project.url} onChange={(e) => update({ url: e.target.value })} placeholder="https://github.com/you/project" /></Field>
             </div>
             <Field label="Skills used (comma separated)" fieldPath={`projects.${index}.skills`} validationError={validationError}>
               <input className={inputClass} defaultValue={project.skills.join(', ')}
@@ -481,6 +546,10 @@ export default function Profile() {
   const [talentGenerating, setTalentGenerating] = useState(false)
   const [talentError, setTalentError] = useState('')
   const talentRequestId = useRef(0)
+  const [credibility, setCredibility] = useState<CredibilityReport | null>(null)
+  const [credibilityRunning, setCredibilityRunning] = useState(false)
+  const [credibilityError, setCredibilityError] = useState('')
+  const credibilityRequestId = useRef(0)
 
   useEffect(() => {
     let cancelled = false
@@ -490,6 +559,7 @@ export default function Profile() {
         if (cancelled) return
         setProfile(result.profile)
         setStudentTalent(result.studentTalent)
+        setCredibility(result.credibility)
         setSearchAttributeCount(result.searchAttributeCount)
         setDiscoverable(isDiscoverable)
         setFullName(account.profile?.fullName ?? '')
@@ -505,6 +575,7 @@ export default function Profile() {
     return () => {
       cancelled = true
       talentRequestId.current += 1
+      credibilityRequestId.current += 1
     }
   }, [])
 
@@ -525,6 +596,22 @@ export default function Profile() {
       }
     } finally {
       if (requestId === talentRequestId.current) setTalentGenerating(false)
+    }
+  }
+
+  async function refreshCredibility() {
+    const requestId = ++credibilityRequestId.current
+    setCredibilityRunning(true)
+    setCredibilityError('')
+    try {
+      const result = await verifyStudentCredibility()
+      if (requestId === credibilityRequestId.current) setCredibility(result)
+    } catch (caught) {
+      if (requestId === credibilityRequestId.current) {
+        setCredibilityError(caught instanceof Error ? caught.message : 'Unable to verify your projects on GitHub.')
+      }
+    } finally {
+      if (requestId === credibilityRequestId.current) setCredibilityRunning(false)
     }
   }
 
@@ -551,10 +638,13 @@ export default function Profile() {
       setSearchAttributeCount(result.searchAttributeCount)
       setSearchIndexingError('')
       setTalentError('')
+      setCredibility(result.credibility)
+      setCredibilityError('')
       setEditing(false)
       clearResumeDraft()
       setResumeDraft(null)
       void refreshTalent(false)
+      if (result.profile.projects.length > 0) void refreshCredibility()
     } catch (caught) {
       if (caught instanceof StudentProfileRequestError && caught.field) {
         setValidationError({ field: caught.field, message: caught.message })
@@ -596,7 +686,9 @@ export default function Profile() {
               searchAttributeCount={searchAttributeCount} searchIndexingError={searchIndexingError}
               discoverable={discoverable} visibilitySaving={visibilitySaving} visibilityError={visibilityError}
               onDiscoverabilityChange={updateDiscoverability}
-              talentGenerating={talentGenerating} talentError={talentError} onRetryTalent={() => void refreshTalent()} />
+              talentGenerating={talentGenerating} talentError={talentError} onRetryTalent={() => void refreshTalent()}
+              credibility={credibility} credibilityRunning={credibilityRunning} credibilityError={credibilityError}
+              onVerifyCredibility={() => void refreshCredibility()} />
             {showResumeUpload ? (
               <section className="flex flex-col gap-3">
                 <h2 className="text-2xl font-semibold text-gray-900">Resume</h2>

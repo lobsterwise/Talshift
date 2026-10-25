@@ -262,6 +262,7 @@ export function createProfessionalSearchRouter(pool: Pool): Router {
               ...(liveCandidate.fieldOfStudy ? { fieldOfStudy: liveCandidate.fieldOfStudy } : {}),
               ...(liveCandidate.institution ? { institution: liveCandidate.institution } : {}),
               candidateProfile: liveCandidate.candidateProfile,
+              projectCredibility: liveCandidate.projectCredibility,
               matches: liveCandidate.matches,
             },
           };

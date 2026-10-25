@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getProfile } from '../../api/auth'
 import { getPostings, type ProfessionalPosting } from '../../api/postings'
 import { getReviewQueue, startReviewQueue, submitCandidateReview, type ReviewQueue } from '../../api/professionalSearch'
+import ProjectCredibilityPanel, { VerifiedExperienceBadge } from '../../components/ProjectCredibility'
 
 export default function FindStudents() {
   const [postings, setPostings] = useState<ProfessionalPosting[]>([])
@@ -155,7 +156,10 @@ export default function FindStudents() {
           <article className="flex flex-col gap-5 py-1">
             <header className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
-                <h2 className="text-xl font-semibold text-gray-900">{queue.current.name}</h2>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <h2 className="text-xl font-semibold text-gray-900">{queue.current.name}</h2>
+                  <VerifiedExperienceBadge projects={queue.current.projectCredibility} />
+                </div>
                 {queue.current.headline && <p className="mt-1 text-sm text-gray-700">{queue.current.headline}</p>}
                 <p className="mt-1 text-sm text-gray-500">{[queue.current.fieldOfStudy, queue.current.institution, queue.current.location].filter(Boolean).join(' · ')}</p>
               </div>
@@ -188,13 +192,17 @@ export default function FindStudents() {
             {queue.current.candidateProfile.projects.length > 0 && (
               <section className="flex flex-col gap-3">
                 <h3 className="text-xs font-semibold uppercase text-gray-500">Projects</h3>
-                {queue.current.candidateProfile.projects.map((project, index) => (
-                  <div key={`${project.name}:${index}`}>
-                    <strong className="text-sm text-gray-900">{project.name}</strong>
-                    {project.description && <p className="mt-1 whitespace-pre-line text-sm text-gray-700">{project.description}</p>}
-                    {project.skills.length > 0 && <p className="mt-1 text-xs text-gray-500">{project.skills.join(' · ')}</p>}
-                  </div>
-                ))}
+                {queue.current.candidateProfile.projects.map((project, index) => {
+                  const credibility = queue.current?.projectCredibility?.[index]
+                  return (
+                    <div key={`${project.name}:${index}`}>
+                      <strong className="text-sm text-gray-900">{project.name}</strong>
+                      {project.description && <p className="mt-1 whitespace-pre-line text-sm text-gray-700">{project.description}</p>}
+                      {project.skills.length > 0 && <p className="mt-1 text-xs text-gray-500">{project.skills.join(' · ')}</p>}
+                      {credibility?.projectName === project.name && <ProjectCredibilityPanel credibility={credibility} />}
+                    </div>
+                  )
+                })}
               </section>
             )}
             {queue.current.candidateProfile.education.length > 0 && (

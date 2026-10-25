@@ -1,6 +1,7 @@
 import type { Pool, PoolClient } from "pg";
 import { composeCandidateRank, summarizeReputation, type CandidateRank } from "./reputation";
 import { rankAttributes, type SearchAttribute } from "./search";
+import { normalizeCredibilityReport, type CredibilityReport, type ProjectCredibility } from "./credibility";
 
 export type HiringSourceType = "professional_demand" | "job_posting";
 
@@ -20,6 +21,7 @@ interface StoredAttributeRow {
   embedding: string;
   profile: Record<string, unknown> | null;
   account_profile: Record<string, unknown> | null;
+  credibility: CredibilityReport | null;
 }
 
 export interface RankedStudent extends CandidateRank {
@@ -32,6 +34,7 @@ export interface RankedStudent extends CandidateRank {
   similarity: number;
   reputationStars: number;
   candidateProfile: PublicCandidateProfile;
+  projectCredibility: ProjectCredibility[];
   matches: { requirement: string; skill: string; similarity: number }[];
 }
 
@@ -132,7 +135,8 @@ export async function rankProfessionalCandidates(
             search_attributes.score,
             attribute_embeddings.embedding::text AS embedding,
             student_profiles.profile,
-            user_profiles.profile AS account_profile
+            user_profiles.profile AS account_profile,
+            student_credibility.report AS credibility
      FROM search_attributes
      JOIN users ON users.id = search_attributes.owner_id AND users.account_type = 'student'
      JOIN search_settings ON search_settings.user_id = users.id AND search_settings.discoverable = true
@@ -142,6 +146,7 @@ export async function rankProfessionalCandidates(
       AND attribute_embeddings.model = search_attributes.embedding_model
      JOIN student_profiles ON student_profiles.student_id = users.id
      LEFT JOIN user_profiles ON user_profiles.user_id = users.id
+     LEFT JOIN student_credibility ON student_credibility.student_id = users.id
      WHERE search_attributes.source_type = 'student_profile'
        AND search_attributes.score > 0
        AND search_attributes.extractor_model = $1
@@ -159,12 +164,14 @@ export async function rankProfessionalCandidates(
     attributes: SearchAttribute[];
     profile: Record<string, unknown>;
     accountProfile: Record<string, unknown> | null;
+    credibility: CredibilityReport | null;
   }>();
   for (const row of candidates.rows) {
     const candidate = byStudent.get(row.owner_id) ?? {
       attributes: [],
       profile: row.profile ?? {},
       accountProfile: row.account_profile,
+      credibility: row.credibility,
     };
     candidate.attributes.push({
       name: row.name,
@@ -189,6 +196,8 @@ export async function rankProfessionalCandidates(
       ...(fieldOfStudy ? { fieldOfStudy } : {}),
       ...(institution ? { institution } : {}),
       candidateProfile: publicProfile(candidate.profile),
+      // Display only: GitHub credibility must never feed relevance, reputation or final ordering.
+      projectCredibility: normalizeCredibilityReport(candidate.credibility)?.projects ?? [],
       relevance: ranking.score,
       score: ranking.score,
       similarity: ranking.score,

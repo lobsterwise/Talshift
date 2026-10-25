@@ -3,11 +3,13 @@ import express, { Router, type ErrorRequestHandler } from "express";
 import type { Pool } from "pg";
 import { ensureAttributeEmbeddings, normalizeAttributeText } from "./embeddings";
 import { parseResumePdf, ResumeParseError, type ResumeProfile } from "./resumeParser";
+import { normalizeCredibilityReport, parseGithubUsername, uniqueUsernames, verifyProjects, type CredibilityReport } from "./credibility";
 
 const maxResumeBytes = 5 * 1024 * 1024;
 
 interface StudentProfile {
   headline: string;
+  githubUsernames: string[];
   summary: string;
   learningGoals: string;
   location: string;
@@ -48,6 +50,7 @@ interface StudentTalent {
 
 const emptyProfile: StudentProfile = {
   headline: "",
+  githubUsernames: [],
   summary: "",
   learningGoals: "",
   location: "",
@@ -58,12 +61,17 @@ const emptyProfile: StudentProfile = {
   links: [],
 };
 
+const maxGithubAccounts = 5;
+
 function normalizeStoredDates(profile: StudentProfile): StudentProfile {
   const toDate = (value: string | null) => value && /^\d{4}-(0[1-9]|1[0-2])$/.test(value)
     ? `${value}-01`
     : value;
   return {
     ...profile,
+    // Profiles saved before multiple accounts were supported hold a single githubUsername.
+    githubUsernames: profile.githubUsernames
+      ?? uniqueUsernames([(profile as { githubUsername?: string }).githubUsername ?? null]),
     learningGoals: profile.learningGoals ?? "",
     jobs: profile.jobs.map((job) => ({
       ...job,
@@ -97,6 +105,7 @@ function profileValidationError(path: string, message: string): ProfileValidatio
     projects: "Projects",
     skills: "Skills",
     links: "Links",
+    githubUsernames: "GitHub account",
   };
   const fieldLabels: Record<string, string> = {
     headline: "Headline",
@@ -117,7 +126,7 @@ function profileValidationError(path: string, message: string): ProfileValidatio
     label: "Label",
     level: "Level",
   };
-  const entryMatch = path.match(/^(education|jobs|projects|skills|links)\[(\d+)\](?:\.(\w+))?$/);
+  const entryMatch = path.match(/^(education|jobs|projects|skills|links|githubUsernames)\[(\d+)\](?:\.(\w+))?$/);
   const label = entryMatch
     ? `${sectionLabels[entryMatch[1]]} ${Number(entryMatch[2]) + 1}${entryMatch[3] ? ` · ${fieldLabels[entryMatch[3]] ?? "Details"}` : ""}`
     : sectionLabels[path] ?? fieldLabels[path] ?? "Profile";
@@ -222,8 +231,19 @@ function readProfile(body: unknown): StudentProfile {
     };
   });
 
+  // Blank rows are dropped so an unfilled "Add another account" field never blocks saving.
+  const githubUsernames = uniqueUsernames(
+    readStringList(body.githubUsernames, "githubUsernames", maxGithubAccounts, 200).map((value, index) => {
+      if (!value.trim()) return null;
+      const username = parseGithubUsername(value);
+      if (!username) throw profileValidationError(`githubUsernames[${index}]`, "Enter a GitHub username or profile link.");
+      return username;
+    }),
+  );
+
   return {
     headline: readString(body, "headline", 160),
+    githubUsernames,
     summary: readString(body, "summary", 2000),
     learningGoals: readString(body, "learningGoals", 2000),
     location: readString(body, "location", 120),
@@ -246,6 +266,10 @@ function mergeResumeIntoProfile(saved: StudentProfile, resume: ResumeProfile): S
   };
   return {
     headline: resume.headline || saved.headline,
+    githubUsernames: uniqueUsernames([
+      ...saved.githubUsernames,
+      ...resume.links.map((link) => parseGithubUsername(link.url)),
+    ]).slice(0, maxGithubAccounts),
     summary: resume.summary || saved.summary,
     learningGoals: saved.learningGoals,
     location: resume.location || saved.location,
@@ -489,20 +513,24 @@ export function createStudentRouter(pool: Pool): Router {
     const result = await pool.query<{
       profile: StudentProfile | null;
       student_talent: StudentTalent | null;
+      credibility: CredibilityReport | null;
       search_attribute_count: number;
     }>(
       `SELECT student_profiles.profile, student_talent.talent AS student_talent
+              , student_credibility.report AS credibility
               , (SELECT count(*)::int FROM search_attributes
                  WHERE owner_id = users.id AND source_type = 'student_profile') AS search_attribute_count
        FROM users
        LEFT JOIN student_profiles ON student_profiles.student_id = users.id
        LEFT JOIN student_talent ON student_talent.student_id = users.id
+       LEFT JOIN student_credibility ON student_credibility.student_id = users.id
        WHERE users.id = $1`,
       [studentId],
     );
     response.json({
       profile: normalizeStoredDates(result.rows[0].profile ?? emptyProfile),
       studentTalent: result.rows[0].student_talent,
+      credibility: normalizeCredibilityReport(result.rows[0].credibility),
       searchAttributeCount: result.rows[0].search_attribute_count,
     });
   });
@@ -581,12 +609,13 @@ export function createStudentRouter(pool: Pool): Router {
         [studentId, JSON.stringify(profile)],
       );
       await client.query("DELETE FROM student_talent WHERE student_id = $1", [studentId]);
+      await client.query("DELETE FROM student_credibility WHERE student_id = $1", [studentId]);
       await client.query(
         "DELETE FROM search_attributes WHERE owner_id = $1 AND source_type IN ('student_profile', 'student_learning_goal')",
         [studentId],
       );
       await client.query("COMMIT");
-      response.json({ profile, studentTalent: null, searchAttributeCount: 0 });
+      response.json({ profile, studentTalent: null, credibility: null, searchAttributeCount: 0 });
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;
@@ -700,6 +729,60 @@ export function createStudentRouter(pool: Pool): Router {
       searchAttributeCount: searchReady ? searchableSkills(talent).length : 0,
       ...(searchIndexingError ? { searchIndexingError } : {}),
     });
+  });
+
+  router.post("/credibility", async (request, response) => {
+    const studentId = await getStudentId(request.header("authorization"));
+    if (!studentId) {
+      response.status(401).json({ error: "valid student authentication is required" });
+      return;
+    }
+
+    const saved = await pool.query<{ profile: StudentProfile }>(
+      "SELECT profile FROM student_profiles WHERE student_id = $1",
+      [studentId],
+    );
+    const savedProfile = saved.rows[0];
+    if (!savedProfile) {
+      response.status(404).json({ error: "Save your student profile before verifying projects." });
+      return;
+    }
+    const profile = normalizeStoredDates(savedProfile.profile);
+    if (!profile.projects.length) {
+      response.status(400).json({ error: "Add a project to your profile before verifying it on GitHub." });
+      return;
+    }
+
+    let report: CredibilityReport;
+    try {
+      report = await verifyProjects(profile);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to verify project credibility right now.";
+      response.status(message.includes("not configured") || message.includes("rate limit") ? 503 : 502).json({ error: message });
+      return;
+    }
+
+    const persisted = await pool.query<{ report: CredibilityReport }>(
+      `INSERT INTO student_credibility (student_id, report)
+       SELECT $1, $2::jsonb
+       WHERE EXISTS (
+         SELECT 1 FROM student_profiles
+         WHERE student_id = $1 AND profile = $3::jsonb
+       )
+       ON CONFLICT (student_id) DO UPDATE
+       SET report = EXCLUDED.report, updated_at = now()
+       WHERE EXISTS (
+         SELECT 1 FROM student_profiles
+         WHERE student_id = $1 AND profile = $3::jsonb
+       )
+       RETURNING report`,
+      [studentId, JSON.stringify(report), JSON.stringify(savedProfile.profile)],
+    );
+    if (!persisted.rows[0]) {
+      response.status(409).json({ error: "Your profile changed during verification. Verify again from the latest profile." });
+      return;
+    }
+    response.json({ credibility: persisted.rows[0].report });
   });
 
   router.post("/talent/index", async (request, response) => {
