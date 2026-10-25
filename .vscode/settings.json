@@ -3,6 +3,7 @@
 		"Push-Location": true,
 		"npm run typecheck": true,
 		"Pop-Location": true,
-		"npm.cmd": true
+		"npm.cmd": true,
+		"npm test": true
 	}
 }

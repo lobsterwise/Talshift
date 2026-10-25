@@ -39,6 +39,7 @@ export interface Link {
 export interface StudentProfile {
   headline: string
   summary: string
+  learningGoals: string
   location: string
   education: Education[]
   jobs: Job[]
@@ -56,6 +57,7 @@ export interface StudentTalentSkill {
 export interface StudentTalent {
   hardSkills: StudentTalentSkill[]
   softSkills: StudentTalentSkill[]
+  learningGoals?: StudentTalentSkill[]
   generatedAt: string
   model: string
 }
@@ -63,6 +65,7 @@ export interface StudentTalent {
 interface StudentProfileResult {
   profile: StudentProfile
   studentTalent: StudentTalent | null
+  searchAttributeCount: number
 }
 
 export class StudentProfileRequestError extends Error {
@@ -102,7 +105,23 @@ export async function saveStudentProfile(profile: StudentProfile) {
 }
 
 export async function generateStudentTalent() {
-  return (await request<{ studentTalent: StudentTalent }>('/api/student/talent', {
+  return request<{
+    studentTalent: StudentTalent
+    searchReady: boolean
+    searchAttributeCount: number
+    searchIndexingError?: string
+  }>('/api/student/talent', {
     method: 'POST',
-  })).studentTalent
+  })
+}
+
+export async function indexStudentTalent() {
+  return request<{
+    studentTalent: StudentTalent
+    searchReady: boolean
+    searchAttributeCount: number
+    searchIndexingError?: string
+  }>('/api/student/talent/index', {
+    method: 'POST',
+  })
 }

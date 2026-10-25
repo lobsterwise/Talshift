@@ -6,6 +6,10 @@ import dotenv from "dotenv";
 import { createAuthRouter } from "./auth";
 import { createStudentRouter } from "./student";
 import { createWorkspaceRouter } from "./workspace";
+import { createPostingsRouter } from "./postings";
+import { createProfessionalSearchRouter } from "./professionalSearch";
+import { createDiscoveryRouter } from "./discovery";
+import { createStudentDiscoveryRouter } from "./studentDiscovery";
 
 dotenv.config();
 
@@ -40,6 +44,10 @@ app.get("/api/catalog/interests", (_request, response) => {
 
 app.use("/api/auth", createAuthRouter(pool));
 app.use("/api/student", createStudentRouter(pool));
+app.use("/api/student/discovery", createStudentDiscoveryRouter(pool));
+app.use("/api/professional/postings", createPostingsRouter(pool));
+app.use("/api/professional/search", createProfessionalSearchRouter(pool));
+app.use("/api/discovery", createDiscoveryRouter(pool));
 app.use("/api/workspace", createWorkspaceRouter(pool));
 
 app.use("/api", (_request, response) => {

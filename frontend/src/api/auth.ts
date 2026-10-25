@@ -24,6 +24,8 @@ export interface Profile {
   organization?: string
   professionalFocus?: string
   yearsExperience?: number
+  offerSummary?: string
+  demandSummary?: string
 }
 
 async function request<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {

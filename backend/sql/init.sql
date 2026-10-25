@@ -1,3 +1,5 @@
+--- CREATE EXTENSION IF NOT EXISTS vector;
+
 CREATE TABLE IF NOT EXISTS users (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   email TEXT NOT NULL,
@@ -44,6 +46,70 @@ CREATE TABLE IF NOT EXISTS student_talent (
   talent JSONB NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS attribute_embeddings (
+  content_hash TEXT NOT NULL CHECK (length(content_hash) = 64),
+  model TEXT NOT NULL,
+  embedding vector(1536) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (content_hash, model)
+);
+
+CREATE INDEX IF NOT EXISTS attribute_embeddings_vector_hnsw_idx
+  ON attribute_embeddings USING hnsw (embedding vector_cosine_ops);
+
+CREATE TABLE IF NOT EXISTS search_attributes (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  owner_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source_type TEXT NOT NULL CHECK (source_type IN (
+    'student_profile', 'student_learning_goal', 'professional_offer', 'professional_demand', 'job_posting'
+  )),
+  source_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  evidence TEXT,
+  score SMALLINT CHECK (score BETWEEN 0 AND 100),
+  priority SMALLINT CHECK (priority BETWEEN 0 AND 100),
+  embedding_hash TEXT NOT NULL,
+  embedding_model TEXT NOT NULL,
+  source_hash TEXT NOT NULL DEFAULT '',
+  extractor_model TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  FOREIGN KEY (embedding_hash, embedding_model)
+    REFERENCES attribute_embeddings(content_hash, model) ON DELETE RESTRICT,
+  CHECK (
+    (source_type IN ('student_profile', 'student_learning_goal') AND score IS NOT NULL AND priority IS NULL) OR
+    (source_type IN ('professional_offer', 'professional_demand', 'job_posting') AND score IS NULL AND priority IS NOT NULL)
+  )
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS search_attributes_source_name_uidx
+  ON search_attributes (owner_id, source_type, source_id, lower(name));
+
+CREATE INDEX IF NOT EXISTS search_attributes_owner_source_idx
+  ON search_attributes (owner_id, source_type);
+
+ALTER TABLE search_attributes
+  ADD COLUMN IF NOT EXISTS source_hash TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS extractor_model TEXT NOT NULL DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS search_settings (
+  user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  discoverable BOOLEAN NOT NULL DEFAULT false,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS professional_postings (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  owner_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL CHECK (length(title) BETWEEN 1 AND 120),
+  description TEXT NOT NULL CHECK (length(description) <= 4000),
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS professional_postings_owner_status_idx
+  ON professional_postings (owner_id, status, updated_at DESC);
 
 DO $$
 BEGIN

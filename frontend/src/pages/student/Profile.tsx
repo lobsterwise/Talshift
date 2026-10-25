@@ -1,6 +1,7 @@
 import { cloneElement, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { getProfile } from '../../api/auth'
-import { generateStudentTalent, getStudentProfile, saveStudentProfile, StudentProfileRequestError, type SkillLevel, type StudentProfile, type StudentTalent } from '../../api/studentProfile'
+import { getDiscoverability, setDiscoverability } from '../../api/discovery'
+import { generateStudentTalent, getStudentProfile, indexStudentTalent, saveStudentProfile, StudentProfileRequestError, type SkillLevel, type StudentProfile, type StudentTalent } from '../../api/studentProfile'
 
 const levels: SkillLevel[] = ['beginner', 'intermediate', 'advanced']
 
@@ -69,15 +70,21 @@ function TalentSkeleton() {
   )
 }
 
-function ProfileView({ profile, fullName, studentTalent, talentGenerating, talentError, onRetryTalent }: {
+function ProfileView({ profile, fullName, studentTalent, searchAttributeCount, searchIndexingError, discoverable, visibilitySaving, visibilityError, onDiscoverabilityChange, talentGenerating, talentError, onRetryTalent }: {
   profile: StudentProfile
   fullName: string
   studentTalent: StudentTalent | null
+  searchAttributeCount: number
+  searchIndexingError: string
+  discoverable: boolean
+  visibilitySaving: boolean
+  visibilityError: string
+  onDiscoverabilityChange: (discoverable: boolean) => void
   talentGenerating: boolean
   talentError: string
   onRetryTalent: () => void
 }) {
-  const empty = !profile.headline && !profile.summary && !profile.education.length && !profile.jobs.length
+  const empty = !profile.headline && !profile.summary && !profile.learningGoals && !profile.education.length && !profile.jobs.length
     && !profile.projects.length && !profile.skills.length && !profile.links.length
 
   return (
@@ -98,6 +105,7 @@ function ProfileView({ profile, fullName, studentTalent, talentGenerating, talen
       {empty && <p className="text-sm text-gray-500">Your profile is empty. Select Edit to add your experience.</p>}
 
       {profile.summary && <Section title="Summary"><Description text={profile.summary} /></Section>}
+      {profile.learningGoals && <Section title="Mentor learning goals"><Description text={profile.learningGoals} /></Section>}
 
       {profile.jobs.length > 0 && (
         <Section title="Experience">
@@ -190,6 +198,27 @@ function ProfileView({ profile, fullName, studentTalent, talentGenerating, talen
         ) : (
           <p className="text-sm text-gray-500">Save your profile to generate your skill rankings.</p>
         )}
+        {studentTalent && searchIndexingError && <p role="status" className="text-sm text-amber-800">{searchIndexingError}</p>}
+        {studentTalent && !searchIndexingError && searchAttributeCount > 0 && (
+          <p role="status" className="text-sm text-gray-600">{searchAttributeCount} attributes are ready for search.</p>
+        )}
+        {studentTalent && !searchIndexingError && searchAttributeCount === 0 && (
+          <div className="flex flex-wrap items-center gap-3">
+            <p role="status" className="text-sm text-gray-600">No search attributes are indexed yet.</p>
+            <button type="button" className={buttonClass} onClick={onRetryTalent}>Prepare search attributes</button>
+          </div>
+        )}
+      </Section>
+
+      <Section title="Search visibility">
+        <label className="flex items-start gap-3 text-sm text-gray-700">
+          <input type="checkbox" className="mt-0.5" checked={discoverable} disabled={visibilitySaving}
+            onChange={(event) => onDiscoverabilityChange(event.target.checked)} />
+          <span>Show my profile in professional search</span>
+        </label>
+        <p className="text-xs text-gray-500">Only a limited profile and matched skills are shown. Contact details stay private.</p>
+        {visibilitySaving && <p role="status" className="text-xs text-gray-500">Updating visibility…</p>}
+        {visibilityError && <p role="alert" className="text-sm text-red-700">{visibilityError}</p>}
       </Section>
     </div>
   )
@@ -303,6 +332,10 @@ function ProfileForm({ initial, saving, error, validationError, onSave, onCancel
           <textarea className={inputClass} rows={4} maxLength={2000} value={draft.summary}
             onChange={(e) => set({ summary: e.target.value })} />
         </Field>
+        <Field label="What would you like to learn from a mentor?" fieldPath="learningGoals" validationError={validationError}>
+          <textarea className={inputClass} rows={3} maxLength={2000} value={draft.learningGoals}
+            onChange={(e) => set({ learningGoals: e.target.value })} placeholder="Topics or skills you want guidance on." />
+        </Field>
       </Section>
 
       <ListEditor title="Experience" items={draft.jobs} onChange={(jobs) => set({ jobs })}
@@ -400,6 +433,11 @@ export default function Profile() {
   const [fullName, setFullName] = useState('')
   const [profile, setProfile] = useState<StudentProfile | null>(null)
   const [studentTalent, setStudentTalent] = useState<StudentTalent | null>(null)
+  const [searchAttributeCount, setSearchAttributeCount] = useState(0)
+  const [searchIndexingError, setSearchIndexingError] = useState('')
+  const [discoverable, setDiscoverable] = useState(false)
+  const [visibilitySaving, setVisibilitySaving] = useState(false)
+  const [visibilityError, setVisibilityError] = useState('')
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -411,11 +449,13 @@ export default function Profile() {
   useEffect(() => {
     let cancelled = false
     const token = localStorage.getItem('talshift.session') ?? ''
-    Promise.all([getStudentProfile(), getProfile(token)])
-      .then(([result, account]) => {
+    Promise.all([getStudentProfile(), getProfile(token), getDiscoverability()])
+      .then(([result, account, isDiscoverable]) => {
         if (cancelled) return
         setProfile(result.profile)
         setStudentTalent(result.studentTalent)
+        setSearchAttributeCount(result.searchAttributeCount)
+        setDiscoverable(isDiscoverable)
         setFullName(account.profile?.fullName ?? '')
       })
       .catch((caught: unknown) => {
@@ -427,19 +467,35 @@ export default function Profile() {
     }
   }, [])
 
-  async function refreshTalent() {
+  async function refreshTalent(indexOnly = Boolean(studentTalent)) {
     const requestId = ++talentRequestId.current
     setTalentGenerating(true)
     setTalentError('')
     try {
-      const result = await generateStudentTalent()
-      if (requestId === talentRequestId.current) setStudentTalent(result)
+      const result = indexOnly ? await indexStudentTalent() : await generateStudentTalent()
+      if (requestId === talentRequestId.current) {
+        setStudentTalent(result.studentTalent)
+        setSearchAttributeCount(result.searchAttributeCount)
+        setSearchIndexingError(result.searchIndexingError ?? '')
+      }
     } catch (caught) {
       if (requestId === talentRequestId.current) {
         setTalentError(caught instanceof Error ? caught.message : 'Unable to generate talent rankings.')
       }
     } finally {
       if (requestId === talentRequestId.current) setTalentGenerating(false)
+    }
+  }
+
+  async function updateDiscoverability(value: boolean) {
+    setVisibilitySaving(true)
+    setVisibilityError('')
+    try {
+      setDiscoverable(await setDiscoverability(value))
+    } catch (caught) {
+      setVisibilityError(caught instanceof Error ? caught.message : 'Unable to update search visibility.')
+    } finally {
+      setVisibilitySaving(false)
     }
   }
 
@@ -451,9 +507,11 @@ export default function Profile() {
       const result = await saveStudentProfile(draft)
       setProfile(result.profile)
       setStudentTalent(result.studentTalent)
+      setSearchAttributeCount(result.searchAttributeCount)
+      setSearchIndexingError('')
       setTalentError('')
       setEditing(false)
-      void refreshTalent()
+      void refreshTalent(false)
     } catch (caught) {
       if (caught instanceof StudentProfileRequestError && caught.field) {
         setValidationError({ field: caught.field, message: caught.message })
@@ -481,7 +539,10 @@ export default function Profile() {
           <>
             <button type="button" className={`${buttonClass} self-end`} onClick={() => setEditing(true)}>Edit</button>
             <ProfileView profile={profile} fullName={fullName} studentTalent={studentTalent}
-              talentGenerating={talentGenerating} talentError={talentError} onRetryTalent={refreshTalent} />
+              searchAttributeCount={searchAttributeCount} searchIndexingError={searchIndexingError}
+              discoverable={discoverable} visibilitySaving={visibilitySaving} visibilityError={visibilityError}
+              onDiscoverabilityChange={updateDiscoverability}
+              talentGenerating={talentGenerating} talentError={talentError} onRetryTalent={() => void refreshTalent()} />
           </>
         )}
     </div>

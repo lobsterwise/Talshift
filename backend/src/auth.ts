@@ -36,6 +36,8 @@ interface Profile {
   organization?: string;
   professionalFocus?: string;
   yearsExperience?: number;
+  offerSummary?: string;
+  demandSummary?: string;
 }
 
 function toAccount(row: AccountRow): Account {
@@ -149,6 +151,8 @@ function readProfile(body: unknown, accountType: AccountType): Profile | null {
     typeof input.jobTitle !== "string" || input.jobTitle.length > 120 ||
     typeof input.organization !== "string" || input.organization.length > 120 ||
     typeof input.professionalFocus !== "string" || input.professionalFocus.length > 120 ||
+    (input.offerSummary !== undefined && (typeof input.offerSummary !== "string" || input.offerSummary.length > 3000)) ||
+    (input.demandSummary !== undefined && (typeof input.demandSummary !== "string" || input.demandSummary.length > 3000)) ||
     !Number.isInteger(input.yearsExperience) ||
     (input.yearsExperience as number) < 0
   ) return null;
@@ -161,6 +165,8 @@ function readProfile(body: unknown, accountType: AccountType): Profile | null {
     organization: input.organization,
     professionalFocus: input.professionalFocus,
     yearsExperience: input.yearsExperience as number,
+    offerSummary: typeof input.offerSummary === "string" ? input.offerSummary.trim() : "",
+    demandSummary: typeof input.demandSummary === "string" ? input.demandSummary.trim() : "",
   };
 }
 
@@ -320,15 +326,32 @@ export function createAuthRouter(pool: Pool): Router {
       return;
     }
 
-    const result = await pool.query<{ profile: Profile }>(
-      `INSERT INTO user_profiles (user_id, profile)
-       VALUES ($1, $2::jsonb)
-       ON CONFLICT (user_id) DO UPDATE
-       SET profile = EXCLUDED.profile, updated_at = now()
-       RETURNING profile`,
-      [account.id, JSON.stringify(profile)],
-    );
-    response.json({ profile: result.rows[0].profile });
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const result = await client.query<{ profile: Profile }>(
+        `INSERT INTO user_profiles (user_id, profile)
+         VALUES ($1, $2::jsonb)
+         ON CONFLICT (user_id) DO UPDATE
+         SET profile = EXCLUDED.profile, updated_at = now()
+         RETURNING profile`,
+        [account.id, JSON.stringify(profile)],
+      );
+      if (account.account_type === "professional") {
+        await client.query(
+          `DELETE FROM search_attributes
+           WHERE owner_id = $1 AND source_type IN ('professional_offer', 'professional_demand')`,
+          [account.id],
+        );
+      }
+      await client.query("COMMIT");
+      response.json({ profile: result.rows[0].profile });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   });
 
   return router;
