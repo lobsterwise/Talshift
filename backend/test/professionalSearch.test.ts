@@ -72,4 +72,13 @@ describe("professional review endpoints", () => {
     });
     assert.equal(response.status, 400);
   });
+
+  it("requires recruiter review text to be present", async () => {
+    const response = await fetch(`${baseUrl}/queues/1/review`, {
+      method: "POST",
+      headers: { Authorization: "Bearer test_token", "Content-Type": "application/json" },
+      body: JSON.stringify({ rating: 4, reviewText: "   ", expectedPosition: 0 }),
+    });
+    assert.equal(response.status, 400);
+  });
 });

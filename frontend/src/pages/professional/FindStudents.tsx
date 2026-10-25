@@ -78,11 +78,12 @@ export default function FindStudents() {
   }
 
   async function submitReview() {
-    if (!queue?.current || rating < 1 || submitting) return
+    const trimmedReviewText = reviewText.trim()
+    if (!queue?.current || rating < 1 || trimmedReviewText.length === 0 || submitting) return
     setSubmitting(true)
     setError('')
     try {
-      const updated = await submitCandidateReview(queue.queueId, queue.cursor, rating, reviewText)
+      const updated = await submitCandidateReview(queue.queueId, queue.cursor, rating, trimmedReviewText)
       setQueue(updated)
       setRating(0)
       setReviewText('')
@@ -228,13 +229,13 @@ export default function FindStudents() {
                 </div>
               </fieldset>
               <label className="flex flex-col gap-1 text-sm" htmlFor="candidate-review-text">
-                <span className="font-medium text-gray-800">Short note for the student <span className="font-normal text-gray-500">optional</span></span>
-                <textarea id="candidate-review-text" maxLength={500} rows={3} value={reviewText} onChange={(event) => setReviewText(event.target.value)} className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" placeholder="Share concise, constructive feedback" />
+                <span className="font-medium text-gray-800">Short note for the student <span className="font-normal text-red-700">required</span></span>
+                <textarea id="candidate-review-text" maxLength={500} rows={3} value={reviewText} onChange={(event) => setReviewText(event.target.value)} required className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" placeholder="Share concise, constructive feedback" />
                 <span className="self-end text-xs tabular-nums text-gray-500">{reviewText.length}/500</span>
               </label>
               <div className="flex items-center justify-between gap-4">
                 <p className="text-xs text-gray-500">Your note is only visible to this student.</p>
-                <button type="submit" disabled={rating === 0 || submitting} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50">
+                <button type="submit" disabled={rating === 0 || reviewText.trim().length === 0 || submitting} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50">
                   {submitting ? 'Saving…' : 'Rate and continue'}
                 </button>
               </div>
