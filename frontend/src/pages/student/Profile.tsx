@@ -443,7 +443,6 @@ export default function Profile() {
   // opens straight into the form for review.
   const [resumeDraft, setResumeDraft] = useState<StudentProfile | null>(() => readResumeDraft())
   const [editing, setEditing] = useState(() => resumeDraft !== null)
-  const [showResumeUpload, setShowResumeUpload] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [validationError, setValidationError] = useState<FormValidationError | null>(null)
@@ -560,24 +559,18 @@ export default function Profile() {
               discoverable={discoverable} visibilitySaving={visibilitySaving} visibilityError={visibilityError}
               onDiscoverabilityChange={updateDiscoverability}
               talentGenerating={talentGenerating} talentError={talentError} onRetryTalent={() => void refreshTalent()} />
-            {showResumeUpload ? (
-              <section className="flex flex-col gap-3">
-                <h2 className="text-2xl font-semibold text-gray-900">Resume</h2>
-                <p className="text-sm text-gray-600">
-                  Upload your latest resume and we'll fill in your profile's experience, projects, education, skills, and links.
-                  You'll review everything before it's saved, and anything already on your profile that isn't on this resume is kept.
-                </p>
-                <ResumeUpload onParsed={(draft) => {
-                  setResumeDraft(draft)
-                  setShowResumeUpload(false)
-                  setEditing(true)
-                  window.scrollTo({ top: 0, behavior: 'smooth' })
-                }} />
-                <button type="button" className={`${buttonClass} self-start`} onClick={() => setShowResumeUpload(false)}>Cancel</button>
-              </section>
-            ) : (
-              <button type="button" className={`${buttonClass} self-start`} onClick={() => setShowResumeUpload(true)}>Upload resume</button>
-            )}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-2xl font-semibold text-gray-900">Resume</h2>
+              <p className="text-sm text-gray-600">
+                Upload your latest resume and we'll fill in your profile's experience, projects, education, skills, and links.
+                You'll review everything before it's saved, and anything already on your profile that isn't on this resume is kept.
+              </p>
+              <ResumeUpload onParsed={(draft) => {
+                setResumeDraft(draft)
+                setEditing(true)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }} />
+            </section>
           </>
         )}
     </div>
