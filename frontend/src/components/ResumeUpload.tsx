@@ -1,4 +1,6 @@
 import { useRef, useState, type DragEvent } from 'react'
+import { FileCheck2, FileUp, LoaderCircle } from 'lucide-react'
+import StatusText from './ui/StatusText'
 import { maxResumeBytes, parseResume, type StudentProfile } from '../api/studentProfile'
 
 // A drop zone that reads a PDF resume into a profile draft. Used during
@@ -57,9 +59,15 @@ export default function ResumeUpload({ onParsed, onParsingChange }: {
         }`}
       >
         {parsing ? (
-          <p role="status" className="text-gray-700">Reading your resume… this can take up to a minute.</p>
+          <>
+            <LoaderCircle aria-hidden="true" className="size-6 animate-spin text-blue-600" />
+            <p role="status" className="text-gray-700">Reading your resume… this can take up to a minute.</p>
+          </>
         ) : (
           <>
+            <span aria-hidden="true" className={`flex size-10 items-center justify-center rounded-full ${parsedName ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-600'}`}>
+              {parsedName ? <FileCheck2 className="size-5" strokeWidth={1.75} /> : <FileUp className="size-5" strokeWidth={1.75} />}
+            </span>
             <p className="text-gray-700">
               {parsedName ? <>Read <strong>{parsedName}</strong>. Drop another PDF to replace it.</> : 'Drag a PDF resume here, or'}
             </p>
@@ -73,7 +81,7 @@ export default function ResumeUpload({ onParsed, onParsingChange }: {
         <input ref={inputRef} type="file" accept="application/pdf,.pdf" hidden
           onChange={(event) => void upload(event.target.files?.[0])} />
       </div>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      {error && <StatusText tone="error">{error}</StatusText>}
     </div>
   )
 }

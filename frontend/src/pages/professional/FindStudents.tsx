@@ -5,6 +5,13 @@ import { getReviewQueue, getSavedCandidates, setCandidateSaved, startReviewQueue
 import ProjectCredibilityPanel, { VerifiedExperienceBadge } from '../../components/ProjectCredibility'
 import StarRatingIndicator from '../../components/StarRatingIndicator'
 import StarRatingInput from '../../components/StarRatingInput'
+import {
+  ArrowRight, Bookmark, BookmarkCheck, Briefcase, CircleCheck, FolderGit2, GraduationCap, ListRestart, RotateCcw, Search, Target, UserRoundSearch, Wrench,
+} from 'lucide-react'
+import EmptyState from '../../components/ui/EmptyState'
+import PageHeading from '../../components/ui/PageHeading'
+import SectionTitle from '../../components/ui/SectionTitle'
+import StatusText from '../../components/ui/StatusText'
 
 export default function FindStudents() {
   const [postings, setPostings] = useState<ProfessionalPosting[]>([])
@@ -157,10 +164,9 @@ export default function FindStudents() {
 
   return (
     <section className="flex flex-col gap-5" aria-live="polite">
-      <header>
-        <h1 className="text-2xl font-semibold text-gray-900">Find students</h1>
+      <PageHeading icon={Search} title="Find students">
         <p className="mt-1 text-sm text-gray-600">Review one eligible candidate at a time and leave a rating to continue.</p>
-      </header>
+      </PageHeading>
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex min-w-64 flex-col gap-1 text-sm" htmlFor="search-source">
           <span className="font-medium text-gray-700">Hiring criteria</span>
@@ -169,12 +175,22 @@ export default function FindStudents() {
             {postings.map((posting) => <option key={posting.id} value={`job_posting:${posting.id}`}>{posting.title}{posting.status === 'draft' ? ' · draft' : ''}</option>)}
           </select>
         </label>
-        {queue?.status === 'completed' && <button type="button" className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setRestartVersion((version) => version + 1)}>Start a new queue</button>}
+        {queue?.status === 'completed' && (
+          <button type="button" className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setRestartVersion((version) => version + 1)}>
+            <ListRestart aria-hidden="true" className="size-4" />
+            Start a new queue
+          </button>
+        )}
       </div>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      {error && <button type="button" className="self-start rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => void reloadQueue()}>Reload queue</button>}
-      {notice && <p role="status" className="text-sm text-gray-600">{notice}</p>}
-      {loading && <p className="text-sm text-gray-500">Preparing review queue…</p>}
+      {error && <StatusText tone="error">{error}</StatusText>}
+      {error && (
+        <button type="button" className="inline-flex items-center gap-1.5 self-start rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => void reloadQueue()}>
+          <RotateCcw aria-hidden="true" className="size-4" />
+          Reload queue
+        </button>
+      )}
+      {notice && <StatusText tone="success">{notice}</StatusText>}
+      {loading && <StatusText tone="loading">Preparing review queue…</StatusText>}
       {!loading && queue?.current && (
         <>
           <div className="flex items-center justify-between gap-3 border-y border-gray-200 py-3">
@@ -198,7 +214,10 @@ export default function FindStudents() {
                 </div>
               </div>
               <div className="flex items-center gap-4 text-sm">
-                <div><p className="text-xs text-gray-500">Match</p><p className="font-semibold tabular-nums text-gray-900">{Math.round(queue.current.relevance * 100)}%</p></div>
+                <div>
+                  <p className="inline-flex items-center gap-1 text-xs text-gray-500"><Target aria-hidden="true" className="size-3.5 text-blue-600" />Match</p>
+                  <p className="font-semibold tabular-nums text-gray-900">{Math.round(queue.current.relevance * 100)}%</p>
+                </div>
               </div>
             </header>
             <ul className="flex flex-col divide-y divide-gray-100 border-y border-gray-200">
@@ -212,7 +231,7 @@ export default function FindStudents() {
             {queue.current.candidateProfile.summary && <p className="whitespace-pre-line text-sm leading-6 text-gray-700">{queue.current.candidateProfile.summary}</p>}
             {queue.current.candidateProfile.jobs.length > 0 && (
               <section className="flex flex-col gap-3">
-                <h3 className="text-xs font-semibold uppercase text-gray-500">Experience</h3>
+                <SectionTitle as="h3" icon={Briefcase}>Experience</SectionTitle>
                 {queue.current.candidateProfile.jobs.map((job, index) => (
                   <div key={`${job.company}:${job.title}:${index}`}>
                     <div className="flex flex-wrap justify-between gap-x-4 text-sm"><strong className="text-gray-900">{job.title} · {job.company}</strong><span className="text-gray-500">{job.startDate.slice(0, 4)}–{job.endDate?.slice(0, 4) ?? 'Present'}</span></div>
@@ -224,7 +243,7 @@ export default function FindStudents() {
             )}
             {queue.current.candidateProfile.projects.length > 0 && (
               <section className="flex flex-col gap-3">
-                <h3 className="text-xs font-semibold uppercase text-gray-500">Projects</h3>
+                <SectionTitle as="h3" icon={FolderGit2}>Projects</SectionTitle>
                 {queue.current.candidateProfile.projects.map((project, index) => {
                   const credibility = queue.current?.projectCredibility?.[index]
                   return (
@@ -240,7 +259,7 @@ export default function FindStudents() {
             )}
             {queue.current.candidateProfile.education.length > 0 && (
               <section className="flex flex-col gap-3">
-                <h3 className="text-xs font-semibold uppercase text-gray-500">Education</h3>
+                <SectionTitle as="h3" icon={GraduationCap}>Education</SectionTitle>
                 {queue.current.candidateProfile.education.map((item, index) => (
                   <div key={`${item.institution}:${index}`}>
                     <strong className="text-sm text-gray-900">{item.institution}</strong>
@@ -252,7 +271,7 @@ export default function FindStudents() {
             )}
             {queue.current.candidateProfile.skills.length > 0 && (
               <section className="flex flex-col gap-2">
-                <h3 className="text-xs font-semibold uppercase text-gray-500">Skills</h3>
+                <SectionTitle as="h3" icon={Wrench}>Skills</SectionTitle>
                 <p className="text-sm text-gray-700">{queue.current.candidateProfile.skills.map((skill) => `${skill.name} · ${skill.level}`).join('  /  ')}</p>
               </section>
             )}
@@ -272,11 +291,15 @@ export default function FindStudents() {
               <div className="flex items-center justify-between gap-4">
                 <p className="text-xs text-gray-500">Your note is only visible to this student.</p>
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  <button type="button" className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void toggleCandidateSaved()} disabled={savingCandidate} aria-pressed={savedIds.includes(queue.current.id)}>
+                  <button type="button" className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void toggleCandidateSaved()} disabled={savingCandidate} aria-pressed={savedIds.includes(queue.current.id)}>
+                    {savedIds.includes(queue.current.id)
+                      ? <BookmarkCheck aria-hidden="true" className="size-4 text-blue-600" />
+                      : <Bookmark aria-hidden="true" className="size-4" />}
                     {savingCandidate ? 'Saving…' : savedIds.includes(queue.current.id) ? 'Saved' : 'Save candidate'}
                   </button>
-                  <button type="submit" disabled={rating === 0 || reviewText.trim().length === 0 || submitting} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50">
+                  <button type="submit" disabled={rating === 0 || reviewText.trim().length === 0 || submitting} className="inline-flex items-center gap-1.5 rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50">
                     {submitting ? 'Saving…' : 'Rate and continue'}
+                    <ArrowRight aria-hidden="true" className="size-4" />
                   </button>
                 </div>
               </div>
@@ -285,12 +308,17 @@ export default function FindStudents() {
         </>
       )}
       {!loading && queue?.status === 'completed' && !queue.current && (
-        <div className="border-y border-gray-200 py-8">
+        <div className="flex flex-col items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-8 text-center">
+          <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-full bg-white text-green-700">
+            <CircleCheck className="size-5" strokeWidth={1.75} />
+          </span>
           <h2 className="text-lg font-semibold text-gray-900">Queue complete</h2>
-          <p className="mt-1 text-sm text-gray-600">You reviewed {queue.total} {queue.total === 1 ? 'candidate' : 'candidates'} for this hiring source.</p>
+          <p className="text-sm text-gray-600">You reviewed {queue.total} {queue.total === 1 ? 'candidate' : 'candidates'} for this hiring source.</p>
         </div>
       )}
-      {!loading && !queue && !error && <p className="text-sm text-gray-500">No eligible candidates match this hiring source yet.</p>}
+      {!loading && !queue && !error && (
+        <EmptyState icon={UserRoundSearch} title="No candidates yet">No eligible candidates match this hiring source yet.</EmptyState>
+      )}
     </section>
   )
 }

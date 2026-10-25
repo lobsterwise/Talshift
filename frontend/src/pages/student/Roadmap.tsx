@@ -1,6 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import {
+  CalendarDays, Check, CircleDashed, Flag, Handshake, MessageSquareText, MessagesSquare, Route, Sparkles, Target, UsersRound, Wrench,
+  type LucideIcon,
+} from 'lucide-react'
 import { buildRoadmap, getRoadmap, type RequirementMatch, type Roadmap as RoadmapData, type RoadmapTarget } from '../../api/roadmap'
+import PageHeading from '../../components/ui/PageHeading'
+import StatusText from '../../components/ui/StatusText'
 
 const primaryClass = 'rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
 const inputClass = 'w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-600 focus:outline-none'
@@ -31,7 +37,7 @@ function MatchSummary({ roadmap }: { roadmap: RoadmapData }) {
   return (
     <section className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
       <div>
-        <p className="text-xs text-gray-500">Target</p>
+        <p className="inline-flex items-center gap-1 text-xs text-gray-500"><Target aria-hidden="true" className="size-3.5" />Target</p>
         <h2 className="font-semibold text-gray-900">{target.title}{target.organization && <span className="font-normal text-gray-600"> · {target.organization}</span>}</h2>
       </div>
       <MatchBar label="Your qualification match today" percent={match.percent} tone="current" />
@@ -42,12 +48,17 @@ function MatchSummary({ roadmap }: { roadmap: RoadmapData }) {
       <ul className="flex flex-wrap gap-1.5">
         {match.requirements.map((requirement) => (
           <li key={requirement.name} title={requirement.bestSkill ? `Closest skill: ${requirement.bestSkill}` : 'No related skill on your resume yet'}
-            className={`rounded border px-1.5 py-0.5 text-xs ${statusStyles[requirement.status]}`}>
-            {requirement.status === 'covered' ? '✓ ' : requirement.status === 'partial' ? '◐ ' : ''}{requirement.name}
+            className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-xs ${statusStyles[requirement.status]}`}>
+            {requirement.status === 'covered' && <Check aria-label="Covered" className="size-3" strokeWidth={2.5} />}
+            {requirement.status === 'partial' && <CircleDashed aria-label="Partly covered" className="size-3" strokeWidth={2.5} />}
+            {requirement.name}
           </li>
         ))}
       </ul>
-      <p className="text-xs text-gray-500">✓ covered · ◐ partly covered · plain: not on your resume yet</p>
+      <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-gray-500">
+        <Check aria-hidden="true" className="size-3 text-green-700" strokeWidth={2.5} /> covered ·
+        <CircleDashed aria-hidden="true" className="size-3 text-amber-700" strokeWidth={2.5} /> partly covered · plain: not on your resume yet
+      </p>
     </section>
   )
 }
@@ -67,10 +78,13 @@ function Step({ index, when, duration, last, children }: { index: number; when: 
   )
 }
 
-function Card({ label, title, children }: { label: string; title?: string; children: ReactNode }) {
+function Card({ icon: Icon, label, title, children }: { icon: LucideIcon; label: string; title?: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5 rounded-md border border-gray-200 p-3">
-      <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">{label}</p>
+      <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+        <Icon aria-hidden="true" className="size-3.5 text-blue-600" strokeWidth={2} />
+        {label}
+      </p>
       {title && <p className="text-sm font-semibold text-gray-900">{title}</p>}
       {children}
     </div>
@@ -83,21 +97,21 @@ function Timeline({ roadmap }: { roadmap: RoadmapData }) {
   return (
     <ol className="flex flex-col" aria-label="Action timeline">
       <Step index={1} when="This Weekend" duration="1–2 days">
-        <Card label="Technical micro-project" title={weekend.microProject.title}>
+        <Card icon={Wrench} label="Technical micro-project" title={weekend.microProject.title}>
           {weekend.microProject.skill && <p className="text-xs text-gray-600">Closes a gap in <span className="font-medium text-gray-800">{weekend.microProject.skill}</span></p>}
           <ol className="list-decimal pl-5 text-sm text-gray-700">
             {weekend.microProject.steps.map((step) => <li key={step}>{step}</li>)}
           </ol>
           <p className="text-sm text-gray-700"><span className="font-medium text-gray-900">Done when:</span> {weekend.microProject.doneWhen}</p>
         </Card>
-        <Card label="Hackathon or career event" title={weekend.event.kind}>
+        <Card icon={CalendarDays} label="Hackathon or career event" title={weekend.event.kind}>
           <p className="text-sm text-gray-700">{weekend.event.why}</p>
           <p className="text-sm text-gray-700"><span className="font-medium text-gray-900">Where to find one:</span> {weekend.event.howToFind}</p>
         </Card>
       </Step>
 
       <Step index={2} when="This Week" duration="7 days">
-        <Card label={week.networking.mentor ? 'Mentor review session' : 'Networking action'}>
+        <Card icon={week.networking.mentor ? MessagesSquare : Handshake} label={week.networking.mentor ? 'Mentor review session' : 'Networking action'}>
           <p className="text-sm text-gray-700">{week.networking.action}</p>
           {week.networking.why && <p className="text-sm text-gray-600">{week.networking.why}</p>}
           {week.networking.mentor && (
@@ -111,7 +125,7 @@ function Timeline({ roadmap }: { roadmap: RoadmapData }) {
           )}
         </Card>
         {week.interviewPrep && (
-          <Card label="Interview prep" title={week.interviewPrep.focus}>
+          <Card icon={MessageSquareText} label="Interview prep" title={week.interviewPrep.focus}>
             <ul className="list-disc pl-5 text-sm text-gray-700">
               {week.interviewPrep.plan.map((step) => <li key={step}>{step}</li>)}
             </ul>
@@ -120,7 +134,7 @@ function Timeline({ roadmap }: { roadmap: RoadmapData }) {
       </Step>
 
       <Step index={3} when="This Month" duration="4–6 weeks" last>
-        <Card label={month.milestone.teamProject ? 'Team project' : 'Qualification milestone'} title={month.milestone.title}>
+        <Card icon={month.milestone.teamProject ? UsersRound : Flag} label={month.milestone.teamProject ? 'Team project' : 'Qualification milestone'} title={month.milestone.title}>
           <p className="text-sm text-gray-700">{month.milestone.description}</p>
           {month.milestone.fills.length > 0 && (
             <p className="text-xs text-gray-600">Fills: <span className="font-medium text-gray-800">{month.milestone.fills.join(', ')}</span></p>
@@ -209,17 +223,16 @@ export default function Roadmap() {
     void runBuild(mode === 'posting' ? { postingId } : { role: role.trim() })
   }
 
-  if (loading) return <p className="text-sm text-gray-500">Loading…</p>
+  if (loading) return <StatusText tone="loading">Loading…</StatusText>
 
   return (
     <section className="flex flex-col gap-6" aria-live="polite">
-      <header>
-        <h1 className="text-2xl font-semibold text-gray-900">Qualification roadmap</h1>
+      <PageHeading icon={Route} title="Qualification roadmap">
         <p className="mt-1 text-sm text-gray-600">
           A plan for becoming genuinely more qualified for a position: real skills, real projects and real conversations,
           from this weekend to this month.
         </p>
-      </header>
+      </PageHeading>
 
       <form className="flex flex-col gap-3" onSubmit={(event) => void build(event)}>
         <div className="flex w-fit rounded-md border border-gray-300 p-0.5" role="group" aria-label="Target type">
@@ -249,14 +262,15 @@ export default function Roadmap() {
               placeholder="e.g. Backend software engineer intern" required />
           </label>
         )}
-        <button type="submit" className={`${primaryClass} self-start`} disabled={building || Boolean(notice) || (mode === 'posting' ? !postingId : !role.trim())}>
+        <button type="submit" className={`${primaryClass} inline-flex items-center gap-1.5 self-start`} disabled={building || Boolean(notice) || (mode === 'posting' ? !postingId : !role.trim())}>
+          <Sparkles aria-hidden="true" className="size-4" />
           {building ? 'Building your roadmap…' : roadmap ? 'Rebuild roadmap' : 'Build my roadmap'}
         </button>
       </form>
 
-      {notice && <p role="status" className="text-sm text-gray-600">{notice}</p>}
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      {building && <p role="status" className="text-sm text-gray-500">Analyzing your resume against the requirements… this can take up to a minute.</p>}
+      {notice && <StatusText tone="info">{notice}</StatusText>}
+      {error && <StatusText tone="error">{error}</StatusText>}
+      {building && <StatusText tone="loading">Analyzing your resume against the requirements… this can take up to a minute.</StatusText>}
 
       {roadmap && !building && (
         <>

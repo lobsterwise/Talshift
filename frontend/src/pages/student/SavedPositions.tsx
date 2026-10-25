@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Bookmark, BookmarkMinus } from 'lucide-react'
 import { getSavedStudentPostings, setStudentPostingSaved, type SavedStudentPosting } from '../../api/studentDiscovery'
+import EmptyState from '../../components/ui/EmptyState'
+import PageHeading from '../../components/ui/PageHeading'
+import StatusText from '../../components/ui/StatusText'
 
 export default function SavedPositions() {
   const [items, setItems] = useState<SavedStudentPosting[]>([])
@@ -31,10 +35,10 @@ export default function SavedPositions() {
 
   return (
     <section className="flex flex-col gap-5" aria-live="polite">
-      <header><h1 className="text-2xl font-semibold text-gray-900">Saved positions</h1></header>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      {loading ? <p className="text-sm text-gray-500">Loading saved positions…</p> : items.length === 0
-        ? <p className="text-sm text-gray-500">Positions you save from Discover will appear here.</p>
+      <PageHeading icon={Bookmark} title="Saved positions" />
+      {error && <StatusText tone="error">{error}</StatusText>}
+      {loading ? <StatusText tone="loading">Loading saved positions…</StatusText> : items.length === 0
+        ? <EmptyState icon={Bookmark} title="No saved positions yet">Positions you save from Discover will appear here.</EmptyState>
         : <div className="divide-y divide-gray-200 border-y border-gray-200">
           {items.map((posting) => (
             <article key={posting.id} className="flex flex-col gap-2 py-4">
@@ -43,7 +47,8 @@ export default function SavedPositions() {
                   <h2 className="font-semibold text-gray-900">{posting.title}</h2>
                   {posting.organization && <p className="text-sm text-gray-600">{posting.organization}</p>}
                 </div>
-                <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void remove(posting.id)} disabled={removingId === posting.id}>
+                <button type="button" className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void remove(posting.id)} disabled={removingId === posting.id}>
+                  <BookmarkMinus aria-hidden="true" className="size-4" />
                   {removingId === posting.id ? 'Removing…' : 'Remove'}
                 </button>
               </div>

@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
+import { BookmarkMinus, UsersRound } from 'lucide-react'
 import { getSavedCandidates, setCandidateSaved, type SavedCandidate } from '../../api/professionalSearch'
+import EmptyState from '../../components/ui/EmptyState'
+import PageHeading from '../../components/ui/PageHeading'
+import StatusText from '../../components/ui/StatusText'
 
 export default function SavedCandidates() {
   const [items, setItems] = useState<SavedCandidate[]>([])
@@ -31,10 +35,10 @@ export default function SavedCandidates() {
 
   return (
     <section className="flex flex-col gap-5" aria-live="polite">
-      <header><h1 className="text-2xl font-semibold text-gray-900">Saved candidates</h1></header>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      {loading ? <p className="text-sm text-gray-500">Loading saved candidates…</p> : items.length === 0
-        ? <p className="text-sm text-gray-500">Candidates you save from Find students will appear here.</p>
+      <PageHeading icon={UsersRound} title="Saved candidates" />
+      {error && <StatusText tone="error">{error}</StatusText>}
+      {loading ? <StatusText tone="loading">Loading saved candidates…</StatusText> : items.length === 0
+        ? <EmptyState icon={UsersRound} title="No saved candidates yet">Candidates you save from Find students will appear here.</EmptyState>
         : <div className="divide-y divide-gray-200 border-y border-gray-200">
           {items.map((candidate) => (
             <article key={candidate.id} className="flex flex-col gap-2 py-4">
@@ -44,7 +48,8 @@ export default function SavedCandidates() {
                   {candidate.headline && <p className="text-sm text-gray-700">{candidate.headline}</p>}
                   <p className="text-sm text-gray-500">{[candidate.field_of_study, candidate.institution, candidate.location].filter(Boolean).join(' · ')}</p>
                 </div>
-                <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void remove(candidate.id)} disabled={removingId === candidate.id}>
+                <button type="button" className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void remove(candidate.id)} disabled={removingId === candidate.id}>
+                  <BookmarkMinus aria-hidden="true" className="size-4" />
                   {removingId === candidate.id ? 'Removing…' : 'Remove'}
                 </button>
               </div>

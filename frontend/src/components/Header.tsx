@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { LogOut } from 'lucide-react'
 import type { Account, Profile } from '../api/auth'
 import type { Persona } from '../personas.tsx'
 
@@ -41,7 +42,10 @@ export default function Header({ persona, account, profile, onSignOut }: HeaderP
           >
             {initials}
           </div>
-          <button type="button" onClick={onSignOut} className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign out</button>
+          <button type="button" onClick={onSignOut} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900">
+            <LogOut aria-hidden="true" className="size-4" />
+            Sign out
+          </button>
         </div>
       </div>
 
@@ -51,13 +55,14 @@ export default function Header({ persona, account, profile, onSignOut }: HeaderP
             key={tab.slug}
             to={`/${persona.id}/${tab.slug}`}
             className={({ isActive }) =>
-              `inline-flex min-h-12 items-center whitespace-nowrap border-b-2 px-3.5 text-[15px] no-underline ${
+              `group inline-flex min-h-12 items-center gap-2 whitespace-nowrap border-b-2 px-3.5 text-[15px] no-underline ${
                 isActive
-                  ? 'border-blue-600 font-semibold text-gray-900 hover:text-gray-900'
+                  ? 'active border-blue-600 font-semibold text-gray-900 hover:text-gray-900'
                   : 'border-transparent font-medium text-gray-600 hover:text-gray-900'
               }`
             }
           >
+            <tab.icon aria-hidden="true" className="size-4 text-gray-400 group-hover:text-gray-600 group-[.active]:text-blue-600" strokeWidth={2} />
             {tab.label}
           </NavLink>
         ))}

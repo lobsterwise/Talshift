@@ -13,9 +13,17 @@ import {
   type PeerSummary,
   type TeamUpRequest,
 } from '../../api/peers'
+import {
+  ArrowUp, ChartNoAxesColumn, Check, Handshake, Mail, RotateCcw, Search, Send, Sparkles, Sprout, TrendingUp, Trophy, UsersRound, X,
+  type LucideIcon,
+} from 'lucide-react'
+import EmptyState from '../../components/ui/EmptyState'
+import PageHeading from '../../components/ui/PageHeading'
+import SectionTitle from '../../components/ui/SectionTitle'
+import StatusText from '../../components/ui/StatusText'
 
-const buttonClass = 'rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50'
-const primaryClass = 'rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
+const buttonClass = 'inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50'
+const primaryClass = 'inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
 
 // Level names match the rubric the backend gives the AI.
 const dimensionLevels = ['No evidence', 'Minimal', 'Developing', 'Strong', 'Exceptional']
@@ -24,10 +32,15 @@ function firstName(name: string) {
   return name.split(/\s+/)[0] || name
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ icon, tone, title, children }: {
+  icon: LucideIcon
+  tone?: 'blue' | 'green' | 'amber'
+  title: string
+  children: React.ReactNode
+}) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">{title}</h2>
+      <SectionTitle icon={icon} tone={tone}>{title}</SectionTitle>
       {children}
     </section>
   )
@@ -38,7 +51,12 @@ function LevelBar({ assessment, levels, leads }: { assessment: Assessment; level
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline justify-between gap-2 text-xs">
         <span className={leads ? 'font-semibold text-green-800' : 'font-medium text-gray-700'}>{levels[assessment.level]}</span>
-        {leads && <span className="rounded-full bg-green-50 px-1.5 py-0.5 text-[11px] font-medium text-green-800">Stronger</span>}
+        {leads && (
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-green-50 px-1.5 py-0.5 text-[11px] font-medium text-green-800">
+            <ArrowUp aria-hidden="true" className="size-3" strokeWidth={2.5} />
+            Stronger
+          </span>
+        )}
       </div>
       <div className="grid grid-cols-4 gap-0.5" aria-hidden="true">
         {[1, 2, 3, 4].map((step) => (
@@ -89,7 +107,7 @@ function HeadToHead({ comparison, analysis }: { comparison: Comparison; analysis
 function Edges({ analysis, peerName }: { analysis: PeerAnalysis; peerName: string }) {
   return (
     <div className="grid gap-6 sm:grid-cols-2">
-      <Section title={`How ${peerName} currently edges you out`}>
+      <Section icon={TrendingUp} tone="amber" title={`How ${peerName} currently edges you out`}>
         {analysis.peerEdges.length === 0
           ? <p className="text-sm text-gray-600">From a recruiter&apos;s view, {peerName}&apos;s resume isn&apos;t stronger than yours in any area right now.</p>
           : (
@@ -100,7 +118,7 @@ function Edges({ analysis, peerName }: { analysis: PeerAnalysis; peerName: strin
             </ul>
           )}
       </Section>
-      <Section title="Where you're ahead">
+      <Section icon={Trophy} tone="green" title="Where you're ahead">
         {analysis.yourEdges.length === 0
           ? <p className="text-sm text-gray-600">No clear advantage yet. The growth plan below targets the biggest gaps.</p>
           : (
@@ -117,7 +135,7 @@ function Edges({ analysis, peerName }: { analysis: PeerAnalysis; peerName: strin
 
 function GrowthPlan({ analysis }: { analysis: PeerAnalysis }) {
   return (
-    <Section title="How to overtake & level up together">
+    <Section icon={Sprout} title="How to overtake & level up together">
       <ol className="flex flex-col gap-4">
         {analysis.growth.map((step, index) => (
           <li key={step.skill} className="flex flex-col gap-1.5">
@@ -165,7 +183,10 @@ function TeamUpCard({ comparison, analysis, onTeamUp }: {
 
   return (
     <div className="flex flex-col gap-2 rounded-md border border-blue-200 bg-blue-50 p-3">
-      <p className="text-sm font-semibold text-blue-950">Team-up project: {teamUp.title}</p>
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-blue-950">
+        <UsersRound aria-hidden="true" className="size-4 shrink-0 text-blue-600" />
+        Team-up project: {teamUp.title}
+      </p>
       <p className="text-sm text-blue-900">{teamUp.description}</p>
       {(teamUp.youBring || teamUp.peerBrings) && (
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
@@ -174,9 +195,12 @@ function TeamUpCard({ comparison, analysis, onTeamUp }: {
         </dl>
       )}
       {connection?.status === 'accepted' ? (
-        <p role="status" className="text-sm font-medium text-green-800">You&apos;re teamed up with {peerName}. Their contact details are under Team-up requests.</p>
+        <StatusText tone="success">You&apos;re teamed up with {peerName}. Their contact details are under Team-up requests.</StatusText>
       ) : connection?.direction === 'outgoing' ? (
-        <p role="status" className="text-sm text-blue-900">Team-up request sent. You&apos;ll see {peerName}&apos;s contact details once they accept.</p>
+        <p role="status" className="flex items-start gap-1.5 text-sm text-blue-900">
+          <Send aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          Team-up request sent. You&apos;ll see {peerName}&apos;s contact details once they accept.
+        </p>
       ) : composing ? (
         <div className="flex flex-col gap-2">
           <label className="flex flex-col gap-1 text-sm" htmlFor="team-up-message">
@@ -184,9 +208,12 @@ function TeamUpCard({ comparison, analysis, onTeamUp }: {
             <textarea id="team-up-message" rows={3} maxLength={500} value={message} onChange={(event) => setMessage(event.target.value)}
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" />
           </label>
-          {sendError && <p role="alert" className="text-sm text-red-700">{sendError}</p>}
+          {sendError && <StatusText tone="error">{sendError}</StatusText>}
           <div className="flex gap-2">
-            <button type="button" className={primaryClass} disabled={sending} onClick={() => void send()}>{sending ? 'Sending…' : 'Send request'}</button>
+            <button type="button" className={primaryClass} disabled={sending} onClick={() => void send()}>
+              <Send aria-hidden="true" className="size-4" />
+              {sending ? 'Sending…' : 'Send request'}
+            </button>
             <button type="button" className={buttonClass} disabled={sending} onClick={() => setComposing(false)}>Cancel</button>
           </div>
         </div>
@@ -201,9 +228,10 @@ function TeamUpCard({ comparison, analysis, onTeamUp }: {
             setMessage(`Hi ${peerName}! Want to team up on "${teamUp.title}"? ${teamUp.description}`.slice(0, 500))
             setComposing(true)
           }}>
+            <Handshake aria-hidden="true" className="size-4" />
             {connection?.direction === 'incoming' ? `Accept ${peerName}'s team-up request` : 'Team up / Connect'}
           </button>
-          {sendError && <p role="alert" className="text-sm text-red-700">{sendError}</p>}
+          {sendError && <StatusText tone="error">{sendError}</StatusText>}
         </>
       )}
     </div>
@@ -213,7 +241,7 @@ function TeamUpCard({ comparison, analysis, onTeamUp }: {
 function TeamUpRequests({ requests, onRespond }: { requests: TeamUpRequest[]; onRespond: (id: string, action: 'accept' | 'decline') => void }) {
   if (!requests.length) return null
   return (
-    <Section title="Team-up requests">
+    <Section icon={Handshake} title="Team-up requests">
       <ul className="flex flex-col divide-y divide-gray-100">
         {requests.map((request) => (
           <li key={request.id} className="flex flex-col gap-1 py-2">
@@ -226,12 +254,21 @@ function TeamUpRequests({ requests, onRespond }: { requests: TeamUpRequest[]; on
             </div>
             {request.message && <p className="text-sm whitespace-pre-line text-gray-700">{request.message}</p>}
             {request.status === 'accepted' && request.peer.email && (
-              <a className="text-sm" href={`mailto:${request.peer.email}`}>{request.peer.email}</a>
+              <a className="inline-flex items-center gap-1.5 self-start text-sm" href={`mailto:${request.peer.email}`}>
+                <Mail aria-hidden="true" className="size-4" />
+                {request.peer.email}
+              </a>
             )}
             {request.status === 'pending' && request.direction === 'incoming' && (
               <div className="flex gap-2">
-                <button type="button" className={primaryClass} onClick={() => onRespond(request.id, 'accept')}>Accept</button>
-                <button type="button" className={buttonClass} onClick={() => onRespond(request.id, 'decline')}>Decline</button>
+                <button type="button" className={primaryClass} onClick={() => onRespond(request.id, 'accept')}>
+                  <Check aria-hidden="true" className="size-4" />
+                  Accept
+                </button>
+                <button type="button" className={buttonClass} onClick={() => onRespond(request.id, 'decline')}>
+                  <X aria-hidden="true" className="size-4" />
+                  Decline
+                </button>
               </div>
             )}
           </li>
@@ -329,13 +366,12 @@ export default function PeerComparison() {
 
   return (
     <section className="flex flex-col gap-6" aria-live="polite">
-      <header>
-        <h1 className="text-2xl font-semibold text-gray-900">Peer comparison</h1>
+      <PageHeading icon={ChartNoAxesColumn} title="Peer comparison">
         <p className="mt-1 text-sm text-gray-600">
           Compare your resume with a peer the way a recruiter would: by what your experience and projects actually show.
           Then learn from each other.
         </p>
-      </header>
+      </PageHeading>
 
       <TeamUpRequests requests={requests} onRespond={(id, action) => void respond(id, action)} />
 
@@ -346,16 +382,20 @@ export default function PeerComparison() {
             <input id="peer-query" className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-600 focus:outline-none"
               maxLength={100} value={queryDraft} onChange={(event) => setQueryDraft(event.target.value)} placeholder="Name or headline" />
           </label>
-          <button type="submit" className={buttonClass}>Search</button>
+          <button type="submit" className={buttonClass}>
+            <Search aria-hidden="true" className="size-4" />
+            Search
+          </button>
           <button type="button" className={primaryClass} disabled={!bestMatch} onClick={() => bestMatch && setSelectedId(bestMatch.id)}>
+            <Sparkles aria-hidden="true" className="size-4" />
             Auto-match me
           </button>
         </form>
-        {peersNotice && <p role="status" className="text-sm text-gray-600">{peersNotice}</p>}
+        {peersNotice && <StatusText tone="info">{peersNotice}</StatusText>}
         {peersLoading
-          ? <p className="text-sm text-gray-500">Loading students…</p>
+          ? <StatusText tone="loading">Loading students…</StatusText>
           : peers.length === 0
-            ? <p className="text-sm text-gray-500">No other students found{query ? ` for "${query}"` : ' yet'}.</p>
+            ? <EmptyState icon={UsersRound} compact>No other students found{query ? ` for "${query}"` : ' yet'}.</EmptyState>
             : (
               <ul className="flex max-h-64 flex-col divide-y divide-gray-100 overflow-y-auto rounded-md border border-gray-200">
                 {peers.map((peer) => (
@@ -374,15 +414,18 @@ export default function PeerComparison() {
             )}
       </section>
 
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      {comparisonLoading && <p role="status" className="text-sm text-gray-500">Loading profiles…</p>}
+      {error && <StatusText tone="error">{error}</StatusText>}
+      {comparisonLoading && <StatusText tone="loading">Loading profiles…</StatusText>}
       {comparison && analysisLoading && (
-        <p role="status" className="text-sm text-gray-500">Reviewing both resumes like a recruiter would… this can take up to a minute the first time.</p>
+        <StatusText tone="loading">Reviewing both resumes like a recruiter would… this can take up to a minute the first time.</StatusText>
       )}
       {comparison && analysisError && (
         <div className="flex flex-wrap items-center gap-3">
-          <p role="alert" className="text-sm text-red-700">{analysisError}</p>
-          <button type="button" className={buttonClass} onClick={() => setAnalysisVersion((version) => version + 1)}>Try again</button>
+          <StatusText tone="error">{analysisError}</StatusText>
+          <button type="button" className={buttonClass} onClick={() => setAnalysisVersion((version) => version + 1)}>
+            <RotateCcw aria-hidden="true" className="size-4" />
+            Try again
+          </button>
         </div>
       )}
       {comparison && analysis && (

@@ -4,6 +4,18 @@ import { getInterestOptions } from "../../api/catalog";
 import { readResumeDraft, storeResumeDraft } from "../../api/studentProfile";
 import ResumeUpload from "../../components/ResumeUpload";
 import {
+  ArrowRight,
+  Briefcase,
+  Check,
+  GraduationCap,
+  LockKeyhole,
+  LogIn,
+  LogOut,
+  Mail,
+  ShieldCheck,
+  UserPlus,
+} from "lucide-react";
+import {
   login,
   register,
   type Account,
@@ -179,6 +191,7 @@ export default function AuthFlow({
         <div className="topbar-note">Connecting talent with opportunity</div>
         {screen === "welcome" ? (
           <button className="quiet-button" type="button" onClick={onLogout}>
+            <LogOut aria-hidden="true" />
             Sign out
           </button>
         ) : screen === "login" ? (
@@ -187,6 +200,7 @@ export default function AuthFlow({
             type="button"
             onClick={() => onNavigate("/signup")}
           >
+            <UserPlus aria-hidden="true" />
             Create account
           </button>
         ) : (
@@ -195,6 +209,7 @@ export default function AuthFlow({
             type="button"
             onClick={() => onNavigate("/login")}
           >
+            <LogIn aria-hidden="true" />
             Sign in
           </button>
         )}
@@ -225,8 +240,7 @@ export default function AuthFlow({
               <p className="eyebrow">MAKE YOUR ACCOUNT</p>
               <h2>Start with your side of the table.</h2>
               <p className="panel-intro">
-                Choose how you’ll use Rungs. We’ll tailor the next step to
-                you.
+                Choose how you’ll use Rungs. We’ll tailor the next step to you.
               </p>
               <div
                 className="account-type-select"
@@ -243,7 +257,7 @@ export default function AuthFlow({
                   onClick={() => setAccountType("student")}
                   aria-pressed={accountType === "student"}
                 >
-                  <span className="option-index">01</span>
+                  <GraduationCap className="option-icon" aria-hidden="true" />
                   <strong>Student</strong>
                   <span>Show what you've done and build credibility.</span>
                 </button>
@@ -257,7 +271,7 @@ export default function AuthFlow({
                   onClick={() => setAccountType("professional")}
                   aria-pressed={accountType === "professional"}
                 >
-                  <span className="option-index">02</span>
+                  <Briefcase className="option-icon" aria-hidden="true" />
                   <strong>Professional</strong>
                   <span>Mentor, recruit, or share your experience.</span>
                 </button>
@@ -266,40 +280,49 @@ export default function AuthFlow({
                 <label className="field-label" htmlFor="signup-email">
                   Email address
                 </label>
-                <input
-                  id="signup-email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                />
+                <div className="input-with-icon">
+                  <Mail aria-hidden="true" />
+                  <input
+                    id="signup-email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                  />
+                </div>
                 <label className="field-label" htmlFor="signup-password">
                   Password
                 </label>
-                <input
-                  id="signup-password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  minLength={8}
-                  maxLength={128}
-                  required
-                />
+                <div className="input-with-icon">
+                  <LockKeyhole aria-hidden="true" />
+                  <input
+                    id="signup-password"
+                    type="password"
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    minLength={8}
+                    maxLength={128}
+                    required
+                  />
+                </div>
                 <label className="field-label" htmlFor="confirm-password">
                   Confirm password
                 </label>
-                <input
-                  id="confirm-password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  minLength={8}
-                  maxLength={128}
-                  required
-                />
+                <div className="input-with-icon">
+                  <LockKeyhole aria-hidden="true" />
+                  <input
+                    id="confirm-password"
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    minLength={8}
+                    maxLength={128}
+                    required
+                  />
+                </div>
                 {error && (
                   <p className="form-error" role="alert">
                     {error}
@@ -311,7 +334,7 @@ export default function AuthFlow({
                   disabled={busy}
                 >
                   {busy ? "Creating account…" : "Create account"}
-                  <span aria-hidden="true">→</span>
+                  <ArrowRight aria-hidden="true" />
                 </button>
                 <p className="form-footnote">
                   By continuing, you agree to use Rungs to represent your
@@ -324,9 +347,7 @@ export default function AuthFlow({
           {screen === "login" && (
             <>
               <p className="eyebrow">WELCOME BACK</p>
-              <h2>
-                Sign in to continue to your Rungs profile.
-              </h2>
+              <h2>Sign in to continue to your Rungs profile.</h2>
               <form
                 className="auth-form login-form"
                 onSubmit={submitCredentials}
@@ -334,25 +355,31 @@ export default function AuthFlow({
                 <label className="field-label" htmlFor="login-email">
                   Email address
                 </label>
-                <input
-                  id="login-email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                />
+                <div className="input-with-icon">
+                  <Mail aria-hidden="true" />
+                  <input
+                    id="login-email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                  />
+                </div>
                 <label className="field-label" htmlFor="login-password">
                   Password
                 </label>
-                <input
-                  id="login-password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
+                <div className="input-with-icon">
+                  <LockKeyhole aria-hidden="true" />
+                  <input
+                    id="login-password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    required
+                  />
+                </div>
                 {error && (
                   <p className="form-error" role="alert">
                     {error}
@@ -364,7 +391,7 @@ export default function AuthFlow({
                   disabled={busy}
                 >
                   {busy ? "Signing in…" : "Sign in"}
-                  <span aria-hidden="true">→</span>
+                  <ArrowRight aria-hidden="true" />
                 </button>
               </form>
             </>
@@ -560,6 +587,9 @@ export default function AuthFlow({
                           onClick={() => toggleInterest(interest)}
                           aria-pressed={interests.includes(interest)}
                         >
+                          {interests.includes(interest) && (
+                            <Check aria-hidden="true" />
+                          )}
                           {interest}
                         </button>
                       ))}
@@ -581,7 +611,7 @@ export default function AuthFlow({
                     : resumeParsing
                       ? "Reading your resume…"
                       : "Finish profile"}
-                  <span aria-hidden="true">→</span>
+                  <ArrowRight aria-hidden="true" />
                 </button>
               </form>
             </>
@@ -590,7 +620,7 @@ export default function AuthFlow({
           {screen === "welcome" && account && (
             <div className="welcome-state">
               <div className="completion-mark" aria-hidden="true">
-                ✓
+                <Check />
               </div>
               <p className="eyebrow">PROFILE COMPLETE</p>
               <h2>
@@ -617,7 +647,7 @@ export default function AuthFlow({
                   onClick={() => onNavigate("/student/profile")}
                 >
                   Review details from your resume
-                  <span aria-hidden="true">→</span>
+                  <ArrowRight aria-hidden="true" />
                 </button>
               ) : (
                 <button
@@ -631,15 +661,15 @@ export default function AuthFlow({
                     )
                   }
                 >
-                  Continue to Rungs<span aria-hidden="true">→</span>
+                  Continue to Rungs
+                  <ArrowRight aria-hidden="true" />
                 </button>
               )}
             </div>
           )}
         </section>
       </div>
-      <footer className="auth-footer">
-      </footer>
+      <footer className="auth-footer"></footer>
     </main>
   );
 }

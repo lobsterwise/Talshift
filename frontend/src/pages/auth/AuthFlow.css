@@ -78,12 +78,21 @@
 }
 
 .topbar-note {
+  display: inline-flex;
+  justify-self: center;
+  align-items: center;
+  gap: 6px;
   color: var(--color-subtle);
   font-size: var(--type-sm);
   text-align: center;
 }
 
+.topbar-note svg { width: 15px; height: 15px; color: var(--color-primary); }
+
 .quiet-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   justify-self: end;
   padding: 0 8px;
   color: var(--color-muted);
@@ -92,6 +101,7 @@
 }
 
 .quiet-button:hover { color: var(--color-ink); }
+.quiet-button svg { width: 16px; height: 16px; }
 
 .auth-content {
   display: grid;
@@ -257,7 +267,20 @@
 .type-option:hover { border-color: var(--color-primary); }
 .type-option.selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
 
-.option-index { color: var(--color-subtle); font-size: var(--type-xs); }
+.option-icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  padding: 7px;
+  border-radius: 8px;
+  background: var(--color-canvas);
+  color: var(--color-subtle);
+  stroke-width: 1.75;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.type-option:hover .option-icon,
+.type-option.selected .option-icon { background: var(--color-white); color: var(--color-primary); }
 
 .type-option strong { font-size: var(--type-sm); font-weight: 600; }
 
@@ -294,6 +317,23 @@
   transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
+.input-with-icon { position: relative; }
+.input-with-icon input { padding-left: 38px; }
+
+.input-with-icon svg {
+  position: absolute;
+  top: 23px;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--color-subtle);
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: color 140ms ease;
+}
+
+.input-with-icon:focus-within svg { color: var(--color-primary); }
+
 .auth-form input::placeholder { color: var(--color-subtle); }
 .auth-form input:focus { border-color: var(--color-primary); outline: 0; }
 
@@ -317,7 +357,8 @@
 
 .primary-button:hover:not(:disabled) { border-color: var(--color-primary-dark); background: var(--color-primary-dark); }
 .primary-button:disabled { cursor: wait; opacity: 0.5; }
-.primary-button span { font-size: var(--type-lg); font-weight: 400; }
+.primary-button svg { width: 18px; height: 18px; flex-shrink: 0; transition: transform 150ms ease; }
+.primary-button:hover:not(:disabled) svg { transform: translateX(2px); }
 
 .form-footnote {
   margin: 13px 0 0;
@@ -366,6 +407,9 @@
 .interest-options { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .interest-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   min-height: 44px;
   padding: 0 11px;
   border: 1px solid var(--color-border-strong);
@@ -379,6 +423,8 @@
 
 .interest-chip:hover { border-color: var(--color-primary); }
 .interest-chip.active { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary-dark); }
+.interest-chip svg { width: 14px; height: 14px; stroke-width: 2.5; }
+.welcome-state .completion-mark svg { width: 24px; height: 24px; stroke-width: 2.5; }
 
 .welcome-state .completion-mark {
   width: 46px;

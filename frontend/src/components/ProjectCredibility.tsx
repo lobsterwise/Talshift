@@ -1,9 +1,10 @@
+import { MessageCircleQuestion, ShieldAlert, ShieldCheck } from 'lucide-react'
 import type { ProjectCredibility } from '../api/studentProfile'
 
 export function CredibilityBadge({ credibility }: { credibility: ProjectCredibility }) {
   return credibility.status === 'verified'
-    ? <span className="rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800">🟢 AI Commit-Verified</span>
-    : <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900">🟡 Unverified on GitHub — Note for Reviewer</span>
+    ? <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800"><ShieldCheck aria-hidden="true" className="size-3.5" />AI Commit-Verified</span>
+    : <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900"><ShieldAlert aria-hidden="true" className="size-3.5" />Unverified on GitHub — Note for Reviewer</span>
 }
 
 // Profile-level badge shown once any project is commit-verified. Display only: it never feeds ranking or reputation.
@@ -14,7 +15,8 @@ export function VerifiedExperienceBadge({ projects }: { projects: ProjectCredibi
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-800"
       title="Project experience matched against the student's public GitHub commit history">
-      🟢 AI-Verified Experience · {label}
+      <ShieldCheck aria-hidden="true" className="size-3.5" />
+      AI-Verified Experience · {label}
     </span>
   )
 }
@@ -42,7 +44,7 @@ export default function ProjectCredibilityPanel({ credibility }: { credibility: 
       </ul>
       {!verified && (credibility.reviewerNote || credibility.reviewerQuestion) && (
         <div className="rounded bg-amber-50 p-2 text-xs text-amber-950">
-          <p className="font-semibold">Note for reviewer</p>
+          <p className="flex items-center gap-1 font-semibold"><MessageCircleQuestion aria-hidden="true" className="size-3.5" />Note for reviewer</p>
           {credibility.reviewerNote && <p className="mt-0.5">{credibility.reviewerNote}</p>}
           {credibility.reviewerQuestion && <p className="mt-1"><span className="font-medium">Ask live:</span> {credibility.reviewerQuestion}</p>}
         </div>

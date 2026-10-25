@@ -2,6 +2,16 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { getProfile, saveProfile, type Profile as ProfessionalProfile } from '../../api/auth'
 import { createPosting, deletePosting, getPostings, updatePosting, type ProfessionalPosting, type PostingStatus } from '../../api/postings'
 import { getProfessionalAttributes, indexProfessionalSource, updateProfessionalPriority, type ProfessionalAttribute } from '../../api/professionalSearch'
+import {
+  Briefcase, Building2, ClipboardList, FilePen, Globe, Pencil, Plus, RefreshCw, Save, SlidersHorizontal, Tags, Trash2, UserRound, X,
+} from 'lucide-react'
+import EmptyState from '../../components/ui/EmptyState'
+import PageHeading from '../../components/ui/PageHeading'
+import SectionTitle from '../../components/ui/SectionTitle'
+import StatusText from '../../components/ui/StatusText'
+
+const buttonClass = 'inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50'
+const primaryClass = 'inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
 
 export default function Profile() {
   const [profile, setProfile] = useState<ProfessionalProfile | null>(null)
@@ -202,45 +212,45 @@ export default function Profile() {
     return postings?.find((posting) => posting.id === attribute.source_id)?.title ?? 'Position'
   }
 
-  if (error && !profile) return <p role="alert" className="text-sm text-red-700">{error}</p>
-  if (!profile) return <p className="text-sm text-gray-500">Loading…</p>
+  if (error && !profile) return <StatusText tone="error">{error}</StatusText>
+  if (!profile) return <StatusText tone="loading">Loading…</StatusText>
 
   return (
     <div className="flex flex-col gap-8">
       <form className="flex flex-col gap-6" onSubmit={submit}>
-        <header>
-          <h1 className="text-2xl font-semibold text-gray-900">My profile</h1>
+        <PageHeading icon={UserRound} title="My profile">
           <p className="mt-1 text-sm text-gray-600">Keep mentoring expertise and hiring needs separate so each search has the right signal.</p>
-        </header>
+        </PageHeading>
         <section className="flex flex-col gap-3">
-          <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Company Information</h2>
+          <SectionTitle icon={Building2}>Company Information</SectionTitle>
           <label className="flex flex-col gap-1 text-sm" htmlFor="offer-summary">
             <span className="font-medium text-gray-700">What you can offer</span>
             <textarea id="offer-summary" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" rows={5} maxLength={3000} value={offerSummary} onChange={(event) => setOfferSummary(event.target.value)} placeholder="Topics you can mentor on, experience you can share, and the kind of support you offer." />
           </label>
         </section>
         <section className="flex flex-col gap-3">
-          <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Hiring</h2>
+          <SectionTitle icon={Briefcase}>Hiring</SectionTitle>
           <label className="flex flex-col gap-1 text-sm" htmlFor="demand-summary">
             <span className="font-medium text-gray-700">What you look for across roles</span>
             <textarea id="demand-summary" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" rows={5} maxLength={3000} value={demandSummary} onChange={(event) => setDemandSummary(event.target.value)} placeholder="Skills and qualities you value across positions. Add role-specific needs as separate postings." />
           </label>
         </section>
-        {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-        {saved && <p role="status" className="text-sm text-green-700">Profile summaries saved.</p>}
-        <button type="submit" className="self-start rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50" disabled={saving}>
+        {error && <StatusText tone="error">{error}</StatusText>}
+        {saved && <StatusText tone="success">Profile summaries saved.</StatusText>}
+        <button type="submit" className={`${primaryClass} self-start`} disabled={saving}>
+          <Save aria-hidden="true" className="size-4" />
           {saving ? 'Saving…' : 'Save profile'}
         </button>
       </form>
 
       <section className="flex flex-col gap-4">
         <header>
-          <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Extracted keywords</h2>
+          <SectionTitle icon={Tags}>Extracted keywords</SectionTitle>
           <p className="mt-2 text-sm text-gray-600">Review how strongly each extracted keyword should affect matching.</p>
         </header>
-        {attributeError && <p role="alert" className="text-sm text-red-700">{attributeError}</p>}
+        {attributeError && <StatusText tone="error">{attributeError}</StatusText>}
         {attributes.length === 0
-          ? <p className="text-sm text-gray-500">Save a summary or position description to extract search keywords.</p>
+          ? <EmptyState icon={Tags} compact>Save a summary or position description to extract search keywords.</EmptyState>
           : <div className="flex flex-col gap-3">
             {attributes.map((attribute) => (
               <label key={attribute.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(180px,240px)_3rem] sm:items-center">
@@ -255,7 +265,8 @@ export default function Profile() {
                 <span className="text-sm tabular-nums text-gray-700">{priorityDrafts[attribute.id] ?? attribute.priority}</span>
               </label>
             ))}
-            <button type="button" className="self-start rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void savePriorities()} disabled={prioritiesSaving || attributes.every((attribute) => priorityDrafts[attribute.id] === attribute.priority)}>
+            <button type="button" className={`${buttonClass} self-start`} onClick={() => void savePriorities()} disabled={prioritiesSaving || attributes.every((attribute) => priorityDrafts[attribute.id] === attribute.priority)}>
+              <SlidersHorizontal aria-hidden="true" className="size-4" />
               {prioritiesSaving ? 'Saving priorities…' : 'Save priorities'}
             </button>
           </div>}
@@ -263,10 +274,15 @@ export default function Profile() {
 
       <section className="flex flex-col gap-4">
         <header>
-          <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Positions</h2>
+          <SectionTitle icon={ClipboardList}>Positions</SectionTitle>
           <p className="mt-2 text-sm text-gray-600">Post role-specific requirements separately from your general hiring needs.</p>
         </header>
-        {!addingPosting && <button type="button" className="self-start rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setAddingPosting(true)}>Add position</button>}
+        {!addingPosting && (
+          <button type="button" className={`${buttonClass} self-start`} onClick={() => setAddingPosting(true)}>
+            <Plus aria-hidden="true" className="size-4" />
+            Add position
+          </button>
+        )}
         {addingPosting && <form className="flex flex-col gap-3 rounded-md border border-gray-200 p-4" onSubmit={submitPosting}>
           <label className="flex flex-col gap-1 text-sm" htmlFor="posting-title">
             <span className="font-medium text-gray-700">Position title</span>
@@ -280,15 +296,16 @@ export default function Profile() {
             <input id="posting-status" type="checkbox" checked={postingStatus === 'published'} onChange={(event) => setPostingStatus(event.target.checked ? 'published' : 'draft')} />
             Publish for student search
           </label>
-          <button type="submit" className="self-start rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50" disabled={postingSaving}>
+          <button type="submit" className={`${primaryClass} self-start`} disabled={postingSaving}>
+            <Plus aria-hidden="true" className="size-4" />
             {postingSaving ? 'Saving…' : 'Add position'}
           </button>
         </form>}
-        {postingError && <p role="alert" className="text-sm text-red-700">{postingError}</p>}
+        {postingError && <StatusText tone="error">{postingError}</StatusText>}
         {postings === null
-          ? <p className="text-sm text-gray-500">Loading positions…</p>
+          ? <StatusText tone="loading">Loading positions…</StatusText>
           : postings.length === 0
-            ? <p className="text-sm text-gray-500">No positions yet.</p>
+            ? <EmptyState icon={ClipboardList} title="No positions yet">Add a position so students can find it and you can search against it.</EmptyState>
             : postings.map((posting) => editingPosting?.id === posting.id ? (
               <form key={posting.id} className="flex flex-col gap-3 rounded-md border border-gray-200 p-4" onSubmit={savePosting}>
                 <label className="flex flex-col gap-1 text-sm" htmlFor={`edit-title-${posting.id}`}>
@@ -304,21 +321,38 @@ export default function Profile() {
                   Published for student search
                 </label>
                 <div className="flex gap-2">
-                  <button type="submit" className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50" disabled={postingSaving}>{postingSaving ? 'Saving…' : 'Save changes'}</button>
-                  <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setEditingPosting(null)}>Cancel</button>
+                  <button type="submit" className={primaryClass} disabled={postingSaving}>
+                    <Save aria-hidden="true" className="size-4" />
+                    {postingSaving ? 'Saving…' : 'Save changes'}
+                  </button>
+                  <button type="button" className={buttonClass} onClick={() => setEditingPosting(null)}>
+                    <X aria-hidden="true" className="size-4" />
+                    Cancel
+                  </button>
                 </div>
               </form>
             ) : (
               <article key={posting.id} className="flex flex-col gap-2 rounded-md border border-gray-200 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-semibold text-gray-900">{posting.title}</h3>
-                  <span className="text-xs font-medium uppercase text-gray-500">{posting.status}</span>
+                  {posting.status === 'published'
+                    ? <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800"><Globe aria-hidden="true" className="size-3" />Published</span>
+                    : <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-600"><FilePen aria-hidden="true" className="size-3" />Draft</span>}
                 </div>
                 <p className="whitespace-pre-line text-sm text-gray-700">{posting.description}</p>
-                <div className="flex gap-2">
-                  <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setEditingPosting(posting)}>Edit</button>
-                  <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void refreshPostingKeywords(posting.id)} disabled={indexingPostingId !== null}>{indexingPostingId === posting.id ? 'Refreshing…' : 'Refresh keywords'}</button>
-                  <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => void removePosting(posting.id)}>Delete</button>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" className={buttonClass} onClick={() => setEditingPosting(posting)}>
+                    <Pencil aria-hidden="true" className="size-4" />
+                    Edit
+                  </button>
+                  <button type="button" className={buttonClass} onClick={() => void refreshPostingKeywords(posting.id)} disabled={indexingPostingId !== null}>
+                    <RefreshCw aria-hidden="true" className={`size-4 ${indexingPostingId === posting.id ? 'animate-spin' : ''}`} />
+                    {indexingPostingId === posting.id ? 'Refreshing…' : 'Refresh keywords'}
+                  </button>
+                  <button type="button" className={`${buttonClass} hover:border-red-200 hover:bg-red-50 hover:text-red-700`} onClick={() => void removePosting(posting.id)}>
+                    <Trash2 aria-hidden="true" className="size-4" />
+                    Delete
+                  </button>
                 </div>
               </article>
             ))}

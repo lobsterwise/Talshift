@@ -7,7 +7,39 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import {
+  Briefcase,
+  ExternalLink,
+  FileCheck2,
+  FileText,
+  FileUp,
+  FolderGit2,
+  GraduationCap,
+  Lightbulb,
+  Link2,
+  MapPin,
+  MessageSquareText,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Save,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Tags,
+  Target,
+  Trash2,
+  TriangleAlert,
+  UserRound,
+  UserRoundPen,
+  Wrench,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { getProfile } from "../../api/auth";
+import EmptyState from "../../components/ui/EmptyState";
+import SectionTitle from "../../components/ui/SectionTitle";
+import StatusText from "../../components/ui/StatusText";
 import ProjectCredibilityPanel, {
   VerifiedExperienceBadge,
 } from "../../components/ProjectCredibility";
@@ -48,9 +80,9 @@ const keywordCategoryLabels: Record<string, string> = {
 const inputClass =
   "w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-600 focus:outline-none";
 const buttonClass =
-  "rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50";
+  "inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50";
 const primaryClass =
-  "rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50";
+  "inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50";
 
 function formatDate(value: string | null, emptyLabel = "Present") {
   if (!value) return emptyLabel;
@@ -69,12 +101,26 @@ function formatYears(start: number | null, end: number | null) {
 
 // ───────────── View ─────────────
 
+const sectionIcons: Record<string, { icon: LucideIcon; tone?: "blue" | "green" | "amber" }> = {
+  About: { icon: UserRound },
+  Reviews: { icon: Star, tone: "amber" },
+  Summary: { icon: FileText },
+  "Mentor learning goals": { icon: Target },
+  Experience: { icon: Briefcase },
+  Projects: { icon: FolderGit2 },
+  Education: { icon: GraduationCap },
+  Skills: { icon: Wrench },
+  Links: { icon: Link2 },
+  "Extracted keywords": { icon: Tags },
+};
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
+  const { icon, tone } = sectionIcons[title] ?? { icon: FileText };
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+      <SectionTitle icon={icon} tone={tone}>
         {title}
-      </h2>
+      </SectionTitle>
       {children}
     </section>
   );
@@ -293,7 +339,10 @@ function ProfileView({
             <p className="text-gray-700">{profile.headline}</p>
           )}
           {profile.location && (
-            <p className="text-sm text-gray-500">{profile.location}</p>
+            <p className="flex items-center gap-1 text-sm text-gray-500">
+              <MapPin aria-hidden="true" className="size-3.5 shrink-0" />
+              {profile.location}
+            </p>
           )}
           {((profile.githubUsernames?.length ?? 0) > 0 ||
             profile.links.length > 0) && (
@@ -301,20 +350,24 @@ function ProfileView({
               {(profile.githubUsernames ?? []).map((username) => (
                 <a
                   key={username}
+                  className="inline-flex items-center gap-1"
                   href={`https://github.com/${username}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
+                  <FolderGit2 aria-hidden="true" className="size-3.5 shrink-0" />
                   GitHub · @{username}
                 </a>
               ))}
               {profile.links.map((link, index) => (
                 <a
                   key={index}
+                  className="inline-flex items-center gap-1"
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
+                  <Link2 aria-hidden="true" className="size-3.5 shrink-0" />
                   {link.label}
                 </a>
               ))}
@@ -326,13 +379,15 @@ function ProfileView({
           className={`${buttonClass} shrink-0`}
           onClick={onEdit}
         >
+          <Pencil aria-hidden="true" className="size-4" />
           Edit
         </button>
       </header>
 
       <Section title="Reviews">
         {reputationError ? (
-          <p role="status" className="text-sm text-amber-800">
+          <p role="status" className="flex items-start gap-1.5 text-sm text-amber-800">
+            <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
             {reputationError}
           </p>
         ) : reputation ? (
@@ -348,19 +403,22 @@ function ProfileView({
                   {reputation.reviewCount}{" "}
                   {reputation.reviewCount === 1 ? "review" : "reviews"}
                 </p>
-                <p className="text-sm text-gray-500">No written feedback yet.</p>
+                <p className="flex items-center gap-1.5 text-sm text-gray-500">
+                  <MessageSquareText aria-hidden="true" className="size-4 text-gray-400" />
+                  No written feedback yet.
+                </p>
               </>
             )}
           </>
         ) : (
-          <p className="text-sm text-gray-500">Loading recruiter reputation…</p>
+          <StatusText tone="loading">Loading recruiter reputation…</StatusText>
         )}
       </Section>
 
       {empty && (
-        <p className="text-sm text-gray-500">
-          Your profile is empty. Select Edit to add your experience.
-        </p>
+        <EmptyState icon={UserRoundPen} title="Your profile is empty">
+          Select Edit to add your experience, or upload your resume to fill it in.
+        </EmptyState>
       )}
 
       {profile.summary && (
@@ -397,11 +455,12 @@ function ProfileView({
             <Entry key={index} title={project.name} meta="">
               {project.url && (
                 <a
-                  className="text-sm"
+                  className="inline-flex items-center gap-1 text-sm"
                   href={project.url}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
+                  <ExternalLink aria-hidden="true" className="size-3.5 shrink-0" />
                   {project.url}
                 </a>
               )}
@@ -426,25 +485,25 @@ function ProfileView({
             </Entry>
           ))}
           {credibilityRunning ? (
-            <p role="status" className="text-sm text-gray-500">
+            <StatusText tone="loading">
               Checking GitHub commits for your projects…
-            </p>
+            </StatusText>
           ) : (
             <div className="flex flex-wrap items-center gap-3">
               {credibilityError && (
-                <p role="alert" className="text-sm text-red-700">
-                  {credibilityError}
-                </p>
+                <StatusText tone="error">{credibilityError}</StatusText>
               )}
               {!credibilityError && !profile.githubUsernames?.length && (
-                <p className="text-sm text-gray-500">
+                <p className="flex items-start gap-1.5 text-sm text-gray-500">
+                  <Lightbulb aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-amber-500" />
                   Add your GitHub accounts (Edit) or link each project to its
                   repository so reviewers can verify your work.
                 </p>
               )}
               {!credibilityError &&
                 (credibility?.unavailableAccounts?.length ?? 0) > 0 && (
-                  <p role="status" className="text-sm text-amber-800">
+                  <p role="status" className="flex items-start gap-1.5 text-sm text-amber-800">
+                    <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
                     GitHub couldn't find{" "}
                     {credibility?.unavailableAccounts
                       ?.map((username) => `@${username}`)
@@ -470,6 +529,7 @@ function ProfileView({
                 className={buttonClass}
                 onClick={onVerifyCredibility}
               >
+                <ShieldCheck aria-hidden="true" className="size-4" />
                 {credibility
                   ? "Re-check on GitHub"
                   : "Verify projects on GitHub"}
@@ -517,21 +577,20 @@ function ProfileView({
           <TalentSkeleton />
         ) : talentError ? (
           <div className="flex flex-wrap items-center gap-3">
-            <p role="alert" className="text-sm text-red-700">
-              {talentError}
-            </p>
+            <StatusText tone="error">{talentError}</StatusText>
             <button
               type="button"
               className={buttonClass}
               onClick={onRetryTalent}
             >
+              <RotateCcw aria-hidden="true" className="size-4" />
               Retry talent generation
             </button>
           </div>
         ) : studentTalent ? (
           <>
             {visibleKeywords.length === 0 && (
-              <p className="text-sm text-gray-500">No profile keywords have enough supporting evidence yet.</p>
+              <EmptyState icon={Tags} compact>No profile keywords have enough supporting evidence yet.</EmptyState>
             )}
             <div className="grid gap-5 sm:grid-cols-2">
               {Object.entries(keywordGroups ?? {}).map(([title, keywords]) => (
@@ -569,32 +628,34 @@ function ProfileView({
             </p>
           </>
         ) : (
-          <p className="text-sm text-gray-500">
+          <EmptyState icon={Tags} compact>
             Save your profile to extract keywords.
-          </p>
+          </EmptyState>
         )}
         {studentTalent && searchIndexingError && (
-          <p role="status" className="text-sm text-amber-800">
+          <p role="status" className="flex items-start gap-1.5 text-sm text-amber-800">
+            <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
             {searchIndexingError}
           </p>
         )}
         {studentTalent && !searchIndexingError && searchAttributeCount > 0 && (
-          <p role="status" className="text-sm text-gray-600">
+          <StatusText tone="success">
             {searchAttributeCount} keywords are ready for search.
-          </p>
+          </StatusText>
         )}
         {studentTalent &&
           !searchIndexingError &&
           searchAttributeCount === 0 && (
             <div className="flex flex-wrap items-center gap-3">
-              <p role="status" className="text-sm text-gray-600">
+              <StatusText tone="info">
                 No search attributes are indexed yet.
-              </p>
+              </StatusText>
               <button
                 type="button"
                 className={buttonClass}
                 onClick={onRetryTalent}
               >
+                <Sparkles aria-hidden="true" className="size-4" />
                 Prepare search attributes
               </button>
             </div>
@@ -706,6 +767,7 @@ function ListEditor<T>({
             className={`${buttonClass} self-start`}
             onClick={() => onChange(items.filter((_, i) => i !== index))}
           >
+            <Trash2 aria-hidden="true" className="size-4" />
             Remove
           </button>
         </div>
@@ -715,6 +777,7 @@ function ListEditor<T>({
         className={`${buttonClass} self-start`}
         onClick={() => onChange([...items, blank])}
       >
+        <Plus aria-hidden="true" className="size-4" />
         Add {title.toLowerCase()}
       </button>
     </Section>
@@ -835,6 +898,7 @@ function ProfileForm({
                     setGithubRows(githubRows.filter((_, i) => i !== index))
                   }
                 >
+                  <Trash2 aria-hidden="true" className="size-4" />
                   Remove
                 </button>
               )}
@@ -846,6 +910,7 @@ function ProfileForm({
               className={`${buttonClass} self-start`}
               onClick={() => setGithubRows([...githubRows, ""])}
             >
+              <Plus aria-hidden="true" className="size-4" />
               Add another GitHub account
             </button>
           )}
@@ -1246,18 +1311,13 @@ function ProfileForm({
         )}
       />
 
-      {error && (
-        <p role="alert" className="text-sm text-red-700">
-          {error}
-        </p>
-      )}
+      {error && <StatusText tone="error">{error}</StatusText>}
       {validationError && !validationError.field && (
-        <p role="alert" className="text-sm text-red-700">
-          {validationError.message}
-        </p>
+        <StatusText tone="error">{validationError.message}</StatusText>
       )}
       <div className="flex gap-2">
         <button type="submit" className={primaryClass} disabled={saving}>
+          <Save aria-hidden="true" className="size-4" />
           {saving ? "Saving…" : "Save profile"}
         </button>
         <button
@@ -1266,6 +1326,7 @@ function ProfileForm({
           onClick={onCancel}
           disabled={saving}
         >
+          <X aria-hidden="true" className="size-4" />
           Cancel
         </button>
       </div>
@@ -1426,11 +1487,9 @@ export default function Profile() {
 
   if (!profile) {
     return error ? (
-      <p role="alert" className="text-sm text-red-700">
-        {error}
-      </p>
+      <StatusText tone="error">{error}</StatusText>
     ) : (
-      <p className="text-sm text-gray-500">Loading…</p>
+      <StatusText tone="loading">Loading…</StatusText>
     );
   }
 
@@ -1441,8 +1500,9 @@ export default function Profile() {
           {resumeDraft && (
             <p
               role="status"
-              className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900"
+              className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900"
             >
+              <FileCheck2 aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-blue-600" />
               We filled in your profile from your resume. Check each section,
               fix anything that's off, then save. Entries already on your
               profile that weren't on the resume are kept below the new ones.
@@ -1484,7 +1544,12 @@ export default function Profile() {
             onVerifyCredibility={() => void refreshCredibility()}
           />
           <section className="flex flex-col gap-3">
-            <h2 className="text-2xl font-semibold text-gray-900">Resume</h2>
+            <h2 className="flex items-center gap-3 text-2xl font-semibold text-gray-900">
+              <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <FileUp className="size-5" strokeWidth={1.75} />
+              </span>
+              Resume
+            </h2>
             <p className="text-sm text-gray-600">
               Upload your latest resume and we'll fill in your profile's
               experience, projects, education, skills, and links. You'll review

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { getSavedStudentPostings, searchStudentDiscovery, setStudentPostingSaved, type StudentOpportunity } from '../../api/studentDiscovery'
 import { Link } from 'react-router-dom'
+import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Compass, Route, Search, SearchX, Sparkles } from 'lucide-react'
+import EmptyState from '../../components/ui/EmptyState'
+import PageHeading from '../../components/ui/PageHeading'
+import StatusText from '../../components/ui/StatusText'
 
 export default function Network() {
   const [queryDraft, setQueryDraft] = useState('')
@@ -57,9 +61,7 @@ export default function Network() {
 
   return (
     <section className="flex flex-col gap-5" aria-live="polite">
-      <header>
-        <h1 className="text-2xl font-semibold text-gray-900">Discover</h1>
-      </header>
+      <PageHeading icon={Compass} title="Discover" />
       <form className="flex flex-col gap-3" onSubmit={submitSearch}>
         <label className="flex flex-col gap-1 text-sm" htmlFor="discovery-query">
           <span className="font-medium text-gray-700">Search</span>
@@ -71,15 +73,18 @@ export default function Network() {
             <input type="checkbox" checked={includeProfile} onChange={(event) => { setIncludeProfile(event.target.checked); setOffset(0) }} />
             Include saved profile
           </label>
-          <button type="submit" className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">Search</button>
+          <button type="submit" className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
+            <Search aria-hidden="true" className="size-4" />
+            Search
+          </button>
         </div>
       </form>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      {notice && <p role="status" className="text-sm text-gray-600">{notice}</p>}
+      {error && <StatusText tone="error">{error}</StatusText>}
+      {notice && <StatusText tone="info">{notice}</StatusText>}
       {loading
-        ? <p className="text-sm text-gray-500">Searching…</p>
+        ? <StatusText tone="loading">Searching…</StatusText>
         : items.length === 0
-          ? !notice && <p className="text-sm text-gray-500">No matching positions yet.</p>
+          ? !notice && <EmptyState icon={SearchX} title="No matching positions yet">Try different skills or roles, or include your saved profile.</EmptyState>
           : <>
             <p className="text-xs text-gray-500">{total} results</p>
             <div className="divide-y divide-gray-200 border-y border-gray-200">
@@ -91,9 +96,15 @@ export default function Network() {
                       {item.name && <p className="text-sm text-gray-600">{item.title}</p>}
                       {item.organization && <p className="text-sm text-gray-600">{item.organization}</p>}
                     </div>
-                    <span className="text-xs tabular-nums text-gray-600">{Math.round(item.score * 100)}% similarity</span>
+                    <span className="inline-flex items-center gap-1 text-xs tabular-nums text-gray-600">
+                      <Sparkles aria-hidden="true" className="size-3.5 text-blue-500" />
+                      {Math.round(item.score * 100)}% similarity
+                    </span>
                   </div>
-                  {item.kind === 'position' && <button type="button" className="self-start rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void toggleSaved(item.id)} disabled={savingId === item.id} aria-pressed={savedIds.includes(item.id)}>
+                  {item.kind === 'position' && <button type="button" className="inline-flex items-center gap-1.5 self-start rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void toggleSaved(item.id)} disabled={savingId === item.id} aria-pressed={savedIds.includes(item.id)}>
+                    {savedIds.includes(item.id)
+                      ? <BookmarkCheck aria-hidden="true" className="size-4 text-blue-600" />
+                      : <Bookmark aria-hidden="true" className="size-4" />}
                     {savingId === item.id ? 'Saving…' : savedIds.includes(item.id) ? 'Saved' : 'Save position'}
                   </button>}
                   <ul className="flex flex-wrap gap-2">
@@ -105,7 +116,8 @@ export default function Network() {
                   </ul>
                   {item.kind === 'position' && (
                     <Link to={`/student/roadmap?postingId=${encodeURIComponent(item.id)}`}
-                      className="self-start rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-50">
+                      className="inline-flex items-center gap-1.5 self-start rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-50">
+                      <Route aria-hidden="true" className="size-4" />
                       Build roadmap for this position
                     </Link>
                   )}
@@ -113,9 +125,15 @@ export default function Network() {
               ))}
             </div>
             <div className="flex items-center justify-between gap-3">
-              <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:opacity-40" onClick={() => setOffset(Math.max(0, offset - 20))} disabled={offset === 0 || loading}>Previous</button>
+              <button type="button" className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:opacity-40" onClick={() => setOffset(Math.max(0, offset - 20))} disabled={offset === 0 || loading}>
+                <ChevronLeft aria-hidden="true" className="size-4" />
+                Previous
+              </button>
               <span className="text-xs text-gray-500">{offset + 1}–{Math.min(offset + items.length, total)} of {total}</span>
-              <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:opacity-40" onClick={() => setOffset(offset + 20)} disabled={offset + 20 >= total || loading}>Next</button>
+              <button type="button" className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:opacity-40" onClick={() => setOffset(offset + 20)} disabled={offset + 20 >= total || loading}>
+                Next
+                <ChevronRight aria-hidden="true" className="size-4" />
+              </button>
             </div>
           </>}
     </section>

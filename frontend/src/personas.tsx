@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { Bookmark, ChartNoAxesColumn, Compass, Route, Search, UserRound, UsersRound, type LucideIcon } from 'lucide-react'
 import StudentNetwork from './pages/student/Network.tsx'
 import StudentPeerComparison from './pages/student/PeerComparison.tsx'
 import StudentRoadmap from './pages/student/Roadmap.tsx'
@@ -14,6 +15,7 @@ export type PersonaId = 'student' | 'professional'
 export interface Tab {
   slug: string
   label: string
+  icon: LucideIcon
   page: ComponentType
 }
 
@@ -30,20 +32,20 @@ export const personas: Persona[] = [
     id: 'student',
     label: 'Student',
     tabs: [
-      { slug: 'network', label: 'Network', page: StudentNetwork },
-      { slug: 'compare', label: 'Compare', page: StudentPeerComparison },
-      { slug: 'saved', label: 'Saved positions', page: StudentSavedPositions },
-      { slug: 'roadmap', label: 'Roadmap', page: StudentRoadmap },
-      { slug: 'profile', label: 'Profile', page: StudentProfile },
+      { slug: 'network', label: 'Network', icon: Compass, page: StudentNetwork },
+      { slug: 'compare', label: 'Compare', icon: ChartNoAxesColumn, page: StudentPeerComparison },
+      { slug: 'saved', label: 'Saved positions', icon: Bookmark, page: StudentSavedPositions },
+      { slug: 'roadmap', label: 'Roadmap', icon: Route, page: StudentRoadmap },
+      { slug: 'profile', label: 'Profile', icon: UserRound, page: StudentProfile },
     ],
   },
   {
     id: 'professional',
     label: 'Professional',
     tabs: [
-      { slug: 'search', label: 'Find students', page: ProfessionalFindStudents },
-      { slug: 'saved', label: 'Saved candidates', page: ProfessionalSavedCandidates },
-      { slug: 'profile', label: 'My profile', page: ProfessionalProfile },
+      { slug: 'search', label: 'Find students', icon: Search, page: ProfessionalFindStudents },
+      { slug: 'saved', label: 'Saved candidates', icon: UsersRound, page: ProfessionalSavedCandidates },
+      { slug: 'profile', label: 'My profile', icon: UserRound, page: ProfessionalProfile },
     ],
   },
 ]
