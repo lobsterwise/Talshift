@@ -4,7 +4,6 @@ import StudentPlan from './pages/student/Plan.tsx'
 import StudentEvents from './pages/student/Events.tsx'
 import StudentNetwork from './pages/student/Network.tsx'
 import StudentProfile from './pages/student/Profile.tsx'
-import StudentResume from './pages/student/Resume.tsx'
 import ProfessionalFeed from './pages/professional/Feed.tsx'
 import ProfessionalFindStudents from './pages/professional/FindStudents.tsx'
 import ProfessionalInvites from './pages/professional/Invites.tsx'
@@ -36,9 +35,7 @@ export const personas: Persona[] = [
       { slug: 'plan', label: 'Plan', page: StudentPlan },
       { slug: 'events', label: 'Events', page: StudentEvents },
       { slug: 'network', label: 'Network', page: StudentNetwork },
-      { slug: 'profile', label: 'Profile', page: StudentProfile },
-      { slug: 'resume', label: 'Resume', page: StudentResume },
-    ],
+      { slug: 'profile', label: 'Profile', page: StudentProfile },    ],
   },
   {
     id: 'professional',

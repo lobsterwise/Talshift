@@ -23,7 +23,7 @@ For Command Prompt:
 set DATABASE_URL=postgres://postgres:password@localhost:5432/talshift
 ```
 
-Set `GEMINI_API_KEY` in the backend environment for student talent, search-attribute extraction, and resume parsing (PDF uploads during onboarding and on the Resume tab; the file is sent to Gemini and not stored). The backend keeps the key private and uses the `gemini-3.8-flash` model by default; set `GEMINI_MODEL` to another model enabled for your API key.
+Set `GEMINI_API_KEY` in the backend environment for student talent, search-attribute extraction, and resume parsing (PDF uploads during onboarding and from the student Profile page; the file is sent to Gemini and not stored). The backend keeps the key private and uses the `gemini-3.8-flash` model by default; set `GEMINI_MODEL` to another model enabled for your API key.
 
 Set `OPENAI_API_KEY` to enable attribute embeddings. The default model is `text-embedding-3-small` with 1536 dimensions; `OPENAI_EMBEDDING_MODEL` can select another OpenAI model that supports the same dimensions. Search results also require a calibrated `SEARCH_HARD_GATE_COSINE_THRESHOLD` between `-1` and `1`; search returns an explicit configuration error until it is set. Do not treat the displayed similarity as a calibrated probability.
 

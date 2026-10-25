@@ -124,8 +124,8 @@ export async function parseResume(file: File) {
   return (await response.json() as { profile: StudentProfile }).profile
 }
 
-// A parsed resume waiting for review. It is handed to the profile page through
-// sessionStorage so it survives the move from onboarding or the Resume tab.
+// A resume parsed during onboarding, waiting for review. It is handed to the
+// profile page through sessionStorage so it survives the move out of onboarding.
 const resumeDraftKey = 'talshift.resumeDraft'
 
 export function storeResumeDraft(profile: StudentProfile) {
