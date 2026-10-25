@@ -14,6 +14,7 @@ export default function Profile() {
   const [postingTitle, setPostingTitle] = useState('')
   const [postingDescription, setPostingDescription] = useState('')
   const [postingStatus, setPostingStatus] = useState<PostingStatus>('draft')
+  const [addingPosting, setAddingPosting] = useState(true)
   const [editingPosting, setEditingPosting] = useState<ProfessionalPosting | null>(null)
   const [postingError, setPostingError] = useState('')
   const [postingSaving, setPostingSaving] = useState(false)
@@ -112,6 +113,7 @@ export default function Profile() {
       setPostingTitle('')
       setPostingDescription('')
       setPostingStatus('draft')
+      setAddingPosting(false)
     } catch (caught) {
       setPostingError(caught instanceof Error ? caught.message : 'Unable to create this posting.')
     } finally {
@@ -264,7 +266,8 @@ export default function Profile() {
           <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Positions</h2>
           <p className="mt-2 text-sm text-gray-600">Post role-specific requirements separately from your general hiring needs.</p>
         </header>
-        <form className="flex flex-col gap-3 rounded-md border border-gray-200 p-4" onSubmit={submitPosting}>
+        {!addingPosting && <button type="button" className="self-start rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setAddingPosting(true)}>Add position</button>}
+        {addingPosting && <form className="flex flex-col gap-3 rounded-md border border-gray-200 p-4" onSubmit={submitPosting}>
           <label className="flex flex-col gap-1 text-sm" htmlFor="posting-title">
             <span className="font-medium text-gray-700">Position title</span>
             <input id="posting-title" className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-600 focus:outline-none" maxLength={120} required value={postingTitle} onChange={(event) => setPostingTitle(event.target.value)} />
@@ -280,7 +283,7 @@ export default function Profile() {
           <button type="submit" className="self-start rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50" disabled={postingSaving}>
             {postingSaving ? 'Saving…' : 'Add position'}
           </button>
-        </form>
+        </form>}
         {postingError && <p role="alert" className="text-sm text-red-700">{postingError}</p>}
         {postings === null
           ? <p className="text-sm text-gray-500">Loading positions…</p>
