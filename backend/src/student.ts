@@ -507,6 +507,51 @@ export function createStudentRouter(pool: Pool): Router {
     });
   });
 
+  router.get("/reputation", async (request, response) => {
+    const studentId = await getStudentId(request.header("authorization"));
+    if (!studentId) {
+      response.status(401).json({ error: "valid student authentication is required" });
+      return;
+    }
+
+    const summaryResult = await pool.query<{
+      review_count: number;
+      stars: number;
+      score: number;
+    }>(
+      `SELECT count(*)::int AS review_count,
+              ((COALESCE(sum(rating), 0) + 9.0) / (count(*) + 3))::numeric(4, 2) AS stars,
+              (((COALESCE(sum(rating), 0) + 9.0) / (count(*) + 3) - 1) / 4)::numeric(6, 4) AS score
+       FROM student_reputation_reviews
+       WHERE student_id = $1`,
+      [studentId],
+    );
+    const reviewsResult = await pool.query<{
+      id: string;
+      rating: number;
+      review_text: string;
+      updated_at: string;
+    }>(
+      `SELECT id::text, rating, review_text, updated_at::text AS updated_at
+       FROM student_reputation_reviews
+       WHERE student_id = $1 AND length(review_text) > 0
+       ORDER BY updated_at DESC, id DESC`,
+      [studentId],
+    );
+    const summary = summaryResult.rows[0];
+    response.json({
+      reviewCount: summary.review_count,
+      stars: Number(summary.stars),
+      score: Number(summary.score),
+      reviews: reviewsResult.rows.map((review) => ({
+        id: review.id,
+        rating: review.rating,
+        reviewText: review.review_text,
+        updatedAt: review.updated_at,
+      })),
+    });
+  });
+
   router.put("/profile", async (request, response) => {
     const studentId = await getStudentId(request.header("authorization"));
     if (!studentId) {

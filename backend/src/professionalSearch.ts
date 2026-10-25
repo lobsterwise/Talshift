@@ -1,8 +1,9 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { Router } from "express";
 import type { Pool } from "pg";
 import { ensureAttributeEmbeddings, normalizeAttributeText } from "./embeddings";
-import { rankAttributes, type SearchAttribute } from "./search";
+import { rankProfessionalCandidates, ProfessionalRankingError } from "./professionalRanking";
+import { orderCandidatesWithExploration, type CandidateRank } from "./reputation";
 
 type ProfessionalSourceType = "professional_offer" | "professional_demand" | "job_posting";
 
@@ -17,30 +18,6 @@ interface ProfileDocument {
   demandSummary?: unknown;
 }
 
-interface StoredAttributeRow {
-  owner_id: string;
-  name: string;
-  evidence: string | null;
-  score: number | null;
-  priority: number | null;
-  embedding: string;
-  profile: Record<string, unknown> | null;
-  account_profile: Record<string, unknown> | null;
-}
-
-function parseVector(value: string): number[] {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(value);
-  } catch {
-    throw new Error("A stored search embedding is invalid.");
-  }
-  if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "number" && Number.isFinite(item))) {
-    throw new Error("A stored search embedding is invalid.");
-  }
-  return parsed;
-}
-
 function bearerToken(header: string | undefined): string | null {
   const match = header?.match(/^Bearer ([A-Za-z0-9_-]+)$/);
   return match?.[1] ?? null;
@@ -52,6 +29,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isSourceType(value: unknown): value is ProfessionalSourceType {
   return value === "professional_offer" || value === "professional_demand" || value === "job_posting";
+}
+
+function isHiringSourceType(value: unknown): value is "professional_demand" | "job_posting" {
+  return value === "professional_demand" || value === "job_posting";
 }
 
 export function parseProfessionalAttributes(value: unknown): ProfessionalAttribute[] {
@@ -190,111 +171,370 @@ export function createProfessionalSearchRouter(pool: Pool): Router {
       return;
     }
 
-    const requirements = await pool.query<{
-      name: string;
-      priority: number;
-      embedding: string;
-    }>(
-      `SELECT search_attributes.name, search_attributes.priority, attribute_embeddings.embedding::text AS embedding
-       FROM search_attributes
-       JOIN attribute_embeddings
-         ON attribute_embeddings.content_hash = search_attributes.embedding_hash
-        AND attribute_embeddings.model = search_attributes.embedding_model
-       WHERE search_attributes.owner_id = $1
-         AND search_attributes.source_type = $2
-         AND search_attributes.source_id = $3
-         AND search_attributes.extractor_model = $4
-       ORDER BY search_attributes.priority DESC, search_attributes.name`,
-      [professionalId, sourceType, sourceId, (process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash").replace(/^models\//, "")],
-    );
-    if (!requirements.rows.length) {
-      response.json({ items: [], total: 0, message: "Prepare search attributes for this hiring source first." });
-      return;
-    }
-
-    const thresholdSetting = process.env.SEARCH_HARD_GATE_COSINE_THRESHOLD?.trim();
-    const threshold = Number(thresholdSetting);
-    if (!thresholdSetting || !Number.isFinite(threshold) || threshold < -1 || threshold > 1) {
-      response.status(503).json({ error: "Configure SEARCH_HARD_GATE_COSINE_THRESHOLD to a calibrated value between -1 and 1." });
-      return;
-    }
-
-    const candidates = await pool.query<StoredAttributeRow>(
-      `SELECT search_attributes.owner_id,
-              search_attributes.name,
-              search_attributes.evidence,
-              search_attributes.score,
-              search_attributes.priority,
-              attribute_embeddings.embedding::text AS embedding,
-              student_profiles.profile,
-              user_profiles.profile AS account_profile
-       FROM search_attributes
-       JOIN users ON users.id = search_attributes.owner_id AND users.account_type = 'student'
-       JOIN search_settings ON search_settings.user_id = users.id AND search_settings.discoverable = true
-      JOIN student_talent ON student_talent.student_id = users.id
-       JOIN attribute_embeddings
-         ON attribute_embeddings.content_hash = search_attributes.embedding_hash
-        AND attribute_embeddings.model = search_attributes.embedding_model
-       JOIN student_profiles ON student_profiles.student_id = users.id
-       LEFT JOIN user_profiles ON user_profiles.user_id = users.id
-       WHERE search_attributes.source_type = 'student_profile'
-         AND search_attributes.score > 0
-         AND search_attributes.extractor_model = $1
-         AND student_talent.talent->>'model' = $1
-       ORDER BY search_attributes.owner_id, search_attributes.id`,
-      [(process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash").replace(/^models\//, "")],
-    );
-
-    const requirementsForRanking: SearchAttribute[] = requirements.rows.map((attribute) => ({
-      name: attribute.name,
-      priority: attribute.priority,
-      embedding: parseVector(attribute.embedding),
-    }));
-    const byStudent = new Map<string, { attributes: SearchAttribute[]; profile: Record<string, unknown>; accountProfile: Record<string, unknown> | null }>();
-    for (const row of candidates.rows) {
-      const candidate = byStudent.get(row.owner_id) ?? {
-        attributes: [],
-        profile: row.profile ?? {},
-        accountProfile: row.account_profile,
-      };
-      candidate.attributes.push({
-        name: row.name,
-        evidence: row.evidence ?? undefined,
-        score: row.score,
-        embedding: parseVector(row.embedding),
+    try {
+      const ranking = await rankProfessionalCandidates(pool, professionalId, sourceType, sourceId);
+      response.json({
+        items: ranking.items.slice(requestedOffset, requestedOffset + requestedLimit),
+        total: ranking.items.length,
+        limit: requestedLimit,
+        offset: requestedOffset,
+        ...(ranking.message ? { message: ranking.message } : {}),
       });
-      byStudent.set(row.owner_id, candidate);
+    } catch (error) {
+      if (error instanceof ProfessionalRankingError) {
+        response.status(error.status).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
+  });
+
+  async function readQueueState(queueId: string, professionalId: string) {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const queueResult = await client.query<{
+        id: string;
+        source_type: "professional_demand" | "job_posting";
+        source_id: string;
+        cursor_position: number;
+        status: "active" | "completed";
+        total: number;
+      }>(
+        `SELECT id::text, source_type, source_id, cursor_position, status,
+                (SELECT count(*)::int FROM professional_review_queue_entries WHERE queue_id = professional_review_queues.id) AS total
+         FROM professional_review_queues
+         WHERE id = $1 AND professional_id = $2
+         FOR UPDATE`,
+        [queueId, professionalId],
+      );
+      const queue = queueResult.rows[0];
+      if (!queue) {
+        await client.query("ROLLBACK");
+        return null;
+      }
+
+      const liveRanking = queue.status === "active"
+        ? await rankProfessionalCandidates(client, professionalId, queue.source_type, queue.source_id)
+        : { items: [] };
+      const liveCandidates = new Map(liveRanking.items.map((candidate) => [candidate.id, candidate]));
+      let current: { position: number; candidate_snapshot: Record<string, unknown> } | null = null;
+      while (queue.status === "active") {
+        const entryResult = await client.query<{
+          position: number;
+          student_id: string;
+          candidate_snapshot: Record<string, unknown>;
+        }>(
+          `SELECT position, student_id::text, candidate_snapshot
+           FROM professional_review_queue_entries
+           WHERE queue_id = $1 AND position >= $2 AND status = 'pending'
+           ORDER BY position
+           LIMIT 1
+           FOR UPDATE`,
+          [queueId, queue.cursor_position],
+        );
+        const entry = entryResult.rows[0];
+        if (!entry) {
+          queue.status = "completed";
+          await client.query(
+            "UPDATE professional_review_queues SET status = 'completed', updated_at = now() WHERE id = $1",
+            [queueId],
+          );
+          break;
+        }
+
+        const liveCandidate = liveCandidates.get(entry.student_id);
+        if (liveCandidate) {
+          queue.cursor_position = entry.position;
+          if (entry.position !== queueResult.rows[0].cursor_position) {
+            await client.query(
+              "UPDATE professional_review_queues SET cursor_position = $2, updated_at = now() WHERE id = $1",
+              [queueId, entry.position],
+            );
+          }
+          current = {
+            position: entry.position,
+            candidate_snapshot: {
+              ...entry.candidate_snapshot,
+              name: liveCandidate.name,
+              headline: liveCandidate.headline,
+              location: liveCandidate.location,
+              ...(liveCandidate.fieldOfStudy ? { fieldOfStudy: liveCandidate.fieldOfStudy } : {}),
+              ...(liveCandidate.institution ? { institution: liveCandidate.institution } : {}),
+              candidateProfile: liveCandidate.candidateProfile,
+              matches: liveCandidate.matches,
+            },
+          };
+          break;
+        }
+
+        await client.query(
+          `UPDATE professional_review_queue_entries
+           SET status = 'skipped', candidate_snapshot = '{}'::jsonb, completed_at = now()
+           WHERE queue_id = $1 AND position = $2`,
+          [queueId, entry.position],
+        );
+        queue.cursor_position = entry.position + 1;
+        await client.query(
+          "UPDATE professional_review_queues SET cursor_position = $2, updated_at = now() WHERE id = $1",
+          [queueId, queue.cursor_position],
+        );
+      }
+
+      await client.query("COMMIT");
+      return {
+        queueId: queue.id,
+        sourceType: queue.source_type,
+        sourceId: queue.source_id,
+        cursor: queue.cursor_position,
+        total: queue.total,
+        status: queue.status,
+        current: current ? { ...current.candidate_snapshot, position: current.position } : null,
+      };
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  router.post("/queues", async (request, response) => {
+    const professionalId = await getProfessionalId(request.header("authorization"));
+    if (!professionalId) {
+      response.status(401).json({ error: "valid professional authentication is required" });
+      return;
+    }
+    const sourceType = isRecord(request.body) ? request.body.sourceType : undefined;
+    const sourceId = isRecord(request.body) ? request.body.sourceId : undefined;
+    const restart = isRecord(request.body) && request.body.restart === true;
+    if (!isHiringSourceType(sourceType) || typeof sourceId !== "string" ||
+      (sourceType === "professional_demand" && sourceId !== "profile") ||
+      (sourceType === "job_posting" && !/^\d+$/.test(sourceId))) {
+      response.status(400).json({ error: "select a valid hiring summary or position" });
+      return;
     }
 
-    const ranked = [...byStudent.entries()].flatMap(([id, candidate]) => {
-      const ranking = rankAttributes(requirementsForRanking, candidate.attributes, threshold);
-      if (!ranking.passesHardGate || ranking.score <= 0) return [];
-      const accountProfile = candidate.accountProfile ?? {};
-      const fieldOfStudy = typeof accountProfile.fieldOfStudy === "string" ? accountProfile.fieldOfStudy : undefined;
-      const institution = typeof accountProfile.institution === "string" ? accountProfile.institution : undefined;
-      return [{
-        id,
-        name: typeof accountProfile.fullName === "string" ? accountProfile.fullName : "Student",
-        headline: typeof candidate.profile.headline === "string" ? candidate.profile.headline : "",
-        location: typeof candidate.profile.location === "string" ? candidate.profile.location : "",
-        ...(fieldOfStudy ? { fieldOfStudy } : {}),
-        ...(institution ? { institution } : {}),
-        score: ranking.score,
-        similarity: ranking.score,
-        matches: ranking.matches.filter((match) => match.weight > 0).slice(0, 3).map((match) => ({
-          requirement: match.requirement,
-          skill: match.candidate,
-          similarity: match.similarity,
-        })),
-      }];
-    }).sort((first, second) => second.score - first.score || first.name.localeCompare(second.name));
+    if (sourceType === "job_posting") {
+      const posting = await pool.query(
+        "SELECT 1 FROM professional_postings WHERE id = $1 AND owner_id = $2",
+        [sourceId, professionalId],
+      );
+      if (!posting.rows.length) {
+        response.status(404).json({ error: "position not found" });
+        return;
+      }
+    }
 
-    response.json({
-      items: ranked.slice(requestedOffset, requestedOffset + requestedLimit),
-      total: ranked.length,
-      limit: requestedLimit,
-      offset: requestedOffset,
-    });
+    const client = await pool.connect();
+    let queueId: string | null = null;
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1), hashtext($2))", [professionalId, `${sourceType}:${sourceId}`]);
+      const existing = await client.query<{ id: string; status: "active" | "completed" }>(
+        `SELECT id::text, status FROM professional_review_queues
+         WHERE professional_id = $1 AND source_type = $2 AND source_id = $3
+         ORDER BY created_at DESC, id DESC
+         LIMIT 1
+         FOR UPDATE`,
+        [professionalId, sourceType, sourceId],
+      );
+      if (existing.rows[0] && !restart) {
+        queueId = existing.rows[0].id;
+        await client.query("COMMIT");
+      } else {
+        if (existing.rows[0]?.status === "active") {
+          await client.query(
+            "UPDATE professional_review_queues SET status = 'completed', updated_at = now() WHERE id = $1",
+            [existing.rows[0].id],
+          );
+        }
+        const ranking = await rankProfessionalCandidates(client, professionalId, sourceType, sourceId);
+        if (!ranking.items.length) {
+          await client.query("ROLLBACK");
+          response.status(409).json({ error: ranking.message ?? "No eligible students match this hiring source." });
+          return;
+        }
+        const seed = randomUUID();
+        const ordered = orderCandidatesWithExploration(ranking.items, seed);
+        const insertedQueue = await client.query<{ id: string }>(
+          `INSERT INTO professional_review_queues
+             (professional_id, source_type, source_id, exploration_seed)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id::text`,
+          [professionalId, sourceType, sourceId, seed],
+        );
+        queueId = insertedQueue.rows[0].id;
+        for (const [position, candidate] of ordered.entries()) {
+          const { isExploration, ...candidateSnapshot } = candidate;
+          await client.query(
+            `INSERT INTO professional_review_queue_entries
+               (queue_id, student_id, position, relevance_score, reputation_score,
+                reputation_stars, review_count, final_score, is_exploration, candidate_snapshot)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb)`,
+            [
+              queueId,
+              candidate.id,
+              position,
+              candidate.relevance,
+              candidate.reputation,
+              candidate.reputationStars,
+              candidate.reviewCount,
+              candidate.finalScore,
+              isExploration,
+              JSON.stringify(candidateSnapshot),
+            ],
+          );
+        }
+        await client.query("COMMIT");
+      }
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    const state = queueId ? await readQueueState(queueId, professionalId) : null;
+    if (!state) {
+      response.status(500).json({ error: "Unable to load the review queue." });
+      return;
+    }
+    response.json(state);
+  });
+
+  router.get("/queues/:queueId", async (request, response) => {
+    const professionalId = await getProfessionalId(request.header("authorization"));
+    if (!professionalId) {
+      response.status(401).json({ error: "valid professional authentication is required" });
+      return;
+    }
+    if (!/^\d+$/.test(request.params.queueId)) {
+      response.status(400).json({ error: "valid queue id is required" });
+      return;
+    }
+    const state = await readQueueState(request.params.queueId, professionalId);
+    if (!state) {
+      response.status(404).json({ error: "review queue not found" });
+      return;
+    }
+    response.json(state);
+  });
+
+  router.post("/queues/:queueId/review", async (request, response) => {
+    const professionalId = await getProfessionalId(request.header("authorization"));
+    if (!professionalId) {
+      response.status(401).json({ error: "valid professional authentication is required" });
+      return;
+    }
+    const body = isRecord(request.body) ? request.body : {};
+    const rating = body.rating;
+    const reviewText = body.reviewText === undefined ? "" : body.reviewText;
+    const expectedPosition = body.expectedPosition;
+    if (!/^\d+$/.test(request.params.queueId) || typeof rating !== "number" || !Number.isInteger(rating) || rating < 1 || rating > 5 ||
+      typeof reviewText !== "string" || reviewText.length > 500 || typeof expectedPosition !== "number" ||
+      !Number.isInteger(expectedPosition) || expectedPosition < 0) {
+      response.status(400).json({ error: "queue position, a 1-5 star rating, and optional text up to 500 characters are required" });
+      return;
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const queueResult = await client.query<{
+        source_type: "professional_demand" | "job_posting";
+        source_id: string;
+        cursor_position: number;
+        status: "active" | "completed";
+      }>(
+        `SELECT source_type, source_id, cursor_position, status
+         FROM professional_review_queues
+         WHERE id = $1 AND professional_id = $2
+         FOR UPDATE`,
+        [request.params.queueId, professionalId],
+      );
+      const queue = queueResult.rows[0];
+      if (!queue) {
+        await client.query("ROLLBACK");
+        response.status(404).json({ error: "review queue not found" });
+        return;
+      }
+      if (queue.cursor_position !== expectedPosition) {
+        const priorEntry = await client.query<{ status: string }>(
+          `SELECT status FROM professional_review_queue_entries
+           WHERE queue_id = $1 AND position = $2`,
+          [request.params.queueId, expectedPosition],
+        );
+        if (priorEntry.rows[0]?.status === "reviewed") {
+          await client.query("ROLLBACK");
+          response.json(await readQueueState(request.params.queueId, professionalId));
+          return;
+        }
+        await client.query("ROLLBACK");
+        response.status(409).json({ error: "the review queue moved; reload its current candidate before submitting" });
+        return;
+      }
+      if (queue.status !== "active") {
+        await client.query("ROLLBACK");
+        response.status(409).json({ error: "this review queue is complete" });
+        return;
+      }
+
+      const entryResult = await client.query<{ student_id: string }>(
+        `SELECT entry.student_id::text
+         FROM professional_review_queue_entries AS entry
+         JOIN users ON users.id = entry.student_id AND users.account_type = 'student'
+         JOIN search_settings ON search_settings.user_id = users.id AND search_settings.discoverable = true
+         WHERE entry.queue_id = $1 AND entry.position = $2 AND entry.status = 'pending'
+         FOR UPDATE OF entry`,
+        [request.params.queueId, queue.cursor_position],
+      );
+      const entry = entryResult.rows[0];
+      if (!entry) {
+        await client.query("ROLLBACK");
+        response.status(409).json({ error: "there is no pending candidate at the current queue position" });
+        return;
+      }
+
+      await client.query(
+        `INSERT INTO student_reputation_reviews
+           (reviewer_id, student_id, rating, review_text, source_type, source_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (reviewer_id, student_id) DO UPDATE
+         SET rating = EXCLUDED.rating,
+             review_text = EXCLUDED.review_text,
+             source_type = EXCLUDED.source_type,
+             source_id = EXCLUDED.source_id,
+             updated_at = now()`,
+        [professionalId, entry.student_id, rating, reviewText.trim(), queue.source_type, queue.source_id],
+      );
+      await client.query(
+        `UPDATE professional_review_queue_entries
+         SET status = 'reviewed', candidate_snapshot = '{}'::jsonb, completed_at = now()
+         WHERE queue_id = $1 AND position = $2`,
+        [request.params.queueId, queue.cursor_position],
+      );
+      await client.query(
+        `UPDATE professional_review_queues AS queue
+         SET cursor_position = cursor_position + 1,
+             status = CASE WHEN EXISTS (
+               SELECT 1 FROM professional_review_queue_entries
+               WHERE queue_id = queue.id AND position > queue.cursor_position AND status = 'pending'
+             ) THEN 'active' ELSE 'completed' END,
+             updated_at = now()
+         WHERE id = $1`,
+        [request.params.queueId],
+      );
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    const state = await readQueueState(request.params.queueId, professionalId);
+    response.json(state);
   });
 
   router.patch("/attributes/:attributeId", async (request, response) => {
