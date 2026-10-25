@@ -12,7 +12,6 @@ import {
   LogIn,
   LogOut,
   Mail,
-  ShieldCheck,
   UserPlus,
 } from "lucide-react";
 import {
