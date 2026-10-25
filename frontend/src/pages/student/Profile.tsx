@@ -224,30 +224,38 @@ function ProfileView({
               Ratings use a confidence-adjusted average; new profiles start at a
               neutral 3 stars.
             </p>
-            {reputation.reviews.length > 0 ? (
-              <ul className="flex flex-col divide-y divide-gray-200 border-y border-gray-200">
-                {reputation.reviews.map((review) => (
-                  <li key={review.id} className="py-3">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span className="font-medium tabular-nums text-gray-800">
-                        {review.rating} / 5 stars
-                      </span>
-                      <time
-                        className="text-xs text-gray-500"
-                        dateTime={review.updatedAt}
-                      >
-                        {new Date(review.updatedAt).toLocaleDateString()}
-                      </time>
-                    </div>
-                    <p className="mt-1 whitespace-pre-line text-sm text-gray-700">
-                      {review.reviewText}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-gray-500">No written feedback yet.</p>
-            )}
+            <div className="border-t border-gray-200 pt-3">
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Reviews
+              </h3>
+              {reputation.reviews.length > 0 ? (
+                <ul className="flex flex-col gap-2">
+                  {reputation.reviews.map((review) => (
+                    <li
+                      key={review.id}
+                      className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3"
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="font-medium tabular-nums text-gray-800">
+                          {review.rating} / 5 stars
+                        </span>
+                        <time
+                          className="text-xs text-gray-500"
+                          dateTime={review.updatedAt}
+                        >
+                          {new Date(review.updatedAt).toLocaleDateString()}
+                        </time>
+                      </div>
+                      <p className="mt-1 whitespace-pre-line text-sm text-gray-700">
+                        {review.reviewText}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">No written feedback yet.</p>
+              )}
+            </div>
           </>
         ) : (
           <p className="text-sm text-gray-500">Loading recruiter reputation…</p>
