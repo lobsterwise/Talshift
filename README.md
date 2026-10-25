@@ -1,6 +1,6 @@
-# Talshift
+# Rungs
 
-Talshift is a React single-page app served by an Express HTTP server. The backend exposes authentication, profile, and workspace APIs and connects to PostgreSQL through `pg`.
+Rungs is a React single-page app served by an Express HTTP server. The backend exposes authentication, profile, and workspace APIs and connects to PostgreSQL through `pg`.
 
 ## Requirements
 
@@ -14,13 +14,13 @@ The PostgreSQL server must have the `pgvector` extension installed; backend star
 Set `DATABASE_URL` in the shell where the backend will run. For PowerShell:
 
 ```powershell
-$env:DATABASE_URL = "postgres://postgres:password@localhost:5432/talshift"
+$env:DATABASE_URL = "postgres://postgres:password@localhost:5432/rungs"
 ```
 
 For Command Prompt:
 
 ```bat
-set DATABASE_URL=postgres://postgres:password@localhost:5432/talshift
+set DATABASE_URL=postgres://postgres:password@localhost:5432/rungs
 ```
 
 Set `GEMINI_API_KEY` in the backend environment for student talent, search-attribute extraction, and resume parsing (PDF uploads during onboarding and from the student Profile page; the file is sent to Gemini and not stored). The backend keeps the key private and uses the `gemini-3.8-flash` model by default; set `GEMINI_MODEL` to another model enabled for your API key.

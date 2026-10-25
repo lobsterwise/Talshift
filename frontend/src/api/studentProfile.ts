@@ -123,7 +123,7 @@ export class StudentProfileRequestError extends Error {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('talshift.session')
+  const token = localStorage.getItem('rungs.session')
   if (!token) throw new Error('Your session has expired. Please sign in again.')
 
   const response = await fetch(path, {
@@ -160,7 +160,7 @@ export const maxResumeBytes = 5 * 1024 * 1024
 // Sends a PDF to be read by Gemini. Returns a draft merged with the saved profile;
 // nothing is stored until the student saves the draft from the profile form.
 export async function parseResume(file: File) {
-  const token = localStorage.getItem('talshift.session')
+  const token = localStorage.getItem('rungs.session')
   if (!token) throw new Error('Your session has expired. Please sign in again.')
 
   const response = await fetch('/api/student/resume/parse', {
@@ -177,7 +177,7 @@ export async function parseResume(file: File) {
 
 // A resume parsed during onboarding, waiting for review. It is handed to the
 // profile page through sessionStorage so it survives the move out of onboarding.
-const resumeDraftKey = 'talshift.resumeDraft'
+const resumeDraftKey = 'rungs.resumeDraft'
 
 export function storeResumeDraft(profile: StudentProfile) {
   try {

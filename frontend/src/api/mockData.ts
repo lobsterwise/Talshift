@@ -1,6 +1,6 @@
 // Sample data copied from the renderVals() sections of design/*.dc.html.
 // Only api/client.ts may import this file. Pages get data through client.ts.
-// Copy is unchanged from the designs except "Rungs", which is now "Talshift".
+// Copy is unchanged from the designs.
 
 import type {
   CampusEvent,
@@ -101,7 +101,7 @@ export const network: NetworkContact[] = [
   { id: 'n2', type: 'recruiter', initials: 'JC', name: 'Jamie Cole', role: 'University Talent Partner · 99P Labs', credibility: 91, why: ['Hiring Design Engineering interns this spring', '11 of 12 students she invited got a reply within a week'], opener: "I'm working toward your Design Engineering rubric; 6 of 9 verified so far.", action: 'Connect' },
   { id: 'n3', type: 'mentor', initials: 'DR', name: 'Daniel R.', role: 'Mechanical Engineer · automotive supplier', credibility: 88, why: ['Reviews CAD work weekly · 41 verified reviews', 'Office hours Tue 4:00 PM, 1 seat left'], opener: 'Which tolerances matter most on a printed hinge?', action: 'Request 15 min' },
   { id: 'n4', type: 'student', initials: 'PS', name: 'Priya Shah', role: 'Mechanical Engineering · Sophomore', match: 'Complementary', why: ['Brings ANSYS FEA and GD&T, two of your open gaps', 'Looking for someone who does user testing'], opener: "Want to team up on Saturday's FEA challenge? I'll handle the user testing side.", action: 'Team up' },
-  { id: 'n5', type: 'recruiter', initials: 'ML', name: 'Morgan Lee', role: 'Campus Recruiter · regional mobility company', credibility: 72, why: ['Posted 2 product design internships on Handshake', 'Newer to Talshift: 3 invites sent so far'], opener: 'I saw your product design internship; my keyboard case covers ergonomics testing.', action: 'Connect' },
+  { id: 'n5', type: 'recruiter', initials: 'ML', name: 'Morgan Lee', role: 'Campus Recruiter · regional mobility company', credibility: 72, why: ['Posted 2 product design internships on Handshake', 'Newer to Rungs: 3 invites sent so far'], opener: 'I saw your product design internship; my keyboard case covers ergonomics testing.', action: 'Connect' },
   { id: 'n6', type: 'student', initials: 'AR', name: 'Ana Ruiz', role: 'Industrial Design · Junior', match: 'Similar', why: ['Also targeting design engineering; 2 points ahead of you', 'Going to Hardware Hack Night on Thursday'], opener: 'See you at Hack Night? Want to trade portfolio feedback?', action: 'Connect' },
 ]
 
@@ -112,7 +112,7 @@ export const resumeRoles: ResumeRole[] = [
       { severity: 'good', type: 'Strong evidence', where: 'Projects · line 6', quote: 'Tested the case through two weeks of daily use and logged comfort each day.', note: "Keep this. It's the kind of proof recruiters for this role ask about." },
       { severity: 'warn', type: 'Unclear impact', where: 'Projects · line 5', quote: 'Designed and printed an ergonomic split keyboard case.', note: 'What changed for the user? Wrist angle, comfort rating, assembly time. Add the number you measured.' },
       { severity: 'miss', type: 'Missing for this role', where: 'Whole resume', quote: '', note: "No drawings or tolerances anywhere. Recruiters check for this. Add it only after you've done it; the GD&T workshop on Wed gets you there." },
-      { severity: 'warn', type: 'Claim without a link', where: 'Projects', quote: '', note: 'None of your projects link to proof. Add your verified Talshift link so each claim can be checked.' },
+      { severity: 'warn', type: 'Claim without a link', where: 'Projects', quote: '', note: 'None of your projects link to proof. Add your verified Rungs link so each claim can be checked.' },
     ],
   },
   {
@@ -260,7 +260,7 @@ export const professionalProfile: ProfessionalProfile = {
   title: 'Research Engineer · Honda Research Institute · mentoring in CAD and human factors',
   credibility: 94,
   credibilityLabel: 'Highly credible',
-  rankLine: 'Top 8% of mentors on Talshift.',
+  rankLine: 'Top 8% of mentors on Rungs.',
   suggestedThisWeek: 210,
   suggestedChange: '+34%',
   parts: [

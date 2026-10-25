@@ -12,7 +12,7 @@ export interface ProfessionalAttribute {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('talshift.session')
+  const token = localStorage.getItem('rungs.session')
   if (!token) throw new Error('Your session has expired. Please sign in again.')
   const response = await fetch(`/api/professional/search${path}`, {
     ...options,

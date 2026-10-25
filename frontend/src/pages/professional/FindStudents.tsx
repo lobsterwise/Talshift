@@ -21,7 +21,7 @@ export default function FindStudents() {
 
   useEffect(() => {
     let cancelled = false
-    const token = localStorage.getItem('talshift.session') ?? ''
+    const token = localStorage.getItem('rungs.session') ?? ''
     Promise.all([getProfile(token), getPostings()])
       .then(([profileResult, postingResults]) => {
         if (cancelled) return

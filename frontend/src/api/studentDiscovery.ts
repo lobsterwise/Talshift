@@ -16,7 +16,7 @@ export async function searchStudentDiscovery(
   includeProfile: boolean,
   offset: number,
 ) {
-  const token = localStorage.getItem('talshift.session')
+  const token = localStorage.getItem('rungs.session')
   if (!token) throw new Error('Your session has expired. Please sign in again.')
   const params = new URLSearchParams({ limit: '20', offset: String(offset), includeProfile: String(includeProfile) })
   if (query.trim()) params.set('query', query.trim())

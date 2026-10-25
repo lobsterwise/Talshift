@@ -1,7 +1,7 @@
 import type { PersonaId } from '../personas'
 
 export async function getWorkspaceItems(persona: PersonaId, resource: string): Promise<unknown[]> {
-  const token = localStorage.getItem('talshift.session')
+  const token = localStorage.getItem('rungs.session')
   if (!token) throw new Error('Your session has expired. Please sign in again.')
 
   const response = await fetch(`/api/workspace/${persona}/${resource}`, {

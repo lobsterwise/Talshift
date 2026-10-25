@@ -77,7 +77,7 @@ async function startServer(): Promise<void> {
   await pool.query(schema);
 
   app.listen(port, "0.0.0.0", () => {
-    console.log(`Talshift backend listening on port ${port}`);
+    console.log(`Rungs backend listening on port ${port}`);
   });
 }
 

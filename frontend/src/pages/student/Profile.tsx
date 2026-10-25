@@ -1211,7 +1211,7 @@ export default function Profile() {
 
   useEffect(() => {
     let cancelled = false;
-    const token = localStorage.getItem("talshift.session") ?? "";
+    const token = localStorage.getItem("rungs.session") ?? "";
     Promise.all([getStudentProfile(), getProfile(token)])
       .then(([result, account]) => {
         if (cancelled) return;

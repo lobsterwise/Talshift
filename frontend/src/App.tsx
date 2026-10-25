@@ -52,10 +52,10 @@ function PersonaLayout({
 function App() {
   const location = useLocation()
   const navigate = useNavigate()
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('talshift.session'))
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('rungs.session'))
   const [account, setAccount] = useState<Account | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [restoring, setRestoring] = useState(() => Boolean(localStorage.getItem('talshift.session')))
+  const [restoring, setRestoring] = useState(() => Boolean(localStorage.getItem('rungs.session')))
   // True only right after a new account finishes onboarding; the welcome screen is
   // shown then and never to returning users.
   const [justOnboarded, setJustOnboarded] = useState(false)
@@ -76,7 +76,7 @@ function App() {
       })
       .catch(() => {
         if (cancelled) return
-        localStorage.removeItem('talshift.session')
+        localStorage.removeItem('rungs.session')
         setToken(null)
         setAccount(null)
         setProfile(null)
@@ -89,7 +89,7 @@ function App() {
   }, [token])
 
   async function authenticated(session: AuthSession) {
-    localStorage.setItem('talshift.session', session.token)
+    localStorage.setItem('rungs.session', session.token)
     setToken(session.token)
     setAccount(session.account)
     const { profile: savedProfile } = await getProfile(session.token)
@@ -109,7 +109,7 @@ function App() {
 
   async function signOut() {
     if (token) await logout(token).catch(() => undefined)
-    localStorage.removeItem('talshift.session')
+    localStorage.removeItem('rungs.session')
     clearResumeDraft()
     setJustOnboarded(false)
     setToken(null)

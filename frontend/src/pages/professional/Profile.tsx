@@ -24,7 +24,7 @@ export default function Profile() {
 
   useEffect(() => {
     let cancelled = false
-    const token = localStorage.getItem('talshift.session') ?? ''
+    const token = localStorage.getItem('rungs.session') ?? ''
     getProfile(token)
       .then(({ profile: result }) => {
         if (cancelled || !result) return
@@ -69,7 +69,7 @@ export default function Profile() {
     setError('')
     setSaved(false)
     try {
-      const token = localStorage.getItem('talshift.session') ?? ''
+      const token = localStorage.getItem('rungs.session') ?? ''
       const result = await saveProfile(token, { ...profile, offerSummary, demandSummary })
       setProfile(result.profile)
       setSaved(true)
