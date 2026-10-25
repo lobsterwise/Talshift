@@ -9,15 +9,15 @@ import { createProfessionalSearchRouter, parseProfessionalAttributes } from "../
 describe("parseProfessionalAttributes", () => {
   it("deduplicates names and bounds priorities without creating score fields", () => {
     const attributes = parseProfessionalAttributes([
-      { name: "  Data   modeling ", priority: 72.4, evidence: "Required for the role" },
-      { name: "data modeling", priority: 101, evidence: "Repeated as essential" },
+      { name: "  Data   modeling ", category: "hard_skill", priority: 72.4, evidence: "Required for the role" },
+      { name: "data modeling", category: "technology", priority: 101, evidence: "Repeated as essential" },
       { name: "Mentoring", priority: -5, evidence: "A support topic" },
-      { name: "", priority: 80, evidence: "Empty label" },
+      { name: "", category: "other", priority: 80, evidence: "Empty label" },
     ]);
 
     assert.deepEqual(attributes, [
-      { name: "data modeling", priority: 100, evidence: "Repeated as essential" },
-      { name: "Mentoring", priority: 0, evidence: "A support topic" },
+      { name: "data modeling", category: "technology", priority: 100, evidence: "Repeated as essential" },
+      { name: "Mentoring", category: "other", priority: 0, evidence: "A support topic" },
     ]);
     assert.equal("score" in attributes[0], false);
   });

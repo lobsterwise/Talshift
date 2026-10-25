@@ -1,12 +1,14 @@
 import type { ProjectCredibility } from './studentProfile'
 
 export type ProfessionalAttributeSource = 'professional_offer' | 'professional_demand' | 'job_posting'
+export type ProfessionalKeywordCategory = 'hard_skill' | 'soft_skill' | 'attribute' | 'location' | 'technology' | 'job_title' | 'industry' | 'education' | 'learning_goal' | 'other'
 
 export interface ProfessionalAttribute {
   id: string
   source_type: ProfessionalAttributeSource
   source_id: string
   name: string
+  category: ProfessionalKeywordCategory
   priority: number
   evidence: string | null
 }

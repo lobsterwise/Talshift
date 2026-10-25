@@ -21,6 +21,7 @@ export default function Profile() {
   const [priorityDrafts, setPriorityDrafts] = useState<Record<string, number>>({})
   const [attributeError, setAttributeError] = useState('')
   const [prioritiesSaving, setPrioritiesSaving] = useState(false)
+  const [indexingPostingId, setIndexingPostingId] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -159,6 +160,21 @@ export default function Profile() {
     }
   }
 
+  async function refreshPostingKeywords(postingId: string) {
+    setIndexingPostingId(postingId)
+    setAttributeError('')
+    try {
+      await indexProfessionalSource('job_posting', postingId)
+      const refreshed = await getProfessionalAttributes()
+      setAttributes(refreshed)
+      setPriorityDrafts(Object.fromEntries(refreshed.map((attribute) => [attribute.id, attribute.priority])))
+    } catch (caught) {
+      setAttributeError(caught instanceof Error ? caught.message : 'Unable to refresh position keywords.')
+    } finally {
+      setIndexingPostingId(null)
+    }
+  }
+
   async function savePriorities() {
     const changed = attributes.filter((attribute) => priorityDrafts[attribute.id] !== attribute.priority)
     if (!changed.length) return
@@ -217,18 +233,19 @@ export default function Profile() {
 
       <section className="flex flex-col gap-4">
         <header>
-          <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Search priorities</h2>
-          <p className="mt-2 text-sm text-gray-600">Review how strongly each extracted attribute should affect matching.</p>
+          <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Extracted keywords</h2>
+          <p className="mt-2 text-sm text-gray-600">Review how strongly each extracted keyword should affect matching.</p>
         </header>
         {attributeError && <p role="alert" className="text-sm text-red-700">{attributeError}</p>}
         {attributes.length === 0
-          ? <p className="text-sm text-gray-500">Save a summary or position description to extract search attributes.</p>
+          ? <p className="text-sm text-gray-500">Save a summary or position description to extract search keywords.</p>
           : <div className="flex flex-col gap-3">
             {attributes.map((attribute) => (
               <label key={attribute.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(180px,240px)_3rem] sm:items-center">
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium text-gray-800">{attribute.name}</span>
-                  <span className="block text-xs text-gray-500">{sourceLabel(attribute)}</span>
+                  <span className="block text-xs text-gray-500">{attribute.category.replace(/_/g, ' ')} · {sourceLabel(attribute)}</span>
+                  {attribute.evidence && <span className="block truncate text-xs text-gray-500">{attribute.evidence}</span>}
                 </span>
                 <input type="range" min={0} max={100} value={priorityDrafts[attribute.id] ?? attribute.priority}
                   aria-label={`${attribute.name} priority`}
@@ -297,6 +314,7 @@ export default function Profile() {
                 <p className="whitespace-pre-line text-sm text-gray-700">{posting.description}</p>
                 <div className="flex gap-2">
                   <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => setEditingPosting(posting)}>Edit</button>
+                  <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" onClick={() => void refreshPostingKeywords(posting.id)} disabled={indexingPostingId !== null}>{indexingPostingId === posting.id ? 'Refreshing…' : 'Refresh keywords'}</button>
                   <button type="button" className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={() => void removePosting(posting.id)}>Delete</button>
                 </div>
               </article>

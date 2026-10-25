@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS search_attributes (
   )),
   source_id TEXT NOT NULL,
   name TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'other',
   evidence TEXT,
   score SMALLINT CHECK (score BETWEEN 0 AND 100),
   priority SMALLINT CHECK (priority BETWEEN 0 AND 100),
@@ -95,6 +96,7 @@ CREATE INDEX IF NOT EXISTS search_attributes_owner_source_idx
   ON search_attributes (owner_id, source_type);
 
 ALTER TABLE search_attributes
+  ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'other',
   ADD COLUMN IF NOT EXISTS source_hash TEXT NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS extractor_model TEXT NOT NULL DEFAULT '';
 

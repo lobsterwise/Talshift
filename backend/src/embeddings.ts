@@ -33,6 +33,10 @@ export function hashAttributeText(text: string): string {
   return createHash("sha256").update(normalizeAttributeText(text)).digest("hex");
 }
 
+export function isRequestTimeout(error: unknown): boolean {
+  return error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+}
+
 function parseEmbedding(value: string): number[] {
   let parsed: unknown;
   try {
@@ -51,15 +55,21 @@ async function requestEmbeddings(texts: readonly string[], model: string, apiKey
   const embeddings: number[][] = [];
   for (let start = 0; start < texts.length; start += maxBatchSize) {
     const batch = texts.slice(start, start + maxBatchSize);
-    const response = await fetch("https://api.openai.com/v1/embeddings", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ model, input: batch, dimensions: embeddingDimensions }),
-      signal: AbortSignal.timeout(20_000),
-    });
+    let response: Response;
+    try {
+      response = await fetch("https://api.openai.com/v1/embeddings", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ model, input: batch, dimensions: embeddingDimensions }),
+        signal: AbortSignal.timeout(60_000),
+      });
+    } catch (error) {
+      if (isRequestTimeout(error)) throw new Error("Search keyword embedding timed out. Please try again.");
+      throw error;
+    }
     if (!response.ok) {
       const providerError = await response.json().catch(() => null) as OpenAiEmbeddingResponse | null;
       console.error("OpenAI embedding request failed", {

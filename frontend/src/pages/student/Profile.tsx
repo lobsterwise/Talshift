@@ -32,6 +32,18 @@ import {
 
 const levels: SkillLevel[] = ["beginner", "intermediate", "advanced"];
 const maxGithubAccounts = 5;
+const keywordCategoryLabels: Record<string, string> = {
+  hard_skill: "Hard skills",
+  soft_skill: "Soft skills",
+  attribute: "Attributes",
+  location: "Locations",
+  technology: "Technologies",
+  job_title: "Job titles",
+  industry: "Industries",
+  education: "Education",
+  learning_goal: "Learning goals",
+  other: "Other keywords",
+};
 
 const inputClass =
   "w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-600 focus:outline-none";
@@ -98,12 +110,12 @@ function TalentSkeleton() {
   return (
     <div
       role="status"
-      aria-label="Generating student talent"
+      aria-label="Extracting profile keywords"
       aria-busy="true"
       className="grid gap-5 sm:grid-cols-2"
     >
-      <span className="sr-only">Generating skill rankings…</span>
-      {["Hard skills", "Soft skills"].map((title) => (
+      <span className="sr-only">Extracting profile keywords…</span>
+      {["Extracted keywords"].map((title) => (
         <div key={title} className="flex flex-col gap-4">
           <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
           {[0, 1, 2].map((row) => (
@@ -155,6 +167,14 @@ function ProfileView({
   credibilityError: string;
   onVerifyCredibility: () => void;
 }) {
+  const visibleKeywords = studentTalent
+    ? [...studentTalent.keywords, ...(studentTalent.learningGoals ?? []).map((goal) => ({ ...goal, category: "learning_goal" as const }))]
+    : [];
+  const keywordGroups = visibleKeywords.reduce<Record<string, StudentTalent["keywords"]>>((groups, keyword) => {
+    const title = keywordCategoryLabels[keyword.category] ?? "Other keywords";
+    (groups[title] ??= []).push(keyword);
+    return groups;
+  }, {});
   const empty =
     !profile.headline &&
     !profile.summary &&
@@ -418,7 +438,7 @@ function ProfileView({
         </Section>
       )}
 
-      <Section title="Student talent">
+      <Section title="Extracted keywords">
         {talentGenerating ? (
           <TalentSkeleton />
         ) : talentError ? (
@@ -436,40 +456,33 @@ function ProfileView({
           </div>
         ) : studentTalent ? (
           <>
+            {visibleKeywords.length === 0 && (
+              <p className="text-sm text-gray-500">No profile keywords have enough supporting evidence yet.</p>
+            )}
             <div className="grid gap-5 sm:grid-cols-2">
-              {(
-                [
-                  ["Hard skills", studentTalent.hardSkills],
-                  ["Soft skills", studentTalent.softSkills],
-                ] as const
-              ).map(([title, skills]) => (
+              {Object.entries(keywordGroups ?? {}).map(([title, keywords]) => (
                 <div key={title} className="flex flex-col gap-3">
                   <h3 className="text-sm font-semibold text-gray-800">
                     {title}
                   </h3>
-                  {skills.length === 0 && (
-                    <p className="text-sm text-gray-500">
-                      No profile evidence yet.
-                    </p>
-                  )}
-                  {skills.map((skill) => (
-                    <div key={skill.name}>
+                  {keywords.map((keyword) => (
+                    <div key={`${keyword.category}:${keyword.name}`}>
                       <div className="flex justify-between gap-3 text-sm">
                         <span className="font-medium text-gray-800">
-                          {skill.name}
+                          {keyword.name}
                         </span>
                         <span className="shrink-0 tabular-nums text-gray-600">
-                          {skill.score}/100
+                          {keyword.score}/100
                         </span>
                       </div>
                       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-200">
                         <div
                           className="h-full rounded-full bg-blue-600"
-                          style={{ width: `${skill.score}%` }}
+                          style={{ width: `${keyword.score}%` }}
                         />
                       </div>
                       <p className="mt-1 text-xs text-gray-600">
-                        {skill.evidence}
+                        {keyword.evidence}
                       </p>
                     </div>
                   ))}
@@ -483,7 +496,7 @@ function ProfileView({
           </>
         ) : (
           <p className="text-sm text-gray-500">
-            Save your profile to generate your skill rankings.
+            Save your profile to extract keywords.
           </p>
         )}
         {studentTalent && searchIndexingError && (
@@ -493,7 +506,7 @@ function ProfileView({
         )}
         {studentTalent && !searchIndexingError && searchAttributeCount > 0 && (
           <p role="status" className="text-sm text-gray-600">
-            {searchAttributeCount} attributes are ready for search.
+            {searchAttributeCount} keywords are ready for search.
           </p>
         )}
         {studentTalent &&

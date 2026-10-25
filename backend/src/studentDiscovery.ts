@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { Router, type Request, type Response } from "express";
 import type { Pool } from "pg";
 import { rankAttributes, type SearchAttribute } from "./search";
-import { ensureAttributeEmbeddings, normalizeAttributeText } from "./embeddings";
+import { ensureAttributeEmbeddings, isRequestTimeout, normalizeAttributeText } from "./embeddings";
 
 type DiscoveryMode = "mentors" | "postings";
 
@@ -50,9 +50,11 @@ async function extractQueryAttributes(text: string, mode: DiscoveryMode): Promis
   const purpose = mode === "mentors"
     ? "skills and topics the student wants to learn from a mentor"
     : "skills and capabilities the student wants to use in a position search";
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-    {
+  let response: globalThis.Response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
@@ -62,9 +64,17 @@ async function extractQueryAttributes(text: string, mode: DiscoveryMode): Promis
         contents: [{ role: "user", parts: [{ text }] }],
         generationConfig: { responseMimeType: "application/json" },
       }),
-      signal: AbortSignal.timeout(20_000),
-    },
-  );
+        signal: AbortSignal.timeout(60_000),
+      },
+    );
+  } catch (error) {
+    return {
+      attributes: [],
+      error: isRequestTimeout(error)
+        ? "Keyword extraction timed out. Please try again."
+        : "Unable to extract search keywords right now. Please try again.",
+    };
+  }
   if (!response.ok) return { attributes: [], error: "Unable to extract search attributes right now. Please try again." };
   const result = await response.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
   const responseText = result.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("");
@@ -173,7 +183,9 @@ export function createStudentDiscoveryRouter(pool: Pool): Router {
       try {
         embedded = await ensureAttributeEmbeddings(pool, extracted.attributes.map((attribute) => attribute.name));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Unable to prepare search embeddings right now.";
+        const message = isRequestTimeout(error)
+          ? "Search keyword embedding timed out. Please try again."
+          : error instanceof Error ? error.message : "Unable to prepare search embeddings right now.";
         response.status(message.includes("not configured") ? 503 : 502).json({ error: message });
         return;
       }

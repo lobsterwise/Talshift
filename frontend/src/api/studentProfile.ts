@@ -56,9 +56,14 @@ export interface StudentTalentSkill {
   evidence: string
 }
 
+export type StudentKeywordCategory = 'hard_skill' | 'soft_skill' | 'attribute' | 'location' | 'technology' | 'job_title' | 'industry' | 'education' | 'learning_goal' | 'other'
+
+export interface StudentKeyword extends StudentTalentSkill {
+  category: StudentKeywordCategory
+}
+
 export interface StudentTalent {
-  hardSkills: StudentTalentSkill[]
-  softSkills: StudentTalentSkill[]
+  keywords: StudentKeyword[]
   learningGoals?: StudentTalentSkill[]
   generatedAt: string
   model: string
