@@ -165,11 +165,11 @@ function App() {
                     ? <PersonaLayout persona={persona} account={account} profile={profile} onSignOut={signOut} />
                     : <Navigate to={`/onboarding/${account.accountType}`} replace />
           }>
-            <Route index element={<Navigate to={firstTab} replace />} />
+            <Route index element={<Navigate to={`/${persona.id}/${firstTab}`} replace />} />
             {persona.tabs.map((tab) => (
               <Route key={tab.slug} path={tab.slug} element={<tab.page />} />
             ))}
-            <Route path="*" element={<Navigate to={firstTab} replace />} />
+            <Route path="*" element={<Navigate to={`/${persona.id}/${firstTab}`} replace />} />
           </Route>
         )
       })}
