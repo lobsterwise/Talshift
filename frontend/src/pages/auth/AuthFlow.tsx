@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './AuthFlow.css'
 import { getInterestOptions } from '../../api/catalog'
+import { readResumeDraft, storeResumeDraft } from '../../api/studentProfile'
+import ResumeUpload from '../../components/ResumeUpload'
 import {
   login,
   register,
@@ -40,6 +42,7 @@ export default function AuthFlow({
   const [interestOptions, setInterestOptions] = useState<string[]>([])
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [resumeParsing, setResumeParsing] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -215,6 +218,11 @@ export default function AuthFlow({
                       <div><label className="field-label" htmlFor="field-of-study">Field of study</label><input id="field-of-study" value={values.fieldOfStudy ?? initialValues('fieldOfStudy')} onChange={(event) => updateValue('fieldOfStudy', event.target.value)} maxLength={120} required /></div>
                       <div><label className="field-label" htmlFor="graduation-year">Grad year</label><input id="graduation-year" type="number" min="2020" max="2040" value={values.graduationYear ?? initialValues('graduationYear')} onChange={(event) => updateValue('graduationYear', event.target.value)} required /></div>
                     </div>
+                    <span className="field-label">Resume (optional)</span>
+                    <p className="panel-intro">We'll use it to fill in your profile. You can review everything after this step.</p>
+                    <div className="mb-4">
+                      <ResumeUpload onParsingChange={setResumeParsing} onParsed={(draft) => storeResumeDraft(draft)} />
+                    </div>
                   </>
                 ) : (
                   <>
@@ -237,7 +245,7 @@ export default function AuthFlow({
                     ))}</div>}
                 </fieldset>
                 {error && <p className="form-error" role="alert">{error}</p>}
-                <button className="primary-button" type="submit" disabled={busy}>{busy ? 'Saving your profile…' : 'Finish profile'}<span aria-hidden="true">→</span></button>
+                <button className="primary-button" type="submit" disabled={busy || resumeParsing}>{busy ? 'Saving your profile…' : resumeParsing ? 'Reading your resume…' : 'Finish profile'}<span aria-hidden="true">→</span></button>
               </form>
             </>
           )}
@@ -255,7 +263,9 @@ export default function AuthFlow({
                 <span className="summary-divider" />
                 <span className="summary-role">{accountLabel} account · onboarding complete</span>
               </div>
-              <button className="primary-button" type="button" onClick={() => onNavigate(account.accountType === 'student' ? '/student/overview' : '/professional/feed')}>Continue to Talshift<span aria-hidden="true">→</span></button>
+              {account.accountType === 'student' && readResumeDraft()
+                ? <button className="primary-button" type="button" onClick={() => onNavigate('/student/profile')}>Review details from your resume<span aria-hidden="true">→</span></button>
+                : <button className="primary-button" type="button" onClick={() => onNavigate(account.accountType === 'student' ? '/student/overview' : '/professional/feed')}>Continue to Talshift<span aria-hidden="true">→</span></button>}
             </div>
           )}
         </section>

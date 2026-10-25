@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
-import { Router } from "express";
+import express, { Router, type ErrorRequestHandler } from "express";
 import type { Pool } from "pg";
 import { ensureAttributeEmbeddings, normalizeAttributeText } from "./embeddings";
+import { parseResumePdf, ResumeParseError, type ResumeProfile } from "./resumeParser";
+
+const maxResumeBytes = 5 * 1024 * 1024;
 
 interface StudentProfile {
   headline: string;
@@ -229,6 +232,28 @@ function readProfile(body: unknown): StudentProfile {
     projects,
     skills,
     links,
+  };
+}
+
+// Combines a parsed resume with the saved profile. Entries that appear in both are
+// taken from the resume (it is the newer source); saved entries the resume doesn't
+// mention are kept after the resume's, so re-uploading never drops manual additions.
+function mergeResumeIntoProfile(saved: StudentProfile, resume: ResumeProfile): StudentProfile {
+  const key = (...parts: string[]) => parts.map((part) => part.trim().toLowerCase()).join("|");
+  const merge = <T>(fromResume: T[], fromSaved: T[], keyOf: (item: T) => string, maxItems: number) => {
+    const resumeKeys = new Set(fromResume.map(keyOf));
+    return [...fromResume, ...fromSaved.filter((item) => !resumeKeys.has(keyOf(item)))].slice(0, maxItems);
+  };
+  return {
+    headline: resume.headline || saved.headline,
+    summary: resume.summary || saved.summary,
+    learningGoals: saved.learningGoals,
+    location: resume.location || saved.location,
+    education: merge(resume.education, saved.education, (item) => key(item.institution, item.degree), 20),
+    jobs: merge(resume.jobs, saved.jobs, (item) => key(item.title, item.company), 20),
+    projects: merge(resume.projects, saved.projects, (item) => key(item.name), 20),
+    skills: merge(resume.skills, saved.skills, (item) => key(item.name), 50),
+    links: merge(resume.links, saved.links, (item) => key(item.url.replace(/\/+$/, "")), 20),
   };
 }
 
@@ -525,6 +550,46 @@ export function createStudentRouter(pool: Pool): Router {
     }
   });
 
+  // Returns a profile draft built from an uploaded PDF. Nothing is saved: the
+  // student reviews the draft in the profile form and saves it from there.
+  router.post(
+    "/resume/parse",
+    async (request, response, next) => {
+      const studentId = await getStudentId(request.header("authorization"));
+      if (!studentId) {
+        response.status(401).json({ error: "valid student authentication is required" });
+        return;
+      }
+      response.locals.studentId = studentId;
+      next();
+    },
+    express.raw({ type: "application/pdf", limit: maxResumeBytes }),
+    async (request, response) => {
+      const pdf = request.body;
+      if (!Buffer.isBuffer(pdf) || pdf.subarray(0, 5).toString("latin1") !== "%PDF-") {
+        response.status(400).json({ error: "Upload your resume as a PDF file." });
+        return;
+      }
+
+      let resume: ResumeProfile;
+      try {
+        resume = await parseResumePdf(pdf);
+      } catch (error) {
+        const status = error instanceof ResumeParseError ? error.status : 502;
+        const message = error instanceof ResumeParseError ? error.message : "Unable to read your resume right now.";
+        response.status(status).json({ error: message });
+        return;
+      }
+
+      const saved = await pool.query<{ profile: StudentProfile }>(
+        "SELECT profile FROM student_profiles WHERE student_id = $1",
+        [response.locals.studentId],
+      );
+      const savedProfile = normalizeStoredDates(saved.rows[0]?.profile ?? emptyProfile);
+      response.json({ profile: mergeResumeIntoProfile(savedProfile, resume) });
+    },
+  );
+
   router.post("/talent", async (request, response) => {
     const studentId = await getStudentId(request.header("authorization"));
     if (!studentId) {
@@ -627,6 +692,15 @@ export function createStudentRouter(pool: Pool): Router {
       response.status(message.includes("not configured") ? 503 : 502).json({ error: message });
     }
   });
+
+  const uploadErrors: ErrorRequestHandler = (error, _request, response, next) => {
+    if (error?.type === "entity.too.large") {
+      response.status(413).json({ error: "Your resume must be 5 MB or smaller." });
+      return;
+    }
+    next(error);
+  };
+  router.use(uploadErrors);
 
   return router;
 }

@@ -1,7 +1,7 @@
 import { cloneElement, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { getProfile } from '../../api/auth'
 import { getDiscoverability, setDiscoverability } from '../../api/discovery'
-import { generateStudentTalent, getStudentProfile, indexStudentTalent, saveStudentProfile, StudentProfileRequestError, type SkillLevel, type StudentProfile, type StudentTalent } from '../../api/studentProfile'
+import { clearResumeDraft, generateStudentTalent, getStudentProfile, indexStudentTalent, readResumeDraft, saveStudentProfile, StudentProfileRequestError, type SkillLevel, type StudentProfile, type StudentTalent } from '../../api/studentProfile'
 
 const levels: SkillLevel[] = ['beginner', 'intermediate', 'advanced']
 
@@ -438,7 +438,9 @@ export default function Profile() {
   const [discoverable, setDiscoverable] = useState(false)
   const [visibilitySaving, setVisibilitySaving] = useState(false)
   const [visibilityError, setVisibilityError] = useState('')
-  const [editing, setEditing] = useState(false)
+  // A parsed resume from onboarding or the Resume tab opens straight into the form for review.
+  const [resumeDraft, setResumeDraft] = useState<StudentProfile | null>(() => readResumeDraft())
+  const [editing, setEditing] = useState(() => resumeDraft !== null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [validationError, setValidationError] = useState<FormValidationError | null>(null)
@@ -511,6 +513,8 @@ export default function Profile() {
       setSearchIndexingError('')
       setTalentError('')
       setEditing(false)
+      clearResumeDraft()
+      setResumeDraft(null)
       void refreshTalent(false)
     } catch (caught) {
       if (caught instanceof StudentProfileRequestError && caught.field) {
@@ -532,9 +536,19 @@ export default function Profile() {
   return (
     <div className="flex flex-col gap-4">
       {editing
-        ? <ProfileForm initial={profile} saving={saving} error={error} validationError={validationError} onSave={save}
-          onCancel={() => { setEditing(false); setError(''); setValidationError(null) }}
-          onClearValidation={() => setValidationError(null)} />
+        ? (
+          <>
+            {resumeDraft && (
+              <p role="status" className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                We filled in your profile from your resume. Check each section, fix anything that's off, then save.
+                Entries already on your profile that weren't on the resume are kept below the new ones.
+              </p>
+            )}
+            <ProfileForm initial={resumeDraft ?? profile} saving={saving} error={error} validationError={validationError} onSave={save}
+              onCancel={() => { setEditing(false); setError(''); setValidationError(null); clearResumeDraft(); setResumeDraft(null) }}
+              onClearValidation={() => setValidationError(null)} />
+          </>
+        )
         : (
           <>
             <button type="button" className={`${buttonClass} self-end`} onClick={() => setEditing(true)}>Edit</button>

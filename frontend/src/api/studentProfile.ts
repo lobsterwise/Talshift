@@ -104,6 +104,56 @@ export async function saveStudentProfile(profile: StudentProfile) {
   })
 }
 
+export const maxResumeBytes = 5 * 1024 * 1024
+
+// Sends a PDF to be read by Gemini. Returns a draft merged with the saved profile;
+// nothing is stored until the student saves the draft from the profile form.
+export async function parseResume(file: File) {
+  const token = localStorage.getItem('talshift.session')
+  if (!token) throw new Error('Your session has expired. Please sign in again.')
+
+  const response = await fetch('/api/student/resume/parse', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/pdf', Authorization: `Bearer ${token}` },
+    body: file,
+  })
+  if (!response.ok) {
+    const result = await response.json().catch(() => null) as { error?: string } | null
+    throw new StudentProfileRequestError(result?.error ?? 'Unable to read your resume. Please try again.')
+  }
+  return (await response.json() as { profile: StudentProfile }).profile
+}
+
+// A parsed resume waiting for review. It is handed to the profile page through
+// sessionStorage so it survives the move from onboarding or the Resume tab.
+const resumeDraftKey = 'talshift.resumeDraft'
+
+export function storeResumeDraft(profile: StudentProfile) {
+  try {
+    sessionStorage.setItem(resumeDraftKey, JSON.stringify(profile))
+  } catch {
+    // Storage can be unavailable (private mode, quota); the draft is then lost,
+    // and the student can upload again.
+  }
+}
+
+export function readResumeDraft(): StudentProfile | null {
+  try {
+    const stored = sessionStorage.getItem(resumeDraftKey)
+    return stored ? JSON.parse(stored) as StudentProfile : null
+  } catch {
+    return null
+  }
+}
+
+export function clearResumeDraft() {
+  try {
+    sessionStorage.removeItem(resumeDraftKey)
+  } catch {
+    // Nothing to clear.
+  }
+}
+
 export async function generateStudentTalent() {
   return request<{
     studentTalent: StudentTalent
