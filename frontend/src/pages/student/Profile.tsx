@@ -80,6 +80,92 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+const recentReviewLimit = 5;
+
+// Collapsed by default. Opening shows the latest reviews; "See all" shows the rest.
+function ReviewList({
+  reviewCount,
+  reviews,
+}: {
+  reviewCount: number;
+  reviews: StudentReputation["reviews"];
+}) {
+  const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  // Latest review always first; stable sort keeps the API order for equal or unparseable dates.
+  const newestFirst = [...reviews].sort(
+    (a, b) =>
+      (Date.parse(b.updatedAt) || 0) - (Date.parse(a.updatedAt) || 0),
+  );
+  const visible = showAll
+    ? newestFirst
+    : newestFirst.slice(0, recentReviewLimit);
+
+  return (
+    <>
+      <button
+        type="button"
+        className="flex items-center gap-1.5 self-start text-sm text-gray-600 hover:text-gray-900"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        aria-controls="student-review-list"
+      >
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`transition-transform ${open ? "rotate-90" : ""}`}
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+        {reviewCount} {reviewCount === 1 ? "review" : "reviews"}
+      </button>
+      {open && (
+        <div id="student-review-list" className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-2">
+            {visible.map((review) => (
+              <li
+                key={review.id}
+                className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <StarRatingIndicator rating={review.rating} compact />
+                  <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                    <p className="whitespace-pre-line text-sm text-gray-700">
+                      {review.reviewText}
+                    </p>
+                    <time
+                      className="shrink-0 text-xs text-gray-500"
+                      dateTime={review.updatedAt}
+                    >
+                      {new Date(review.updatedAt).toLocaleDateString()}
+                    </time>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {reviews.length > recentReviewLimit && (
+            <button
+              type="button"
+              className="self-start text-sm font-medium text-blue-600 hover:text-blue-700"
+              onClick={() => setShowAll((current) => !current)}
+            >
+              {showAll ? "Show fewer" : `… See all ${reviews.length} reviews`}
+            </button>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 function Entry({
   title,
   meta,
@@ -246,37 +332,20 @@ function ProfileView({
           </p>
         ) : reputation ? (
           <>
-            <p className="text-sm text-gray-600">
-              {reputation.reviewCount}{" "}
-              {reputation.reviewCount === 1 ? "review" : "reviews"}
-            </p>
-              {reputation.reviews.length > 0 ? (
-                <ul className="flex flex-col gap-2">
-                  {reputation.reviews.map((review) => (
-                    <li
-                      key={review.id}
-                      className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <StarRatingIndicator rating={review.rating} compact />
-                        <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-                          <p className="whitespace-pre-line text-sm text-gray-700">
-                            {review.reviewText}
-                          </p>
-                          <time
-                            className="shrink-0 text-xs text-gray-500"
-                            dateTime={review.updatedAt}
-                          >
-                            {new Date(review.updatedAt).toLocaleDateString()}
-                          </time>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
+            {reputation.reviews.length > 0 ? (
+              <ReviewList
+                reviewCount={reputation.reviewCount}
+                reviews={reputation.reviews}
+              />
+            ) : (
+              <>
+                <p className="text-sm text-gray-600">
+                  {reputation.reviewCount}{" "}
+                  {reputation.reviewCount === 1 ? "review" : "reviews"}
+                </p>
                 <p className="text-sm text-gray-500">No written feedback yet.</p>
-              )}
+              </>
+            )}
           </>
         ) : (
           <p className="text-sm text-gray-500">Loading recruiter reputation…</p>
