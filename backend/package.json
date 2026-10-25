@@ -10,7 +10,7 @@
     "dev": "tsx watch --include .env src/server.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "tsc -p tsconfig.json",
-    "test": "tsx --test test/search.test.ts test/embeddings.test.ts test/professionalSearch.test.ts",
+    "test": "tsx --test test/search.test.ts test/embeddings.test.ts test/professionalSearch.test.ts test/reputation.test.ts",
     "start": "node dist/server.js"
   },
   "dependencies": {

@@ -68,6 +68,13 @@ interface StudentProfileResult {
   searchAttributeCount: number
 }
 
+export interface StudentReputation {
+  reviewCount: number
+  stars: number
+  score: number
+  reviews: { id: string; rating: number; reviewText: string; updatedAt: string }[]
+}
+
 export class StudentProfileRequestError extends Error {
   constructor(message: string, readonly field: string | null = null) {
     super(message)
@@ -95,6 +102,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export async function getStudentProfile() {
   return request<StudentProfileResult>('/api/student/profile')
+}
+
+export async function getStudentReputation() {
+  return request<StudentReputation>('/api/student/reputation')
 }
 
 export async function saveStudentProfile(profile: StudentProfile) {

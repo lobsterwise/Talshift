@@ -1,8 +1,8 @@
 import { cloneElement, isValidElement, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { getProfile } from '../../api/auth'
 import { getDiscoverability, setDiscoverability } from '../../api/discovery'
-import { clearResumeDraft, generateStudentTalent, getStudentProfile, indexStudentTalent, readResumeDraft, saveStudentProfile, StudentProfileRequestError, type SkillLevel, type StudentProfile, type StudentTalent } from '../../api/studentProfile'
 import ResumeUpload from '../../components/ResumeUpload'
+import {clearResumeDraft,  generateStudentTalent, getStudentProfile, getStudentReputation, indexStudentTalent, readResumeDraft, saveStudentProfile, StudentProfileRequestError, type SkillLevel, type StudentProfile, type StudentReputation, type StudentTalent } from '../../api/studentProfile'
 
 const levels: SkillLevel[] = ['beginner', 'intermediate', 'advanced']
 
@@ -71,10 +71,12 @@ function TalentSkeleton() {
   )
 }
 
-function ProfileView({ profile, fullName, studentTalent, searchAttributeCount, searchIndexingError, discoverable, visibilitySaving, visibilityError, onDiscoverabilityChange, talentGenerating, talentError, onRetryTalent }: {
+function ProfileView({ profile, fullName, studentTalent, reputation, reputationError, searchAttributeCount, searchIndexingError, discoverable, visibilitySaving, visibilityError, onDiscoverabilityChange, talentGenerating, talentError, onRetryTalent }: {
   profile: StudentProfile
   fullName: string
   studentTalent: StudentTalent | null
+  reputation: StudentReputation | null
+  reputationError: string
   searchAttributeCount: number
   searchIndexingError: string
   discoverable: boolean
@@ -102,6 +104,33 @@ function ProfileView({ profile, fullName, studentTalent, searchAttributeCount, s
           </p>
         )}
       </header>
+
+      <Section title="Recruiter reputation">
+        {reputationError
+          ? <p role="status" className="text-sm text-amber-800">{reputationError}</p>
+          : reputation
+            ? <>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <p className="text-xl font-semibold tabular-nums text-gray-900">{reputation.stars.toFixed(1)} / 5</p>
+                <p className="text-sm text-gray-600">{reputation.reviewCount} {reputation.reviewCount === 1 ? 'review' : 'reviews'}</p>
+              </div>
+              <p className="text-xs text-gray-500">Ratings use a confidence-adjusted average; new profiles start at a neutral 3 stars.</p>
+              {reputation.reviews.length > 0
+                ? <ul className="flex flex-col divide-y divide-gray-200 border-y border-gray-200">
+                  {reputation.reviews.map((review) => (
+                    <li key={review.id} className="py-3">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="font-medium tabular-nums text-gray-800">{review.rating} / 5 stars</span>
+                        <time className="text-xs text-gray-500" dateTime={review.updatedAt}>{new Date(review.updatedAt).toLocaleDateString()}</time>
+                      </div>
+                      <p className="mt-1 whitespace-pre-line text-sm text-gray-700">{review.reviewText}</p>
+                    </li>
+                  ))}
+                </ul>
+                : <p className="text-sm text-gray-500">No written feedback yet.</p>}
+            </>
+            : <p className="text-sm text-gray-500">Loading recruiter reputation…</p>}
+      </Section>
 
       {empty && <p className="text-sm text-gray-500">Your profile is empty. Select Edit to add your experience.</p>}
 
@@ -434,6 +463,8 @@ export default function Profile() {
   const [fullName, setFullName] = useState('')
   const [profile, setProfile] = useState<StudentProfile | null>(null)
   const [studentTalent, setStudentTalent] = useState<StudentTalent | null>(null)
+  const [reputation, setReputation] = useState<StudentReputation | null>(null)
+  const [reputationError, setReputationError] = useState('')
   const [searchAttributeCount, setSearchAttributeCount] = useState(0)
   const [searchIndexingError, setSearchIndexingError] = useState('')
   const [discoverable, setDiscoverable] = useState(false)
@@ -465,6 +496,11 @@ export default function Profile() {
       })
       .catch((caught: unknown) => {
         if (!cancelled) setError(caught instanceof Error ? caught.message : 'Unable to load your profile.')
+      })
+    getStudentReputation()
+      .then((result) => { if (!cancelled) setReputation(result) })
+      .catch((caught: unknown) => {
+        if (!cancelled) setReputationError(caught instanceof Error ? caught.message : 'Unable to load recruiter reputation.')
       })
     return () => {
       cancelled = true
@@ -556,6 +592,7 @@ export default function Profile() {
           <>
             <button type="button" className={`${buttonClass} self-end`} onClick={() => setEditing(true)}>Edit</button>
             <ProfileView profile={profile} fullName={fullName} studentTalent={studentTalent}
+              reputation={reputation} reputationError={reputationError}
               searchAttributeCount={searchAttributeCount} searchIndexingError={searchIndexingError}
               discoverable={discoverable} visibilitySaving={visibilitySaving} visibilityError={visibilityError}
               onDiscoverabilityChange={updateDiscoverability}

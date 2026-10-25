@@ -111,6 +111,61 @@ CREATE TABLE IF NOT EXISTS professional_postings (
 CREATE INDEX IF NOT EXISTS professional_postings_owner_status_idx
   ON professional_postings (owner_id, status, updated_at DESC);
 
+CREATE TABLE IF NOT EXISTS student_reputation_reviews (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  reviewer_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  student_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  review_text TEXT NOT NULL DEFAULT '' CHECK (length(review_text) <= 500),
+  source_type TEXT NOT NULL CHECK (source_type IN ('professional_demand', 'job_posting')),
+  source_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (reviewer_id, student_id)
+);
+
+CREATE INDEX IF NOT EXISTS student_reputation_reviews_student_idx
+  ON student_reputation_reviews (student_id, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS professional_review_queues (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  professional_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source_type TEXT NOT NULL CHECK (source_type IN ('professional_demand', 'job_posting')),
+  source_id TEXT NOT NULL,
+  exploration_seed TEXT NOT NULL,
+  algorithm_version SMALLINT NOT NULL DEFAULT 1,
+  cursor_position INTEGER NOT NULL DEFAULT 0 CHECK (cursor_position >= 0),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS professional_review_queues_active_source_uidx
+  ON professional_review_queues (professional_id, source_type, source_id)
+  WHERE status = 'active';
+
+CREATE TABLE IF NOT EXISTS professional_review_queue_entries (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  queue_id BIGINT NOT NULL REFERENCES professional_review_queues(id) ON DELETE CASCADE,
+  student_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL CHECK (position >= 0),
+  relevance_score NUMERIC(8, 6) NOT NULL CHECK (relevance_score BETWEEN 0 AND 1),
+  reputation_score NUMERIC(8, 6) NOT NULL CHECK (reputation_score BETWEEN 0 AND 1),
+  reputation_stars NUMERIC(4, 2) NOT NULL CHECK (reputation_stars BETWEEN 1 AND 5),
+  review_count INTEGER NOT NULL CHECK (review_count >= 0),
+  final_score NUMERIC(8, 6) NOT NULL CHECK (final_score BETWEEN 0 AND 1),
+  is_exploration BOOLEAN NOT NULL DEFAULT false,
+  candidate_snapshot JSONB NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'skipped')),
+  completed_at TIMESTAMPTZ,
+  UNIQUE (queue_id, position),
+  UNIQUE (queue_id, student_id)
+);
+
+CREATE INDEX IF NOT EXISTS professional_review_queue_entries_pending_idx
+  ON professional_review_queue_entries (queue_id, position)
+  WHERE status = 'pending';
+
 DO $$
 BEGIN
   IF EXISTS (

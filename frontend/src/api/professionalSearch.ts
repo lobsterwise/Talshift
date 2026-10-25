@@ -55,10 +55,50 @@ export interface StudentSearchResult {
   institution?: string
   score: number
   similarity: number
+  relevance: number
+  reputation: number
+  reputationStars: number
+  reviewCount: number
+  finalScore: number
+  candidateProfile: {
+    summary: string
+    education: { institution: string; degree: string; field: string; startYear: number | null; endYear: number | null; description: string }[]
+    jobs: { title: string; company: string; location: string; startDate: string; endDate: string | null; description: string }[]
+    projects: { name: string; description: string; skills: string[] }[]
+    skills: { name: string; level: string }[]
+  }
   matches: { requirement: string; skill: string; similarity: number }[]
+}
+
+export interface ReviewQueue {
+  queueId: string
+  sourceType: 'professional_demand' | 'job_posting'
+  sourceId: string
+  cursor: number
+  total: number
+  status: 'active' | 'completed'
+  current: (StudentSearchResult & { position: number }) | null
 }
 
 export async function searchStudents(sourceType: 'professional_demand' | 'job_posting', sourceId: string, offset = 0) {
   const query = new URLSearchParams({ sourceType, sourceId, limit: '20', offset: String(offset) })
   return request<{ items: StudentSearchResult[]; total: number; limit: number; offset: number; message?: string }>(`/students?${query}`)
+}
+
+export async function startReviewQueue(sourceType: 'professional_demand' | 'job_posting', sourceId: string, restart = false) {
+  return request<ReviewQueue>('/queues', {
+    method: 'POST',
+    body: JSON.stringify({ sourceType, sourceId, restart }),
+  })
+}
+
+export async function getReviewQueue(queueId: string) {
+  return request<ReviewQueue>(`/queues/${encodeURIComponent(queueId)}`)
+}
+
+export async function submitCandidateReview(queueId: string, expectedPosition: number, rating: number, reviewText: string) {
+  return request<ReviewQueue>(`/queues/${encodeURIComponent(queueId)}/review`, {
+    method: 'POST',
+    body: JSON.stringify({ expectedPosition, rating, reviewText }),
+  })
 }
