@@ -142,6 +142,30 @@ CREATE TABLE IF NOT EXISTS student_reputation_reviews (
 CREATE INDEX IF NOT EXISTS student_reputation_reviews_student_idx
   ON student_reputation_reviews (student_id, updated_at DESC);
 
+CREATE TABLE IF NOT EXISTS student_connections (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  requester_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  recipient_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  message TEXT NOT NULL DEFAULT '' CHECK (length(message) <= 500),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (requester_id <> recipient_id)
+);
+
+-- One connection per pair of students, whichever of them asked first.
+CREATE UNIQUE INDEX IF NOT EXISTS student_connections_pair_uidx
+  ON student_connections (LEAST(requester_id, recipient_id), GREATEST(requester_id, recipient_id));
+
+CREATE TABLE IF NOT EXISTS peer_comparison_advice (
+  student_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  peer_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  input_hash TEXT NOT NULL,
+  advice JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (student_id, peer_id)
+);
+
 CREATE TABLE IF NOT EXISTS professional_review_queues (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   professional_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

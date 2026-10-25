@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import StudentNetwork from './pages/student/Network.tsx'
+import StudentPeerComparison from './pages/student/PeerComparison.tsx'
 import StudentProfile from './pages/student/Profile.tsx'
 import ProfessionalFindStudents from './pages/professional/FindStudents.tsx'
 import ProfessionalProfile from './pages/professional/Profile.tsx'
@@ -27,6 +28,7 @@ export const personas: Persona[] = [
     label: 'Student',
     tabs: [
       { slug: 'network', label: 'Network', page: StudentNetwork },
+      { slug: 'compare', label: 'Compare', page: StudentPeerComparison },
       { slug: 'profile', label: 'Profile', page: StudentProfile },
     ],
   },
