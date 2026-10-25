@@ -56,6 +56,9 @@ function App() {
   const [account, setAccount] = useState<Account | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [restoring, setRestoring] = useState(() => Boolean(localStorage.getItem('talshift.session')))
+  // True only right after a new account finishes onboarding; the welcome screen is
+  // shown then and never to returning users.
+  const [justOnboarded, setJustOnboarded] = useState(false)
 
   useEffect(() => {
     if (!token) {
@@ -92,13 +95,15 @@ function App() {
     const { profile: savedProfile } = await getProfile(session.token)
     setProfile(savedProfile)
     navigate(savedProfile?.onboardingCompleted
-      ? '/welcome'
+      ? workspacePath(session.account)
       : `/onboarding/${session.account.accountType}`)
   }
 
   async function saveProfile(profileToSave: Profile) {
     if (!token) throw new Error('Your session has expired. Please sign in again.')
+    const firstCompletion = !profile?.onboardingCompleted
     const { profile: savedProfile } = await saveProfileRequest(token, profileToSave)
+    if (firstCompletion && savedProfile.onboardingCompleted) setJustOnboarded(true)
     setProfile(savedProfile)
   }
 
@@ -106,6 +111,7 @@ function App() {
     if (token) await logout(token).catch(() => undefined)
     localStorage.removeItem('talshift.session')
     clearResumeDraft()
+    setJustOnboarded(false)
     setToken(null)
     setAccount(null)
     setProfile(null)
@@ -125,15 +131,15 @@ function App() {
     />
   )
   const profileDestination = account
-    ? profile?.onboardingCompleted ? '/welcome' : `/onboarding/${account.accountType}`
+    ? profile?.onboardingCompleted ? workspacePath(account) : `/onboarding/${account.accountType}`
     : '/signup'
   const protectedAuthPage = restoring
     ? <main className="auth-loading" aria-live="polite">Checking your session…</main>
     : token && account
-      ? screenForPath(location.pathname) === 'welcome' && !profile?.onboardingCompleted
+      ? screenForPath(location.pathname) === 'welcome' && !justOnboarded
         ? <Navigate to={profileDestination} replace />
         : screenForPath(location.pathname) === 'onboarding' && profile?.onboardingCompleted
-          ? <Navigate to="/welcome" replace />
+          ? <Navigate to={justOnboarded ? '/welcome' : profileDestination} replace />
           : location.pathname.startsWith('/onboarding/') && location.pathname !== `/onboarding/${account.accountType}`
             ? <Navigate to={`/onboarding/${account.accountType}`} replace />
             : authPage
