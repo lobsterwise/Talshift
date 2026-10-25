@@ -545,10 +545,10 @@ export function createProfessionalSearchRouter(pool: Pool): Router {
     const rating = body.rating;
     const reviewText = body.reviewText === undefined ? "" : body.reviewText;
     const expectedPosition = body.expectedPosition;
-    if (!/^\d+$/.test(request.params.queueId) || typeof rating !== "number" || !Number.isInteger(rating) || rating < 1 || rating > 5 ||
+    if (!/^\d+$/.test(request.params.queueId) || typeof rating !== "number" || !Number.isInteger(rating * 2) || rating < 0.5 || rating > 5 ||
       typeof reviewText !== "string" || reviewText.trim().length === 0 || reviewText.length > 500 || typeof expectedPosition !== "number" ||
       !Number.isInteger(expectedPosition) || expectedPosition < 0) {
-      response.status(400).json({ error: "queue position, a 1-5 star rating, and required review text up to 500 characters are required" });
+      response.status(400).json({ error: "queue position, a 0.5-5 star rating in half-star steps, and required review text up to 500 characters are required" });
       return;
     }
 

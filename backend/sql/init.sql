@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS student_reputation_reviews (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   reviewer_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   student_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  rating NUMERIC(2, 1) NOT NULL CHECK (rating BETWEEN 0.5 AND 5 AND rating * 2 = trunc(rating * 2)),
   review_text TEXT NOT NULL DEFAULT '' CHECK (length(review_text) <= 500),
   source_type TEXT NOT NULL CHECK (source_type IN ('professional_demand', 'job_posting')),
   source_id TEXT NOT NULL,
@@ -158,6 +158,26 @@ CREATE TABLE IF NOT EXISTS student_reputation_reviews (
 
 CREATE INDEX IF NOT EXISTS student_reputation_reviews_student_idx
   ON student_reputation_reviews (student_id, updated_at DESC);
+
+-- Ratings moved from whole stars (1-5) to half-star steps (0.5-5).
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'student_reputation_reviews'
+      AND column_name = 'rating'
+      AND data_type = 'smallint'
+  ) THEN
+    ALTER TABLE student_reputation_reviews
+      DROP CONSTRAINT IF EXISTS student_reputation_reviews_rating_check;
+    ALTER TABLE student_reputation_reviews
+      ALTER COLUMN rating TYPE NUMERIC(2, 1);
+    ALTER TABLE student_reputation_reviews
+      ADD CONSTRAINT student_reputation_reviews_rating_check
+      CHECK (rating BETWEEN 0.5 AND 5 AND rating * 2 = trunc(rating * 2));
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS student_connections (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

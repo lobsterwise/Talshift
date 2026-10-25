@@ -219,7 +219,7 @@ export async function rankProfessionalCandidates(
   const ratingsByStudent = new Map<string, number[]>();
   for (const row of ratings.rows) {
     const values = ratingsByStudent.get(row.student_id) ?? [];
-    values.push(row.rating);
+    values.push(Number(row.rating));
     ratingsByStudent.set(row.student_id, values);
   }
 

@@ -561,7 +561,7 @@ export function createStudentRouter(pool: Pool): Router {
     }>(
       `SELECT count(*)::int AS review_count,
               ((COALESCE(sum(rating), 0) + 9.0) / (count(*) + 3))::numeric(4, 2) AS stars,
-              (((COALESCE(sum(rating), 0) + 9.0) / (count(*) + 3) - 1) / 4)::numeric(6, 4) AS score
+              GREATEST(0, ((COALESCE(sum(rating), 0) + 9.0) / (count(*) + 3) - 1) / 4)::numeric(6, 4) AS score
        FROM student_reputation_reviews
        WHERE student_id = $1`,
       [studentId],
@@ -585,7 +585,7 @@ export function createStudentRouter(pool: Pool): Router {
       score: Number(summary.score),
       reviews: reviewsResult.rows.map((review) => ({
         id: review.id,
-        rating: review.rating,
+        rating: Number(review.rating),
         reviewText: review.review_text,
         updatedAt: review.updated_at,
       })),

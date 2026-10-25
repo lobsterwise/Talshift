@@ -4,6 +4,7 @@ import { getPostings, type ProfessionalPosting } from '../../api/postings'
 import { getReviewQueue, getSavedCandidates, setCandidateSaved, startReviewQueue, submitCandidateReview, type ReviewQueue } from '../../api/professionalSearch'
 import ProjectCredibilityPanel, { VerifiedExperienceBadge } from '../../components/ProjectCredibility'
 import StarRatingIndicator from '../../components/StarRatingIndicator'
+import StarRatingInput from '../../components/StarRatingInput'
 
 export default function FindStudents() {
   const [postings, setPostings] = useState<ProfessionalPosting[]>([])
@@ -91,7 +92,7 @@ export default function FindStudents() {
 
   async function submitReview() {
     const trimmedReviewText = reviewText.trim()
-    if (!queue?.current || rating < 1 || trimmedReviewText.length === 0 || submitting) return
+    if (!queue?.current || rating < 0.5 || trimmedReviewText.length === 0 || submitting) return
     setSubmitting(true)
     setError('')
     try {
@@ -259,13 +260,8 @@ export default function FindStudents() {
               <fieldset>
                 <legend className="text-sm font-semibold text-gray-900">Your candidate rating <span className="text-red-700">required</span></legend>
                 <p className="mt-1 text-xs text-gray-600">1 serious concern · 2 below expectations · 3 meets expectations · 4 strong · 5 exceptional</p>
-                <div className="mt-2 flex gap-2">
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <label key={value} className="cursor-pointer">
-                      <input type="radio" name="candidate-rating" value={value} checked={rating === value} required={value === 1} onChange={() => setRating(value)} className="peer sr-only" />
-                      <span className={`flex size-11 items-center justify-center rounded-md border text-lg peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-blue-700 ${rating >= value ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-gray-300 text-gray-400'}`} aria-hidden="true">★</span>
-                    </label>
-                  ))}
+                <div className="mt-2">
+                  <StarRatingInput name="candidate-rating" value={rating} onChange={setRating} required />
                 </div>
               </fieldset>
               <label className="flex flex-col gap-1 text-sm" htmlFor="candidate-review-text">
