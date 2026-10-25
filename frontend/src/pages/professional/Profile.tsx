@@ -195,7 +195,7 @@ export default function Profile() {
           <p className="mt-1 text-sm text-gray-600">Keep mentoring expertise and hiring needs separate so each search has the right signal.</p>
         </header>
         <section className="flex flex-col gap-3">
-          <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Mentor discovery</h2>
+          <h2 className="border-b border-gray-200 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">Company Information</h2>
           <label className="flex flex-col gap-1 text-sm" htmlFor="offer-summary">
             <span className="font-medium text-gray-700">What you can offer</span>
             <textarea id="offer-summary" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" rows={5} maxLength={3000} value={offerSummary} onChange={(event) => setOfferSummary(event.target.value)} placeholder="Topics you can mentor on, experience you can share, and the kind of support you offer." />
