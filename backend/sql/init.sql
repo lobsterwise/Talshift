@@ -47,6 +47,12 @@ CREATE TABLE IF NOT EXISTS student_talent (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS student_credibility (
+  student_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  report JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS attribute_embeddings (
   content_hash TEXT NOT NULL CHECK (length(content_hash) = 64),
   model TEXT NOT NULL,
