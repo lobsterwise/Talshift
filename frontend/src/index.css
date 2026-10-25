@@ -1,5 +1,38 @@
 @import "tailwindcss";
 
+/* Star burst when a mentor picks a rating: each particle flies out along --dx/--dy and fades. */
+@keyframes star-burst {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(0deg); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--spin)); }
+}
+
+/* Profile rating: the ring of stars spins in while each star travels out from the center. */
+@keyframes rating-spin {
+  from { transform: rotate(-360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes rating-star-in {
+  from { left: 50%; top: 50%; opacity: 0; }
+}
+
+@keyframes rating-score-in {
+  from { opacity: 0; transform: scale(0.6); }
+}
+
+.animate-star-burst { animation: star-burst 700ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards; }
+.animate-rating-spin { animation: rating-spin 1100ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-rating-star-in { animation: rating-star-in 1100ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-rating-score-in { animation: rating-score-in 500ms ease-out 700ms both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-star-burst { display: none; }
+  .animate-rating-spin,
+  .animate-rating-star-in,
+  .animate-rating-score-in { animation: none; }
+}
+
 /* Base text from the design files: Inter 15px, gray-900 on white, tabular numbers. */
 @layer base {
   body {

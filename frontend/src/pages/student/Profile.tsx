@@ -326,7 +326,7 @@ function ProfileView({
     <div className="flex flex-col gap-6">
       <header className="flex items-start gap-4">
         {reputation && !reputationError && (
-          <StarRatingIndicator rating={reputation.stars} />
+          <StarRatingIndicator rating={reputation.stars} animated />
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

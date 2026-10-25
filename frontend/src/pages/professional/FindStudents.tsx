@@ -201,7 +201,7 @@ export default function FindStudents() {
             <header className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex min-w-0 items-start gap-4">
                 <div className="flex shrink-0 flex-col items-center">
-                  <StarRatingIndicator rating={queue.current.reputationStars} />
+                  <StarRatingIndicator key={queue.current.id} rating={queue.current.reputationStars} animated />
                   <p className="text-xs text-gray-500">{queue.current.reviewCount} reviews</p>
                 </div>
                 <div className="min-w-0">
